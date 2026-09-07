@@ -4,6 +4,8 @@ using System.IO.Compression;
 
 namespace JAASM.App.Services;
 
+public sealed record SteamCmdValidationResult(bool Success, int? ExitCode, string Message);
+
 public sealed class SteamCmdService
 {
     public const string WindowsDownloadUrl =
@@ -32,10 +34,11 @@ public sealed class SteamCmdService
         return File.Exists(candidate) ? Path.GetFullPath(candidate) : null;
     }
 
-    public async Task<bool> ValidateAsync(string executablePath, CancellationToken cancellationToken = default)
+    public async Task<SteamCmdValidationResult> ValidateDetailedAsync(
+        string executablePath, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(executablePath))
-            return false;
+            return new(false, null, "SteamCMD executable does not exist.");
 
         var psi = new ProcessStartInfo
         {
@@ -48,13 +51,41 @@ public sealed class SteamCmdService
             RedirectStandardError = true
         };
 
-        using var process = Process.Start(psi);
-        if (process is null)
-            return false;
+        try
+        {
+            using var process = Process.Start(psi);
+            if (process is null)
+                return new(false, null, "Windows/Linux could not start the SteamCMD process.");
 
-        await process.WaitForExitAsync(cancellationToken);
-        return process.ExitCode == 0;
+            // SteamCMD may emit enough output during its first self-update to fill redirected pipes.
+            // Consume both streams while the process runs instead of waiting for exit first.
+            var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
+            await process.WaitForExitAsync(cancellationToken);
+            var stdout = await stdoutTask;
+            var stderr = await stderrTask;
+
+            // SteamCMD's first launch may bootstrap/update itself. Exit code 0 is the authoritative success signal.
+            if (process.ExitCode == 0)
+                return new(true, 0, "SteamCMD started and exited normally.");
+
+            var detail = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
+            detail = detail.Trim();
+            if (detail.Length > 800)
+                detail = detail[^800..];
+
+            return new(false, process.ExitCode,
+                $"SteamCMD exited with code {process.ExitCode}. {detail}");
+        }
+        catch (Exception ex)
+        {
+            return new(false, null, $"Could not execute SteamCMD: {ex.Message}");
+        }
     }
+
+    public async Task<bool> ValidateAsync(string executablePath, CancellationToken cancellationToken = default) =>
+        (await ValidateDetailedAsync(executablePath, cancellationToken)).Success;
 
     public async Task<string> InstallAsync(
         IProgress<double>? progress = null,
@@ -109,8 +140,10 @@ public sealed class SteamCmdService
         File.Delete(archivePath);
         var executable = Path.Combine(installDirectory, ExecutableName);
 
-        if (!await ValidateAsync(executable, cancellationToken))
-            throw new InvalidOperationException("SteamCMD was installed but validation failed.");
+        var validation = await ValidateDetailedAsync(executable, cancellationToken);
+        if (!validation.Success)
+            throw new InvalidOperationException(
+                $"SteamCMD was extracted to '{installDirectory}', but validation failed. {validation.Message}");
 
         return executable;
     }
