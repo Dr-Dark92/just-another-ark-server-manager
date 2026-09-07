@@ -10,10 +10,7 @@ public sealed class AsaServerService
 
     private readonly SteamCmdService _steamCmd;
 
-    public AsaServerService(SteamCmdService steamCmd)
-    {
-        _steamCmd = steamCmd;
-    }
+    public AsaServerService(SteamCmdService steamCmd) => _steamCmd = steamCmd;
 
     public string GetExpectedExecutablePath(string installDirectory) =>
         Path.Combine(installDirectory, WindowsExecutableRelativePath);
@@ -24,19 +21,15 @@ public sealed class AsaServerService
             return new(false, "ASA installation directory is not configured.", null);
 
         var directory = Path.GetFullPath(installDirectory);
-
         if (!Directory.Exists(directory))
             return new(false, $"ASA installation directory does not exist: {directory}", null);
 
         if (!OperatingSystem.IsWindows())
-        {
             return new(false,
                 "Native ASA Dedicated Server runtime is currently Windows-targeted. Linux compatibility/runtime support will be handled separately.",
                 null);
-        }
 
         var executable = GetExpectedExecutablePath(directory);
-
         if (!File.Exists(executable))
             return new(false, $"ArkAscendedServer.exe was not found at {executable}", executable);
 
@@ -61,9 +54,10 @@ public sealed class AsaServerService
         console?.Report($"[ASA] App ID: {AppId}");
         console?.Report($"[ASA] Install directory: {installDirectory}");
 
-        var escapedDirectory = installDirectory.Replace(""", "\\"");
+        // ProcessStartInfo receives this as one command-line string. Quote the force_install_dir
+        // value so paths containing spaces remain a single SteamCMD argument.
         var arguments =
-            $"+force_install_dir \"{escapedDirectory}\" +login anonymous +app_update {AppId} validate +quit";
+            $"+force_install_dir \"{installDirectory}\" +login anonymous +app_update {AppId} validate +quit";
 
         var result = await _steamCmd.ExecuteAsync(
             steamCmdExecutable,
