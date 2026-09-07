@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="JAASM.App.MainWindow"
         Title="Just Another ARK Server Manager"
-        Width="820" Height="560"
-        MinWidth="720" MinHeight="500">
+        Width="900" Height="650"
+        MinWidth="760" MinHeight="560">
   <Grid RowDefinitions="Auto,*" Margin="28">
     <StackPanel>
       <TextBlock Text="JAASM" FontSize="34" FontWeight="Bold"/>
@@ -13,13 +13,31 @@
     <StackPanel Grid.Row="1" Margin="0,28,0,0" Spacing="14">
       <TextBlock Text="Phase 1 — SteamCMD Bootstrap" FontSize="22" FontWeight="SemiBold"/>
       <TextBlock x:Name="PlatformText"/>
-      <TextBlock Text="SteamCMD" FontWeight="SemiBold"/>
+
+      <TextBlock Text="Use Existing SteamCMD" FontSize="18" FontWeight="SemiBold"/>
       <TextBox x:Name="SteamCmdPathBox" IsReadOnly="True" Watermark="SteamCMD is not configured"/>
       <StackPanel Orientation="Horizontal" Spacing="10">
         <Button Content="Select Existing Directory" Click="SelectSteamCmd_Click"/>
-        <Button Content="Install SteamCMD" Click="InstallSteamCmd_Click"/>
         <Button Content="Validate" Click="ValidateSteamCmd_Click"/>
       </StackPanel>
+
+      <Separator Margin="0,8"/>
+
+      <TextBlock Text="Install New SteamCMD" FontSize="18" FontWeight="SemiBold"/>
+      <TextBlock Text="SteamCMD will be installed directly into the directory selected below."
+                 Opacity="0.65"/>
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <TextBox x:Name="SteamCmdInstallDirectoryBox"
+                 Grid.Column="0"
+                 IsReadOnly="True"
+                 Watermark="Select an installation directory"/>
+        <Button Grid.Column="1"
+                Content="Browse"
+                Click="BrowseSteamCmdInstallDirectory_Click"/>
+      </Grid>
+      <Button Content="Download &amp; Install SteamCMD"
+              HorizontalAlignment="Left"
+              Click="InstallSteamCmd_Click"/>
 
       <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="100" Height="8"/>
       <TextBlock x:Name="StatusText" Text="Ready." TextWrapping="Wrap"/>
