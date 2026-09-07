@@ -4,6 +4,7 @@ public sealed class AppSettings
 {
     public string? SteamCmdPath { get; set; }
     public string? SteamCmdInstallDirectory { get; set; }
+    public string? AsaServerInstallDirectory { get; set; }
     public WebGuiSettings WebGui { get; set; } = new();
 }
 
