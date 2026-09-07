@@ -25,6 +25,7 @@ public partial class MainWindow : Window
         _loading = true;
         _settings = await _settingsService.LoadAsync();
         SteamCmdPathBox.Text = _settings.SteamCmdPath ?? string.Empty;
+        SteamCmdInstallDirectoryBox.Text = _settings.SteamCmdInstallDirectory ?? string.Empty;
         WebGuiToggle.IsChecked = _settings.WebGui.Enabled;
         _loading = false;
 
@@ -38,7 +39,7 @@ public partial class MainWindow : Window
     {
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "Select the SteamCMD directory",
+            Title = "Select the existing SteamCMD directory",
             AllowMultiple = false
         });
 
@@ -62,32 +63,69 @@ public partial class MainWindow : Window
         SteamCmdPathBox.Text = executable;
         StatusText.Text = "SteamCMD found. Validating...";
 
-        if (await _steamCmd.ValidateAsync(executable))
+        var validation = await _steamCmd.ValidateDetailedAsync(executable);
+        if (validation.Success)
         {
             _settings.SteamCmdPath = executable;
             await _settingsService.SaveAsync(_settings);
-            StatusText.Text = "SteamCMD validated and saved.";
+            StatusText.Text = $"SteamCMD validated and saved: {executable}";
         }
         else
         {
-            StatusText.Text = "SteamCMD exists but validation failed.";
+            StatusText.Text = $"SteamCMD exists but validation failed: {validation.Message}";
         }
+    }
+
+    private async void BrowseSteamCmdInstallDirectory_Click(object? sender, RoutedEventArgs e)
+    {
+        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select where JAASM should install SteamCMD",
+            AllowMultiple = false
+        });
+
+        if (folders.Count == 0)
+            return;
+
+        var path = folders[0].TryGetLocalPath();
+        if (path is null)
+        {
+            StatusText.Text = "JAASM requires a local filesystem directory.";
+            return;
+        }
+
+        SteamCmdInstallDirectoryBox.Text = path;
+        _settings.SteamCmdInstallDirectory = path;
+        await _settingsService.SaveAsync(_settings);
+        StatusText.Text = $"SteamCMD installation directory selected: {path}";
     }
 
     private async void InstallSteamCmd_Click(object? sender, RoutedEventArgs e)
     {
+        var installDirectory = SteamCmdInstallDirectoryBox.Text;
+        if (string.IsNullOrWhiteSpace(installDirectory))
+        {
+            StatusText.Text = "Select the SteamCMD installation directory first.";
+            return;
+        }
+
         try
         {
             SetBusy(true);
-            StatusText.Text = "Downloading SteamCMD from Valve CDN...";
+            DownloadProgress.Value = 0;
+            StatusText.Text = $"Preparing SteamCMD installation in {installDirectory}...";
+
             var progress = new Progress<double>(value => DownloadProgress.Value = value * 100);
             var status = new Progress<string>(message => StatusText.Text = message);
 
-            var executable = await _steamCmd.InstallAsync(progress, status);
+            var executable = await _steamCmd.InstallAsync(installDirectory, progress, status);
+
             SteamCmdPathBox.Text = executable;
+            _settings.SteamCmdInstallDirectory = installDirectory;
             _settings.SteamCmdPath = executable;
             await _settingsService.SaveAsync(_settings);
-            StatusText.Text = "SteamCMD installed, validated, and saved.";
+
+            StatusText.Text = $"SteamCMD installed, validated, and saved at {executable}";
         }
         catch (Exception ex)
         {
@@ -112,9 +150,10 @@ public partial class MainWindow : Window
         StatusText.Text = "Validating SteamCMD...";
         try
         {
-            StatusText.Text = await _steamCmd.ValidateAsync(path)
-                ? "SteamCMD validation passed."
-                : "SteamCMD validation failed.";
+            var validation = await _steamCmd.ValidateDetailedAsync(path);
+            StatusText.Text = validation.Success
+                ? $"SteamCMD validation passed: {path}"
+                : $"SteamCMD validation failed: {validation.Message}";
         }
         catch (Exception ex)
         {
