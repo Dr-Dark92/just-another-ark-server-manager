@@ -20,10 +20,6 @@ public sealed class SteamCmdService
         OperatingSystem.IsLinux() ? "steamcmd.sh" :
         throw new PlatformNotSupportedException("JAASM Phase 1 supports Windows and Linux.");
 
-    public string GetManagedInstallDirectory() =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "JAASM", "steamcmd");
-
     public string? ResolveExecutable(string selectedPath)
     {
         if (File.Exists(selectedPath) &&
@@ -85,11 +81,15 @@ public sealed class SteamCmdService
         (await ValidateDetailedAsync(executablePath, cancellationToken)).Success;
 
     public async Task<string> InstallAsync(
+        string installDirectory,
         IProgress<double>? progress = null,
         IProgress<string>? status = null,
         CancellationToken cancellationToken = default)
     {
-        var installDirectory = GetManagedInstallDirectory();
+        if (string.IsNullOrWhiteSpace(installDirectory))
+            throw new ArgumentException("A SteamCMD installation directory must be selected.", nameof(installDirectory));
+
+        installDirectory = Path.GetFullPath(installDirectory);
         Directory.CreateDirectory(installDirectory);
 
         var url = OperatingSystem.IsWindows() ? WindowsDownloadUrl :
@@ -99,8 +99,8 @@ public sealed class SteamCmdService
         var archivePath = Path.Combine(Path.GetTempPath(),
             OperatingSystem.IsWindows() ? "jaasm-steamcmd.zip" : "jaasm-steamcmd.tar.gz");
 
-        status?.Report($"Downloading from {url}");
-        status?.Report($"Temporary archive: {archivePath}");
+        status?.Report($"Downloading SteamCMD to temporary archive...");
+        status?.Report($"Target directory: {installDirectory}");
 
         if (File.Exists(archivePath))
             File.Delete(archivePath);
@@ -141,7 +141,7 @@ public sealed class SteamCmdService
         if (length is > 0 && actualSize != length.Value)
             throw new IOException($"Incomplete SteamCMD download. Expected {length.Value:N0} bytes, got {actualSize:N0}.");
 
-        status?.Report($"Extracting to {installDirectory}");
+        status?.Report($"Extracting directly to {installDirectory}");
 
         if (OperatingSystem.IsWindows())
         {
@@ -181,9 +181,7 @@ public sealed class SteamCmdService
 
         status?.Report("SteamCMD validation passed.");
 
-        // Only remove the archive after the full install path has succeeded.
         File.Delete(archivePath);
-
         return executable;
     }
 }
