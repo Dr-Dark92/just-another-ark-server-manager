@@ -3,6 +3,7 @@ namespace JAASM.App.Models;
 public sealed class AppSettings
 {
     public string? SteamCmdPath { get; set; }
+    public string? SteamCmdInstallDirectory { get; set; }
     public WebGuiSettings WebGui { get; set; } = new();
 }
 
