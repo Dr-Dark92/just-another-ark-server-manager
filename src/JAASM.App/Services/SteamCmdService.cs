@@ -38,7 +38,7 @@ public sealed class SteamCmdService
         string executablePath, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(executablePath))
-            return new(false, null, "SteamCMD executable does not exist.");
+            return new(false, null, $"SteamCMD executable does not exist: {executablePath}");
 
         var psi = new ProcessStartInfo
         {
@@ -55,10 +55,8 @@ public sealed class SteamCmdService
         {
             using var process = Process.Start(psi);
             if (process is null)
-                return new(false, null, "Windows/Linux could not start the SteamCMD process.");
+                return new(false, null, "The operating system could not start SteamCMD.");
 
-            // SteamCMD may emit enough output during its first self-update to fill redirected pipes.
-            // Consume both streams while the process runs instead of waiting for exit first.
             var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
             var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
 
@@ -66,7 +64,6 @@ public sealed class SteamCmdService
             var stdout = await stdoutTask;
             var stderr = await stderrTask;
 
-            // SteamCMD's first launch may bootstrap/update itself. Exit code 0 is the authoritative success signal.
             if (process.ExitCode == 0)
                 return new(true, 0, "SteamCMD started and exited normally.");
 
@@ -89,6 +86,7 @@ public sealed class SteamCmdService
 
     public async Task<string> InstallAsync(
         IProgress<double>? progress = null,
+        IProgress<string>? status = null,
         CancellationToken cancellationToken = default)
     {
         var installDirectory = GetManagedInstallDirectory();
@@ -101,24 +99,49 @@ public sealed class SteamCmdService
         var archivePath = Path.Combine(Path.GetTempPath(),
             OperatingSystem.IsWindows() ? "jaasm-steamcmd.zip" : "jaasm-steamcmd.tar.gz");
 
+        status?.Report($"Downloading from {url}");
+        status?.Report($"Temporary archive: {archivePath}");
+
+        if (File.Exists(archivePath))
+            File.Delete(archivePath);
+
         using var response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        status?.Report($"HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
         response.EnsureSuccessStatusCode();
 
         var length = response.Content.Headers.ContentLength;
+        long total = 0;
+
         await using (var input = await response.Content.ReadAsStreamAsync(cancellationToken))
         await using (var output = File.Create(archivePath))
         {
             var buffer = new byte[81920];
-            long total = 0;
             int read;
             while ((read = await input.ReadAsync(buffer, cancellationToken)) > 0)
             {
                 await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
                 total += read;
+
                 if (length is > 0)
                     progress?.Report((double)total / length.Value);
             }
+
+            await output.FlushAsync(cancellationToken);
         }
+
+        if (!File.Exists(archivePath))
+            throw new IOException($"Download completed but archive was not created: {archivePath}");
+
+        var actualSize = new FileInfo(archivePath).Length;
+        status?.Report($"Downloaded {actualSize:N0} bytes.");
+
+        if (actualSize <= 0)
+            throw new IOException("SteamCMD download produced an empty archive.");
+
+        if (length is > 0 && actualSize != length.Value)
+            throw new IOException($"Incomplete SteamCMD download. Expected {length.Value:N0} bytes, got {actualSize:N0}.");
+
+        status?.Report($"Extracting to {installDirectory}");
 
         if (OperatingSystem.IsWindows())
         {
@@ -131,19 +154,35 @@ public sealed class SteamCmdService
             TarFile.ExtractToDirectory(gzip, installDirectory, overwriteFiles: true);
 
             var script = Path.Combine(installDirectory, ExecutableName);
-            File.SetUnixFileMode(script,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            if (File.Exists(script))
+            {
+                File.SetUnixFileMode(script,
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            }
         }
 
-        File.Delete(archivePath);
         var executable = Path.Combine(installDirectory, ExecutableName);
+
+        if (!File.Exists(executable))
+            throw new FileNotFoundException(
+                $"Archive extraction completed, but {ExecutableName} was not found in {installDirectory}. " +
+                $"The downloaded archive was preserved at {archivePath} for inspection.");
+
+        status?.Report($"SteamCMD executable found: {executable}");
+        status?.Report("Starting SteamCMD validation...");
 
         var validation = await ValidateDetailedAsync(executable, cancellationToken);
         if (!validation.Success)
             throw new InvalidOperationException(
-                $"SteamCMD was extracted to '{installDirectory}', but validation failed. {validation.Message}");
+                $"SteamCMD exists at '{executable}', but validation failed. {validation.Message}. " +
+                $"The archive remains at {archivePath}.");
+
+        status?.Report("SteamCMD validation passed.");
+
+        // Only remove the archive after the full install path has succeeded.
+        File.Delete(archivePath);
 
         return executable;
     }
