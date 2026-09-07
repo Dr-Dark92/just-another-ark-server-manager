@@ -63,7 +63,7 @@ public partial class MainWindow : Window
         SteamCmdPathBox.Text = executable;
         StatusText.Text = "SteamCMD found. Validating...";
 
-        var validation = await _steamCmd.ValidateDetailedAsync(executable);
+        var validation = await _steamCmd.ValidateDetailedAsync(executable, CreateConsoleProgress());
         if (validation.Success)
         {
             _settings.SteamCmdPath = executable;
@@ -118,7 +118,7 @@ public partial class MainWindow : Window
             var progress = new Progress<double>(value => DownloadProgress.Value = value * 100);
             var status = new Progress<string>(message => StatusText.Text = message);
 
-            var executable = await _steamCmd.InstallAsync(installDirectory, progress, status);
+            var executable = await _steamCmd.InstallAsync(installDirectory, progress, status, CreateConsoleProgress());
 
             SteamCmdPathBox.Text = executable;
             _settings.SteamCmdInstallDirectory = installDirectory;
@@ -150,7 +150,7 @@ public partial class MainWindow : Window
         StatusText.Text = "Validating SteamCMD...";
         try
         {
-            var validation = await _steamCmd.ValidateDetailedAsync(path);
+            var validation = await _steamCmd.ValidateDetailedAsync(path, CreateConsoleProgress());
             StatusText.Text = validation.Success
                 ? $"SteamCMD validation passed: {path}"
                 : $"SteamCMD validation failed: {validation.Message}";
@@ -176,6 +176,18 @@ public partial class MainWindow : Window
             ? "Web GUI setting enabled (127.0.0.1:8484)."
             : "Web GUI setting disabled.";
     }
+
+    private IProgress<string> CreateConsoleProgress() =>
+        new Progress<string>(AppendConsole);
+
+    private void AppendConsole(string message)
+    {
+        ConsoleBox.Text += $"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}";
+        ConsoleBox.CaretIndex = ConsoleBox.Text?.Length ?? 0;
+    }
+
+    private void ClearConsole_Click(object? sender, RoutedEventArgs e) =>
+        ConsoleBox.Text = string.Empty;
 
     private void SetBusy(bool busy)
     {
