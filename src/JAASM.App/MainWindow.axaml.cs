@@ -81,8 +81,9 @@ public partial class MainWindow : Window
             SetBusy(true);
             StatusText.Text = "Downloading SteamCMD from Valve CDN...";
             var progress = new Progress<double>(value => DownloadProgress.Value = value * 100);
+            var status = new Progress<string>(message => StatusText.Text = message);
 
-            var executable = await _steamCmd.InstallAsync(progress);
+            var executable = await _steamCmd.InstallAsync(progress, status);
             SteamCmdPathBox.Text = executable;
             _settings.SteamCmdPath = executable;
             await _settingsService.SaveAsync(_settings);
