@@ -737,6 +737,30 @@ public partial class MainWindow : Window
         SpoilingTimeBox.Value = (decimal)s.GlobalSpoilingTimeMultiplier;
         ItemDecompositionBox.Value = (decimal)s.GlobalItemDecompositionTimeMultiplier;
         CorpseDecompositionBox.Value = (decimal)s.GlobalCorpseDecompositionTimeMultiplier;
+
+        MatingIntervalBox.Value = (decimal)s.MatingIntervalMultiplier;
+        EggHatchSpeedBox.Value = (decimal)s.EggHatchSpeedMultiplier;
+        BabyMatureSpeedBox.Value = (decimal)s.BabyMatureSpeedMultiplier;
+        BabyCuddleIntervalBox.Value = (decimal)s.BabyCuddleIntervalMultiplier;
+        BabyImprintAmountBox.Value = (decimal)s.BabyImprintAmountMultiplier;
+        BabyFoodConsumptionBox.Value = (decimal)s.BabyFoodConsumptionSpeedMultiplier;
+
+        StructureResistanceBox.Value = (decimal)s.StructureResistanceMultiplier;
+        StructureDamageBox.Value = (decimal)s.StructureDamageMultiplier;
+        PveStructureDecayPeriodBox.Value = (decimal)s.PvEStructureDecayPeriodMultiplier;
+        PveDinoDecayPeriodBox.Value = (decimal)s.PvEDinoDecayPeriodMultiplier;
+        AllowCaveBuildingPveToggle.IsChecked = s.AllowCaveBuildingPvE;
+        ExtraStructurePreventionToggle.IsChecked = s.EnableExtraStructurePreventionVolumes;
+        PvpStructureDecayToggle.IsChecked = s.PvPStructureDecay;
+
+        PlayerDamageBox.Value = (decimal)s.PlayerDamageMultiplier;
+        PlayerResistanceBox.Value = (decimal)s.PlayerResistanceMultiplier;
+        DinoDamageBox.Value = (decimal)s.DinoDamageMultiplier;
+        DinoResistanceBox.Value = (decimal)s.DinoResistanceMultiplier;
+        PlayerStaminaDrainBox.Value = (decimal)s.PlayerStaminaDrainMultiplier;
+        DinoStaminaDrainBox.Value = (decimal)s.DinoStaminaDrainMultiplier;
+        PlayerHealthRecoveryBox.Value = (decimal)s.PlayerHealthRecoveryMultiplier;
+        DinoHealthRecoveryBox.Value = (decimal)s.DinoHealthRecoveryMultiplier;
     }
 
     private void ReadCustomizationControls(AsaCustomizationSettings s)
@@ -768,6 +792,30 @@ public partial class MainWindow : Window
         s.GlobalSpoilingTimeMultiplier = (float)(SpoilingTimeBox.Value ?? 1m);
         s.GlobalItemDecompositionTimeMultiplier = (float)(ItemDecompositionBox.Value ?? 1m);
         s.GlobalCorpseDecompositionTimeMultiplier = (float)(CorpseDecompositionBox.Value ?? 1m);
+
+        s.MatingIntervalMultiplier = (float)(MatingIntervalBox.Value ?? 1m);
+        s.EggHatchSpeedMultiplier = (float)(EggHatchSpeedBox.Value ?? 1m);
+        s.BabyMatureSpeedMultiplier = (float)(BabyMatureSpeedBox.Value ?? 1m);
+        s.BabyCuddleIntervalMultiplier = (float)(BabyCuddleIntervalBox.Value ?? 1m);
+        s.BabyImprintAmountMultiplier = (float)(BabyImprintAmountBox.Value ?? 1m);
+        s.BabyFoodConsumptionSpeedMultiplier = (float)(BabyFoodConsumptionBox.Value ?? 1m);
+
+        s.StructureResistanceMultiplier = (float)(StructureResistanceBox.Value ?? 1m);
+        s.StructureDamageMultiplier = (float)(StructureDamageBox.Value ?? 1m);
+        s.PvEStructureDecayPeriodMultiplier = (float)(PveStructureDecayPeriodBox.Value ?? 1m);
+        s.PvEDinoDecayPeriodMultiplier = (float)(PveDinoDecayPeriodBox.Value ?? 1m);
+        s.AllowCaveBuildingPvE = AllowCaveBuildingPveToggle.IsChecked == true;
+        s.EnableExtraStructurePreventionVolumes = ExtraStructurePreventionToggle.IsChecked == true;
+        s.PvPStructureDecay = PvpStructureDecayToggle.IsChecked == true;
+
+        s.PlayerDamageMultiplier = (float)(PlayerDamageBox.Value ?? 1m);
+        s.PlayerResistanceMultiplier = (float)(PlayerResistanceBox.Value ?? 1m);
+        s.DinoDamageMultiplier = (float)(DinoDamageBox.Value ?? 1m);
+        s.DinoResistanceMultiplier = (float)(DinoResistanceBox.Value ?? 1m);
+        s.PlayerStaminaDrainMultiplier = (float)(PlayerStaminaDrainBox.Value ?? 1m);
+        s.DinoStaminaDrainMultiplier = (float)(DinoStaminaDrainBox.Value ?? 1m);
+        s.PlayerHealthRecoveryMultiplier = (float)(PlayerHealthRecoveryBox.Value ?? 1m);
+        s.DinoHealthRecoveryMultiplier = (float)(DinoHealthRecoveryBox.Value ?? 1m);
     }
 
     private async void WebGuiToggle_Changed(object? sender, RoutedEventArgs e)
