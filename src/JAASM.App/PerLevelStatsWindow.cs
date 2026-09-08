@@ -39,7 +39,7 @@ public sealed class PerLevelStatsWindow : Window
         var tabs = new TabControl();
 
         tabs.Items.Add(CreateStatTab("Player", settings.Player,
-            "Writes PerLevelStatsMultiplier_Player[index] to Game.ini."));
+            "Writes PerLevelStatsMultiplier_Player[index] to Game.ini.", isPlayer: true));
         tabs.Items.Add(CreateStatTab("Wild Dino", settings.DinoWild,
             "Writes PerLevelStatsMultiplier_DinoWild[index] to Game.ini."));
         tabs.Items.Add(CreateStatTab("Tamed Level-Up", settings.DinoTamed,
@@ -98,7 +98,7 @@ public sealed class PerLevelStatsWindow : Window
         Content = root;
     }
 
-    private TabItem CreateStatTab(string title, Dictionary<int, float> target, string description)
+    private TabItem CreateStatTab(string title, Dictionary<int, float> target, string description, bool isPlayer = false)
     {
         var panel = new StackPanel { Spacing = 10, Margin = new Thickness(12) };
         panel.Children.Add(new TextBlock
@@ -110,6 +110,11 @@ public sealed class PerLevelStatsWindow : Window
 
         foreach (var stat in Stats)
         {
+            // Fortitude and Crafting Skill are player-only attributes. Do not expose
+            // meaningless dino controls simply because the underlying array has indices.
+            if (!isPlayer && stat.Index is 10 or 11)
+                continue;
+
             var box = new NumericUpDown
             {
                 Minimum = 0.001m,
