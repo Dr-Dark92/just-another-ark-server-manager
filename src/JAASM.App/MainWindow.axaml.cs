@@ -999,17 +999,62 @@ public partial class MainWindow : Window
             ModId = id,
             DisplayName = $"Mod {id}",
             Enabled = true,
-            LoadOrder = profile.Mods.Count + 1
+            LoadOrder = profile.Mods.Count + 1,
+            MetadataStatus = _curseForgeMods.IsConfigured ? "Querying metadata..." : "Metadata provider unavailable"
         };
 
         profile.Mods.Add(mod);
         NewModIdBox.Text = string.Empty;
+
+        // Adding a valid ASA CurseForge project ID should immediately try to
+        // resolve the human-readable metadata. Previously we stored the ID and
+        // left the entry permanently as "Not queried" until a separate refresh.
+        if (_curseForgeMods.IsConfigured)
+        {
+            AppendConsole($"[MODS] Resolving metadata for project {id}...");
+            var resolved = await _curseForgeMods.GetModAsync(id);
+
+            if (resolved is not null)
+            {
+                ApplyResolvedModMetadata(mod, resolved);
+                mod.MetadataStatus = "Metadata current";
+                AppendConsole($"[MODS] Resolved {id}: {mod.DisplayName}.");
+            }
+            else
+            {
+                mod.MetadataStatus = "Metadata lookup failed";
+                AppendConsole($"[MODS] Could not resolve metadata for project {id}; keeping the mod ID.");
+            }
+        }
+
         await _settingsService.SaveAsync(_settings);
 
         RefreshModsUi();
         ModsListBox.SelectedItem = mod;
         LaunchPreviewText.Text = BuildLaunchArguments();
         AppendConsole($"[MODS] Added mod {id} to {profile.ServerName}.");
+    }
+
+    private static void ApplyResolvedModMetadata(AsaModEntry target, AsaModEntry source)
+    {
+        target.DisplayName = source.DisplayName;
+        target.Author = source.Author;
+        target.Summary = source.Summary;
+        target.Platform = source.Platform;
+        target.Downloads = source.Downloads;
+        target.Rating = source.Rating;
+        target.ThumbsUpCount = source.ThumbsUpCount;
+        target.LogoUrl = source.LogoUrl;
+        target.WebsiteUrl = source.WebsiteUrl;
+        target.PrimaryCategory = source.PrimaryCategory;
+        target.LastUpdated = source.LastUpdated;
+        target.MainFileId = source.MainFileId;
+        target.MainFileName = source.MainFileName;
+        target.MainFileSizeBytes = source.MainFileSizeBytes;
+        target.ReleaseType = source.ReleaseType;
+        target.IsAvailable = source.IsAvailable;
+        target.AllowDistribution = source.AllowDistribution;
+        target.Dependencies = source.Dependencies.ToList();
     }
 
     private async void RemoveMod_Click(object? sender, RoutedEventArgs e)
@@ -1305,24 +1350,7 @@ public partial class MainWindow : Window
 
             var previousFile = installed.MainFileId;
 
-            installed.DisplayName = latest.DisplayName;
-            installed.Author = latest.Author;
-            installed.Summary = latest.Summary;
-            installed.Platform = latest.Platform;
-            installed.Downloads = latest.Downloads;
-            installed.Rating = latest.Rating;
-            installed.ThumbsUpCount = latest.ThumbsUpCount;
-            installed.LogoUrl = latest.LogoUrl;
-            installed.WebsiteUrl = latest.WebsiteUrl;
-            installed.PrimaryCategory = latest.PrimaryCategory;
-            installed.LastUpdated = latest.LastUpdated;
-            installed.MainFileId = latest.MainFileId;
-            installed.MainFileName = latest.MainFileName;
-            installed.MainFileSizeBytes = latest.MainFileSizeBytes;
-            installed.ReleaseType = latest.ReleaseType;
-            installed.IsAvailable = latest.IsAvailable;
-            installed.AllowDistribution = latest.AllowDistribution;
-            installed.Dependencies = latest.Dependencies.ToList();
+            ApplyResolvedModMetadata(installed, latest);
 
             installed.MetadataStatus =
                 previousFile is not null && latest.MainFileId is not null && previousFile != latest.MainFileId
