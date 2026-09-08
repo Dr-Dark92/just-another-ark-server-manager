@@ -41,7 +41,12 @@ public sealed class CurseForgeModService
             AllowAutoRedirect = true,
             AutomaticDecompression = DecompressionMethods.All
         });
-        _http.DefaultRequestHeaders.UserAgent.ParseAdd("JAASM/0.1 (+https://github.com/Dr-Dark92/just-another-ark-server-manager)");
+        _http.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36");
+        _http.DefaultRequestHeaders.Accept.ParseAdd(
+            "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8");
+        _http.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
         ConfigureApiKey(Environment.GetEnvironmentVariable("JAASM_CURSEFORGE_API_KEY"));
     }
 
@@ -216,6 +221,8 @@ public sealed class CurseForgeModService
                 ModBrowseSort.LastUpdated => "latest+update",
                 ModBrowseSort.Downloads => "total+downloads",
                 ModBrowseSort.Name => "a-z",
+                ModBrowseSort.Popularity => "popularity",
+                ModBrowseSort.ReleasedDate => "creation+date",
                 _ => "relevancy"
             };
 
@@ -231,17 +238,34 @@ public sealed class CurseForgeModService
 
             var html = await response.Content.ReadAsStringAsync(ct);
 
+            // CurseForge changes its frontend markup often. Do not depend on a
+            // specific <a href="..."> representation. Normalize escaped JSON/HTML
+            // then discover every ASA mod path in the response.
+            var normalizedHtml = html
+                .Replace(@"\/", "/")
+                .Replace(@"\u002F", "/", StringComparison.OrdinalIgnoreCase)
+                .Replace("&quot;", "\"");
+
             var slugs = Regex.Matches(
-                    html,
-                    "href=\"/ark-survival-ascended/mods/([a-z0-9-]+)\"",
+                    normalizedHtml,
+                    @"/ark-survival-ascended/mods/([a-z0-9][a-z0-9-]{1,120})",
                     RegexOptions.IgnoreCase)
                 .Select(m => m.Groups[1].Value)
+                .Where(slug =>
+                    !string.Equals(slug, "search", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(slug, "files", StringComparison.OrdinalIgnoreCase))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Take(pageSize)
                 .ToList();
 
             if (slugs.Count == 0)
-                return new(false, "Public catalogue did not expose any mod results.", Array.Empty<AsaModEntry>());
+            {
+                var title = HtmlMatch(html, @"<title[^>]*>(.*?)</title>");
+                return new(false,
+                    $"Public catalogue returned HTML but no ASA mod links were recognized. " +
+                    $"Page title: '{title}'. Response length: {html.Length:N0} bytes.",
+                    Array.Empty<AsaModEntry>());
+            }
 
             var gate = new SemaphoreSlim(6);
             var tasks = slugs.Select(async slug =>
