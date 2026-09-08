@@ -437,7 +437,7 @@ public partial class MainWindow : Window
 
     private string BuildLaunchArguments()
     {
-        var p = _settings.AsaProfile;
+        var p = ActiveProfile;
         var args = $"{p.Map}?SessionName={QuoteUrl(p.ServerName)}?Port={p.GamePort}?QueryPort={p.QueryPort}?RCONPort={p.RconPort}?MaxPlayers={p.MaxPlayers}";
 
         if (!string.IsNullOrWhiteSpace(p.ServerPassword))
