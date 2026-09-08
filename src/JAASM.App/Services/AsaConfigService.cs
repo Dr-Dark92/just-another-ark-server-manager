@@ -4,7 +4,11 @@ using JAASM.App.Models;
 
 namespace JAASM.App.Services;
 
-public sealed record AsaConfigWriteResult(string LivePath, string ProfileSnapshotPath);
+public sealed record AsaConfigWriteResult(
+    string LivePath,
+    string ProfileSnapshotPath,
+    string LiveGameIniPath,
+    string ProfileGameIniSnapshotPath);
 
 public sealed class AsaConfigService
 {
@@ -25,6 +29,23 @@ public sealed class AsaConfigService
             profileId,
             "GameUserSettings.ini");
 
+    public string GetGameIniPath(string asaInstallDirectory) =>
+        Path.Combine(
+            asaInstallDirectory,
+            "ShooterGame",
+            "Saved",
+            "Config",
+            "WindowsServer",
+            "Game.ini");
+
+    public string GetGameIniSnapshotPath(string profileId) =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "JAASM",
+            "profiles",
+            profileId,
+            "Game.ini");
+
     public async Task<AsaConfigWriteResult> WriteGameUserSettingsAsync(
         string asaInstallDirectory,
         AsaServerProfile profile,
@@ -34,6 +55,7 @@ public sealed class AsaConfigService
             throw new ArgumentException("ASA installation directory is not configured.");
 
         var content = BuildGameUserSettings(profile);
+        var gameIniContent = BuildGameIni(profile);
 
         var snapshotPath = GetProfileSnapshotPath(profile.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(snapshotPath)!);
@@ -43,7 +65,15 @@ public sealed class AsaConfigService
         Directory.CreateDirectory(Path.GetDirectoryName(livePath)!);
         await File.WriteAllTextAsync(livePath, content, Encoding.UTF8, ct);
 
-        return new(livePath, snapshotPath);
+        var gameSnapshotPath = GetGameIniSnapshotPath(profile.Id);
+        Directory.CreateDirectory(Path.GetDirectoryName(gameSnapshotPath)!);
+        await File.WriteAllTextAsync(gameSnapshotPath, gameIniContent, Encoding.UTF8, ct);
+
+        var liveGameIniPath = GetGameIniPath(asaInstallDirectory);
+        Directory.CreateDirectory(Path.GetDirectoryName(liveGameIniPath)!);
+        await File.WriteAllTextAsync(liveGameIniPath, gameIniContent, Encoding.UTF8, ct);
+
+        return new(livePath, snapshotPath, liveGameIniPath, gameSnapshotPath);
     }
 
     public string BuildGameUserSettings(AsaServerProfile profile)
@@ -105,6 +135,32 @@ public sealed class AsaConfigService
         Add(sb, "DinoHealthRecoveryMultiplier", c.DinoHealthRecoveryMultiplier);
 
         return sb.ToString();
+    }
+
+    public string BuildGameIni(AsaServerProfile profile)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("[/script/shootergame.shootergamemode]");
+
+        AddPerLevel(sb, "PerLevelStatsMultiplier_Player", profile.PerLevelStats.Player);
+        AddPerLevel(sb, "PerLevelStatsMultiplier_DinoWild", profile.PerLevelStats.DinoWild);
+        AddPerLevel(sb, "PerLevelStatsMultiplier_DinoTamed", profile.PerLevelStats.DinoTamed);
+        AddPerLevel(sb, "PerLevelStatsMultiplier_DinoTamed_Add", profile.PerLevelStats.DinoTamedAdd);
+        AddPerLevel(sb, "PerLevelStatsMultiplier_DinoTamed_Affinity", profile.PerLevelStats.DinoTamedAffinity);
+
+        return sb.ToString();
+    }
+
+    private static void AddPerLevel(
+        StringBuilder sb,
+        string prefix,
+        Dictionary<int, float> values)
+    {
+        foreach (var pair in values.OrderBy(x => x.Key))
+        {
+            sb.AppendLine(
+                $"{prefix}[{pair.Key}]={pair.Value.ToString("0.###", CultureInfo.InvariantCulture)}");
+        }
     }
 
     private static void Add(StringBuilder sb, string key, bool value) =>
