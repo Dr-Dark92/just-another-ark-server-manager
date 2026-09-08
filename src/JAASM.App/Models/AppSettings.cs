@@ -5,12 +5,18 @@ public sealed class AppSettings
     public string? SteamCmdPath { get; set; }
     public string? SteamCmdInstallDirectory { get; set; }
     public string? AsaServerInstallDirectory { get; set; }
+
+    // Legacy single-profile value is retained for settings migration.
     public AsaServerProfile AsaProfile { get; set; } = new();
+
+    public List<AsaServerProfile> AsaProfiles { get; set; } = new();
+    public string? ActiveAsaProfileId { get; set; }
     public WebGuiSettings WebGui { get; set; } = new();
 }
 
 public sealed class AsaServerProfile
 {
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string ServerName { get; set; } = "JAASM Server";
     public string Map { get; set; } = "TheIsland_WP";
     public int MaxPlayers { get; set; } = 70;
