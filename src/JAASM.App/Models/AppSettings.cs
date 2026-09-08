@@ -29,6 +29,30 @@ public sealed class AsaServerProfile
     public List<string> SelectedExtraArguments { get; set; } = new();
     public AsaCustomizationSettings Customization { get; set; } = new();
     public PerLevelStatSettings PerLevelStats { get; set; } = new();
+    public List<AsaModEntry> Mods { get; set; } = new();
+}
+
+public sealed class AsaModEntry
+{
+    public string ModId { get; set; } = string.Empty;
+    public bool Enabled { get; set; } = true;
+    public int LoadOrder { get; set; }
+
+    // Optional metadata. Core mod loading does not depend on these values.
+    public string DisplayName { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public string Platform { get; set; } = string.Empty;
+    public long Downloads { get; set; }
+    public DateTimeOffset? LastUpdated { get; set; }
+    public int? MainFileId { get; set; }
+    public string MainFileName { get; set; } = string.Empty;
+    public long? MainFileSizeBytes { get; set; }
+    public string ReleaseType { get; set; } = string.Empty;
+    public bool? IsAvailable { get; set; }
+    public bool? AllowDistribution { get; set; }
+    public List<string> Dependencies { get; set; } = new();
+    public string MetadataStatus { get; set; } = "Not queried";
 }
 
 public sealed class PerLevelStatSettings
