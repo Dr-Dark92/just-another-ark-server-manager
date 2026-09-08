@@ -511,6 +511,7 @@ public partial class MainWindow : Window
             : $"{p.SelectedExtraArguments.Count} selected";
 
         LoadCustomizationControls(p.Customization);
+        RefreshPerLevelStatsSummary();
         LaunchPreviewText.Text = BuildLaunchArguments();
     }
 
@@ -594,7 +595,9 @@ public partial class MainWindow : Window
                     _settings.AsaServerInstallDirectory,
                     profile);
                 AppendConsole($"[CONFIG] Generated {result.LivePath}");
+                AppendConsole($"[CONFIG] Generated {result.LiveGameIniPath}");
                 AppendConsole($"[CONFIG SNAPSHOT] {result.ProfileSnapshotPath}");
+                AppendConsole($"[CONFIG SNAPSHOT] {result.ProfileGameIniSnapshotPath}");
             }
             catch (Exception ex)
             {
@@ -627,7 +630,8 @@ public partial class MainWindow : Window
             var configResult = await _asaConfig.WriteGameUserSettingsAsync(
                 _settings.AsaServerInstallDirectory ?? string.Empty,
                 profile);
-            AppendConsole($"[CONFIG] Activated profile config: {configResult.LivePath}");
+            AppendConsole($"[CONFIG] Activated profile configs: {configResult.LivePath}");
+            AppendConsole($"[CONFIG] Activated Game.ini: {configResult.LiveGameIniPath}");
         }
         catch (Exception ex)
         {
@@ -670,7 +674,8 @@ public partial class MainWindow : Window
             var configResult = await _asaConfig.WriteGameUserSettingsAsync(
                 _settings.AsaServerInstallDirectory ?? string.Empty,
                 profile);
-            AppendConsole($"[CONFIG] Activated profile config: {configResult.LivePath}");
+            AppendConsole($"[CONFIG] Activated profile configs: {configResult.LivePath}");
+            AppendConsole($"[CONFIG] Activated Game.ini: {configResult.LiveGameIniPath}");
         }
         catch (Exception ex)
         {
@@ -816,6 +821,47 @@ public partial class MainWindow : Window
         s.DinoStaminaDrainMultiplier = (float)(DinoStaminaDrainBox.Value ?? 1m);
         s.PlayerHealthRecoveryMultiplier = (float)(PlayerHealthRecoveryBox.Value ?? 1m);
         s.DinoHealthRecoveryMultiplier = (float)(DinoHealthRecoveryBox.Value ?? 1m);
+    }
+
+    private async void ConfigurePerLevelStats_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        var dialog = new PerLevelStatsWindow(profile.PerLevelStats);
+        await dialog.ShowDialog(this);
+
+        if (!dialog.Applied)
+            return;
+
+        RefreshPerLevelStatsSummary();
+        await _settingsService.SaveAsync(_settings);
+        AppendConsole($"[PER-LEVEL STATS] Updated for {profile.ServerName}.");
+    }
+
+    private void RefreshPerLevelStatsSummary()
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+        {
+            PerLevelStatsSummaryText.Text = "No profile selected";
+            return;
+        }
+
+        static int CountModified(Dictionary<int, float> values) =>
+            values.Count(x => Math.Abs(x.Value - 1.0f) > 0.0001f);
+
+        var modified =
+            CountModified(profile.PerLevelStats.Player) +
+            CountModified(profile.PerLevelStats.DinoWild) +
+            CountModified(profile.PerLevelStats.DinoTamed) +
+            CountModified(profile.PerLevelStats.DinoTamedAdd) +
+            CountModified(profile.PerLevelStats.DinoTamedAffinity);
+
+        PerLevelStatsSummaryText.Text = modified == 0
+            ? "All multipliers at default 1.0"
+            : $"{modified} per-level multipliers customized";
     }
 
     private async void WebGuiToggle_Changed(object? sender, RoutedEventArgs e)
