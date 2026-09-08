@@ -19,14 +19,30 @@
 <TextBlock Text="ASA Server Profile" FontSize="22" FontWeight="SemiBold"/>
 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
 <TextBlock Grid.Row="0" Text="Server Name" VerticalAlignment="Center"/><TextBox x:Name="ServerNameBox" Grid.Row="0" Grid.Column="1"/>
-<TextBlock Grid.Row="1" Text="Map" VerticalAlignment="Center"/><TextBox x:Name="MapBox" Grid.Row="1" Grid.Column="1"/>
+<TextBlock Grid.Row="1" Text="Map" VerticalAlignment="Center"/>
+<ComboBox x:Name="MapBox" Grid.Row="1" Grid.Column="1" SelectedIndex="0">
+<ComboBoxItem Content="The Island" Tag="TheIsland_WP"/>
+<ComboBoxItem Content="Scorched Earth" Tag="ScorchedEarth_WP"/>
+<ComboBoxItem Content="The Center" Tag="TheCenter_WP"/>
+<ComboBoxItem Content="Aberration" Tag="Aberration_WP"/>
+<ComboBoxItem Content="Extinction" Tag="Extinction_WP"/>
+<ComboBoxItem Content="Ragnarok" Tag="Ragnarok_WP"/>
+<ComboBoxItem Content="Valguero" Tag="Valguero_WP"/>
+<ComboBoxItem Content="Astraeos" Tag="Astraeos_WP"/>
+<ComboBoxItem Content="Genesis Ascended Part 1" Tag="Genesis_WP"/>
+<ComboBoxItem Content="Lost Colony" Tag="LostColony_WP"/>
+</ComboBox>
 <TextBlock Grid.Row="2" Text="Max Players" VerticalAlignment="Center"/><NumericUpDown x:Name="MaxPlayersBox" Grid.Row="2" Grid.Column="1" Minimum="1" Maximum="500"/>
 <TextBlock Grid.Row="3" Text="Game Port" VerticalAlignment="Center"/><NumericUpDown x:Name="GamePortBox" Grid.Row="3" Grid.Column="1" Minimum="1" Maximum="65535"/>
 <TextBlock Grid.Row="4" Text="Query Port" VerticalAlignment="Center"/><NumericUpDown x:Name="QueryPortBox" Grid.Row="4" Grid.Column="1" Minimum="1" Maximum="65535"/>
 <TextBlock Grid.Row="5" Text="RCON Port" VerticalAlignment="Center"/><NumericUpDown x:Name="RconPortBox" Grid.Row="5" Grid.Column="1" Minimum="1" Maximum="65535"/>
 <TextBlock Grid.Row="6" Text="Server Password" VerticalAlignment="Center"/><TextBox x:Name="ServerPasswordBox" Grid.Row="6" Grid.Column="1" PasswordChar="●"/>
 <TextBlock Grid.Row="7" Text="Admin Password" VerticalAlignment="Center"/><TextBox x:Name="AdminPasswordBox" Grid.Row="7" Grid.Column="1" PasswordChar="●"/>
-<TextBlock Grid.Row="8" Text="Extra Arguments" VerticalAlignment="Center"/><TextBox x:Name="ExtraArgumentsBox" Grid.Row="8" Grid.Column="1"/>
+<TextBlock Grid.Row="8" Text="Extra Arguments" VerticalAlignment="Center"/>
+<StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Spacing="10">
+<Button Content="Choose Arguments..." Click="ChooseExtraArguments_Click"/>
+<TextBlock x:Name="ExtraArgumentsSummaryText" Text="None selected" VerticalAlignment="Center" Opacity="0.7"/>
+</StackPanel>
 </Grid>
 <Button Content="Save Profile" HorizontalAlignment="Left" Click="SaveProfile_Click"/>
 <Separator/><TextBlock Text="Process Control" FontSize="22" FontWeight="SemiBold"/>
