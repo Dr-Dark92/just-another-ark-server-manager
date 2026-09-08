@@ -62,6 +62,33 @@ public sealed class AsaCustomizationSettings
     public float GlobalSpoilingTimeMultiplier { get; set; } = 1.0f;
     public float GlobalItemDecompositionTimeMultiplier { get; set; } = 1.0f;
     public float GlobalCorpseDecompositionTimeMultiplier { get; set; } = 1.0f;
+
+    // Breeding
+    public float MatingIntervalMultiplier { get; set; } = 1.0f;
+    public float EggHatchSpeedMultiplier { get; set; } = 1.0f;
+    public float BabyMatureSpeedMultiplier { get; set; } = 1.0f;
+    public float BabyCuddleIntervalMultiplier { get; set; } = 1.0f;
+    public float BabyImprintAmountMultiplier { get; set; } = 1.0f;
+    public float BabyFoodConsumptionSpeedMultiplier { get; set; } = 1.0f;
+
+    // Structures
+    public float StructureResistanceMultiplier { get; set; } = 1.0f;
+    public float StructureDamageMultiplier { get; set; } = 1.0f;
+    public float PvEStructureDecayPeriodMultiplier { get; set; } = 1.0f;
+    public float PvEDinoDecayPeriodMultiplier { get; set; } = 1.0f;
+    public bool AllowCaveBuildingPvE { get; set; }
+    public bool EnableExtraStructurePreventionVolumes { get; set; } = true;
+    public bool PvPStructureDecay { get; set; } = true;
+
+    // Player and creature stats
+    public float PlayerDamageMultiplier { get; set; } = 1.0f;
+    public float PlayerResistanceMultiplier { get; set; } = 1.0f;
+    public float DinoDamageMultiplier { get; set; } = 1.0f;
+    public float DinoResistanceMultiplier { get; set; } = 1.0f;
+    public float PlayerStaminaDrainMultiplier { get; set; } = 1.0f;
+    public float DinoStaminaDrainMultiplier { get; set; } = 1.0f;
+    public float PlayerHealthRecoveryMultiplier { get; set; } = 1.0f;
+    public float DinoHealthRecoveryMultiplier { get; set; } = 1.0f;
 }
 
 public sealed class WebGuiSettings
