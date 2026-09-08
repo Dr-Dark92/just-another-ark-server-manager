@@ -1057,6 +1057,42 @@ public partial class MainWindow : Window
         target.Dependencies = source.Dependencies.ToList();
     }
 
+    private async void RefreshSelectedModMetadata_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null || ModsListBox.SelectedItem is not AsaModEntry mod)
+            return;
+
+        if (!_curseForgeMods.IsConfigured)
+        {
+            mod.MetadataStatus = "Metadata provider unavailable";
+            ShowModDetails(mod);
+            AppendConsole("[MOD CATALOGUE] Metadata refresh requires a configured catalogue connection.");
+            return;
+        }
+
+        mod.MetadataStatus = "Querying metadata...";
+        ShowModDetails(mod);
+        AppendConsole($"[MODS] Refreshing metadata for project {mod.ModId}...");
+
+        var resolved = await _curseForgeMods.GetModAsync(mod.ModId);
+        if (resolved is null)
+        {
+            mod.MetadataStatus = "Metadata lookup failed";
+            ShowModDetails(mod);
+            AppendConsole($"[MODS] Metadata lookup failed for project {mod.ModId}.");
+            return;
+        }
+
+        ApplyResolvedModMetadata(mod, resolved);
+        mod.MetadataStatus = "Metadata current";
+        await _settingsService.SaveAsync(_settings);
+
+        RefreshModsUi();
+        ModsListBox.SelectedItem = profile.Mods.First(m => m.ModId == mod.ModId);
+        AppendConsole($"[MODS] Metadata refreshed: {mod.DisplayName} ({mod.ModId}).");
+    }
+
     private async void RemoveMod_Click(object? sender, RoutedEventArgs e)
     {
         var profile = ActiveProfile;
