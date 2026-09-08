@@ -13,9 +13,13 @@
 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><TextBox x:Name="AsaInstallDirectoryBox" IsReadOnly="True" PlaceholderText="Select ASA server installation directory"/><Button Grid.Column="1" Content="Browse" Click="BrowseAsaInstallDirectory_Click"/></Grid>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Install / Update ASA" Click="InstallOrUpdateAsa_Click"/><Button Content="Validate ASA" Click="ValidateAsa_Click"/></StackPanel><TextBlock x:Name="AsaStatusText" Text="ASA server is not configured." TextWrapping="Wrap"/>
 <Separator/>
+<Border BorderBrush="#555" BorderThickness="1" CornerRadius="6" Padding="14">
+<StackPanel Spacing="8">
 <TextBlock Text="ARK Server Profiles" FontSize="22" FontWeight="SemiBold"/>
-<TextBlock Text="Create separate server profiles. Each profile has its own map, ports, passwords, launch options and process controls." Opacity="0.65" TextWrapping="Wrap"/>
-<Button Content="+  Create ARK Server Profile" HorizontalAlignment="Left" Click="CreateProfile_Click"/>
+<TextBlock Text="Create and manage multiple independent ASA server instances. Profiles share the ASA installation but keep separate runtime settings and process state." Opacity="0.65" TextWrapping="Wrap"/>
+<Button Content="+  Create ARK Server Profile" HorizontalAlignment="Left" Padding="16,8" Click="CreateProfile_Click"/>
+</StackPanel>
+</Border>
 <Separator/><TextBlock Text="Optional Web GUI" FontSize="18" FontWeight="SemiBold"/><ToggleSwitch x:Name="WebGuiToggle" Content="Enable Web GUI" IsCheckedChanged="WebGuiToggle_Changed"/><TextBlock Text="Default bind: 127.0.0.1:8484" Opacity="0.65"/>
 </StackPanel></ScrollViewer></TabItem>
 
@@ -27,6 +31,7 @@
 </Grid>
 <TextBlock x:Name="ProfileExplanationText" Text="Each profile can run independently. Ports must not conflict with another running profile." Opacity="0.7" TextWrapping="Wrap"/>
 <TextBlock Text="Profile Configuration" FontSize="18" FontWeight="SemiBold"/>
+<TextBlock Text="Every field below belongs only to the selected server profile." Opacity="0.6"/>
 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
 <StackPanel Grid.Row="0"><TextBlock Text="Server Name"/><TextBlock Text="Public session name shown in the ARK server browser." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><TextBox x:Name="ServerNameBox" Grid.Row="0" Grid.Column="1"/>
 <StackPanel Grid.Row="1"><TextBlock Text="Map"/><TextBlock Text="World loaded by this server profile. Each profile may run a different map." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
@@ -59,7 +64,10 @@
 <TextBlock Text="Start launches only the selected profile. Stop requests shutdown and currently falls back to process termination until RCON graceful shutdown is implemented. Restart stops then starts this profile. Force Stop immediately terminates its process tree." Opacity="0.7" TextWrapping="Wrap"/>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Start" Click="StartAsa_Click"/><Button Content="Stop" Click="StopAsa_Click"/><Button Content="Restart" Click="RestartAsa_Click"/><Button Content="Force Stop" Click="ForceStopAsa_Click"/></StackPanel>
 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8"><TextBlock Text="Status:"/><TextBlock x:Name="ProcessStatusText" Grid.Column="1" Text="Stopped" FontWeight="SemiBold"/><TextBlock Grid.Column="2" Text="PID:"/><TextBlock x:Name="PidText" Grid.Column="3" Text="-"/><TextBlock Grid.Column="4" Text="Uptime:"/><TextBlock x:Name="UptimeText" Grid.Column="5" Text="-"/></Grid>
-<TextBlock x:Name="LaunchPreviewText" TextWrapping="Wrap" Opacity="0.7"/>
+<TextBlock Text="Generated launch command" FontWeight="SemiBold" Margin="0,8,0,0"/>
+<Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+<TextBlock x:Name="LaunchPreviewText" TextWrapping="Wrap" FontFamily="Consolas, monospace" Opacity="0.75"/>
+</Border>
 </StackPanel></ScrollViewer></TabItem>
 
 <TabItem Header="Console"><Grid Margin="18" RowDefinitions="Auto,*,Auto"><TextBlock Text="JAASM / SteamCMD / ASA Console" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,12"/><TextBox x:Name="ConsoleBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas, monospace" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"/><Button Grid.Row="2" Content="Clear Console" HorizontalAlignment="Right" Margin="0,10,0,0" Click="ClearConsole_Click"/></Grid></TabItem>
