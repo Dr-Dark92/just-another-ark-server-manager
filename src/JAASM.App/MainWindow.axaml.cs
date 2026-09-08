@@ -511,6 +511,7 @@ public partial class MainWindow : Window
             : $"{p.SelectedExtraArguments.Count} selected";
 
         LoadCustomizationControls(p.Customization);
+        LoadPerLevelStatsControls(p.PerLevelStats);
         RefreshPerLevelStatsSummary();
         LaunchPreviewText.Text = BuildLaunchArguments();
     }
@@ -530,6 +531,7 @@ public partial class MainWindow : Window
         p.AdminPassword = AdminPasswordBox.Text ?? string.Empty;
         p.ExtraArguments = string.Join(" ", p.SelectedExtraArguments);
         ReadCustomizationControls(p.Customization);
+        ReadPerLevelStatsControls(p.PerLevelStats);
     }
 
     private string BuildLaunchArguments()
@@ -823,21 +825,65 @@ public partial class MainWindow : Window
         s.DinoHealthRecoveryMultiplier = (float)(DinoHealthRecoveryBox.Value ?? 1m);
     }
 
-    private async void ConfigurePerLevelStats_Click(object? sender, RoutedEventArgs e)
+    private void LoadPerLevelStatsControls(PerLevelStatSettings s)
+    {
+        LoadStatFamily("Player", s.Player, 12);
+        LoadStatFamily("DinoWild", s.DinoWild, 10);
+        LoadStatFamily("DinoTamed", s.DinoTamed, 10);
+        LoadStatFamily("DinoTamedAdd", s.DinoTamedAdd, 10);
+        LoadStatFamily("DinoTamedAffinity", s.DinoTamedAffinity, 10);
+    }
+
+    private void ReadPerLevelStatsControls(PerLevelStatSettings s)
+    {
+        ReadStatFamily("Player", s.Player, 12);
+        ReadStatFamily("DinoWild", s.DinoWild, 10);
+        ReadStatFamily("DinoTamed", s.DinoTamed, 10);
+        ReadStatFamily("DinoTamedAdd", s.DinoTamedAdd, 10);
+        ReadStatFamily("DinoTamedAffinity", s.DinoTamedAffinity, 10);
+        RefreshPerLevelStatsSummary();
+    }
+
+    private void LoadStatFamily(string prefix, Dictionary<int, float> target, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            if (this.FindControl<NumericUpDown>($"{prefix}Stat{i}Box") is { } box)
+                box.Value = (decimal)(target.TryGetValue(i, out var value) ? value : 1.0f);
+        }
+    }
+
+    private void ReadStatFamily(string prefix, Dictionary<int, float> target, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            if (this.FindControl<NumericUpDown>($"{prefix}Stat{i}Box") is { } box)
+                target[i] = (float)(box.Value ?? 1m);
+        }
+    }
+
+    private void ResetPerLevelStats_Click(object? sender, RoutedEventArgs e)
     {
         var profile = ActiveProfile;
         if (profile is null)
             return;
 
-        var dialog = new PerLevelStatsWindow(profile.PerLevelStats);
-        await dialog.ShowDialog(this);
+        foreach (var family in new[]
+        {
+            profile.PerLevelStats.Player,
+            profile.PerLevelStats.DinoWild,
+            profile.PerLevelStats.DinoTamed,
+            profile.PerLevelStats.DinoTamedAdd,
+            profile.PerLevelStats.DinoTamedAffinity
+        })
+        {
+            foreach (var key in family.Keys.ToList())
+                family[key] = 1.0f;
+        }
 
-        if (!dialog.Applied)
-            return;
-
+        LoadPerLevelStatsControls(profile.PerLevelStats);
         RefreshPerLevelStatsSummary();
-        await _settingsService.SaveAsync(_settings);
-        AppendConsole($"[PER-LEVEL STATS] Updated for {profile.ServerName}.");
+        AppendConsole($"[PER-LEVEL STATS] Reset to defaults for {profile.ServerName}.");
     }
 
     private void RefreshPerLevelStatsSummary()
