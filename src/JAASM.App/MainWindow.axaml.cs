@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using System.Diagnostics;
 using JAASM.App.Models;
 using JAASM.App.Services;
 
@@ -40,6 +41,18 @@ public partial class MainWindow : Window
         SteamCmdInstallDirectoryBox.Text = _settings.SteamCmdInstallDirectory ?? string.Empty;
         AsaInstallDirectoryBox.Text = _settings.AsaServerInstallDirectory ?? string.Empty;
         WebGuiToggle.IsChecked = _settings.WebGui.Enabled;
+
+        var providerKey = !string.IsNullOrWhiteSpace(_settings.ModProvider.CurseForgeApiKey)
+            ? _settings.ModProvider.CurseForgeApiKey
+            : Environment.GetEnvironmentVariable("JAASM_CURSEFORGE_API_KEY") ?? string.Empty;
+
+        _curseForgeMods.ConfigureApiKey(providerKey);
+        CurseForgeApiKeyBox.Text = _settings.ModProvider.CurseForgeApiKey;
+
+        ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
+            ? "Mod catalogue connected."
+            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
+
         EnsureProfiles();
         RefreshProfileTabs();
 
@@ -1116,6 +1129,47 @@ public partial class MainWindow : Window
         ModDetailDependenciesText.Text = string.Empty;
         ModDetailSummaryText.Text = string.Empty;
         ModMetadataStatusText.Text = "Metadata: not queried";
+    }
+
+    private async void SaveCurseForgeProvider_Click(object? sender, RoutedEventArgs e)
+    {
+        var key = CurseForgeApiKeyBox.Text?.Trim() ?? string.Empty;
+
+        _settings.ModProvider.CurseForgeApiKey = key;
+        await _settingsService.SaveAsync(_settings);
+
+        _curseForgeMods.ConfigureApiKey(key);
+
+        ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
+            ? "Mod catalogue connection saved. Search is now available."
+            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
+
+        AppendConsole(_curseForgeMods.IsConfigured
+            ? "[MOD CATALOGUE] CurseForge provider configured."
+            : "[MOD CATALOGUE] CurseForge provider cleared.");
+    }
+
+    private void OpenCurseForgeWebsite_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var search = Uri.EscapeDataString(ModBrowseSearchBox.Text?.Trim() ?? string.Empty);
+            var url = string.IsNullOrWhiteSpace(search)
+                ? "https://www.curseforge.com/ark-survival-ascended/search?class=mods"
+                : $"https://www.curseforge.com/ark-survival-ascended/search?class=mods&search={search}";
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+
+            AppendConsole("[MOD CATALOGUE] Opened CurseForge in the default browser.");
+        }
+        catch (Exception ex)
+        {
+            AppendConsole($"[MOD CATALOGUE] Could not open CurseForge website: {ex.Message}");
+        }
     }
 
     private async void BrowseModsSearch_Click(object? sender, RoutedEventArgs e)
