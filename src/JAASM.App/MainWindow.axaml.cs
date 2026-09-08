@@ -1312,9 +1312,7 @@ public partial class MainWindow : Window
                 descending,
                 pageSize));
 
-        ModBrowseStatusText.Text = result.Success
-            ? result.Message
-            : "Mod catalogue search failed. You can still add mods by ID.";
+        ModBrowseStatusText.Text = result.Message;
 
         if (!result.Success)
             AppendConsole($"[MOD CATALOGUE] {result.Message}");
