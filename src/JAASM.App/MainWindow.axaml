@@ -177,6 +177,61 @@
       </StackPanel>
     </ScrollViewer>
   </TabItem>
+
+  <TabItem Header="Breeding">
+    <ScrollViewer><StackPanel Margin="12" Spacing="12">
+      <Grid ColumnDefinitions="320,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+        <StackPanel Grid.Row="0"><TextBlock Text="Mating Interval"/><TextBlock Text="Time between mating attempts. Lower values allow breeding sooner. Config: MatingIntervalMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="MatingIntervalBox" Grid.Row="0" Grid.Column="1" Minimum="0.001" Maximum="1000" Increment="0.1" FormatString="0.000"/>
+        <StackPanel Grid.Row="1"><TextBlock Text="Egg Hatch Speed"/><TextBlock Text="Egg incubation and gestation speed. Higher values hatch/birth faster. Config: EggHatchSpeedMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="EggHatchSpeedBox" Grid.Row="1" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+        <StackPanel Grid.Row="2"><TextBlock Text="Baby Mature Speed"/><TextBlock Text="How quickly babies mature. Higher values shorten maturation. Config: BabyMatureSpeedMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="BabyMatureSpeedBox" Grid.Row="2" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+        <StackPanel Grid.Row="3"><TextBlock Text="Cuddle Interval"/><TextBlock Text="Time between imprint requests. Lower values make requests more frequent. Config: BabyCuddleIntervalMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="BabyCuddleIntervalBox" Grid.Row="3" Grid.Column="1" Minimum="0.001" Maximum="1000" Increment="0.1" FormatString="0.000"/>
+        <StackPanel Grid.Row="4"><TextBlock Text="Imprint Amount"/><TextBlock Text="Imprint percentage awarded per successful care interaction. Config: BabyImprintAmountMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="BabyImprintAmountBox" Grid.Row="4" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+        <StackPanel Grid.Row="5"><TextBlock Text="Baby Food Consumption"/><TextBlock Text="Baby food drain rate. Lower values reduce food consumption. Config: BabyFoodConsumptionSpeedMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="BabyFoodConsumptionBox" Grid.Row="5" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+      </Grid>
+    </StackPanel></ScrollViewer>
+  </TabItem>
+
+  <TabItem Header="Structures">
+    <ScrollViewer><StackPanel Margin="12" Spacing="12">
+      <Grid ColumnDefinitions="320,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+        <StackPanel Grid.Row="0"><TextBlock Text="Structure Resistance"/><TextBlock Text="Damage received by structures. Lower values make structures tougher. Config: StructureResistanceMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="StructureResistanceBox" Grid.Row="0" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="1"><TextBlock Text="Structure Damage"/><TextBlock Text="Global damage dealt by structures such as turrets. Config: StructureDamageMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="StructureDamageBox" Grid.Row="1" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="2"><TextBlock Text="PvE Structure Decay Period"/><TextBlock Text="Scales PvE structure decay timing. Config: PvEStructureDecayPeriodMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="PveStructureDecayPeriodBox" Grid.Row="2" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="3"><TextBlock Text="PvE Dino Decay Period"/><TextBlock Text="Scales PvE tame decay timing. Config: PvEDinoDecayPeriodMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <NumericUpDown x:Name="PveDinoDecayPeriodBox" Grid.Row="3" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="4"><TextBlock Text="Allow Cave Building PvE"/><TextBlock Text="Permits PvE structure placement in cave areas where normally restricted. Config: AllowCaveBuildingPvE." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <ToggleSwitch x:Name="AllowCaveBuildingPveToggle" Grid.Row="4" Grid.Column="1"/>
+        <StackPanel Grid.Row="5"><TextBlock Text="Extra Structure Prevention Volumes"/><TextBlock Text="Keeps additional map-specific no-build volumes enabled. Config: EnableExtraStructurePreventionVolumes. Default: enabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <ToggleSwitch x:Name="ExtraStructurePreventionToggle" Grid.Row="5" Grid.Column="1"/>
+        <StackPanel Grid.Row="6"><TextBlock Text="PvP Structure Decay"/><TextBlock Text="Allows abandoned structures to decay on PvP servers. Config: PvPStructureDecay. Default: enabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+        <ToggleSwitch x:Name="PvpStructureDecayToggle" Grid.Row="6" Grid.Column="1"/>
+      </Grid>
+    </StackPanel></ScrollViewer>
+  </TabItem>
+
+  <TabItem Header="Player &amp; Dinos">
+    <ScrollViewer><StackPanel Margin="12" Spacing="12">
+      <Grid ColumnDefinitions="320,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+        <StackPanel Grid.Row="0"><TextBlock Text="Player Damage"/><TextBlock Text="Global player damage multiplier. Config: PlayerDamageMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="PlayerDamageBox" Grid.Row="0" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="1"><TextBlock Text="Player Resistance"/><TextBlock Text="Damage received by players. Lower values make players tougher. Config: PlayerResistanceMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="PlayerResistanceBox" Grid.Row="1" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="2"><TextBlock Text="Dino Damage"/><TextBlock Text="Global creature damage multiplier. Config: DinoDamageMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="DinoDamageBox" Grid.Row="2" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="3"><TextBlock Text="Dino Resistance"/><TextBlock Text="Damage received by creatures. Lower values make creatures tougher. Config: DinoResistanceMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="DinoResistanceBox" Grid.Row="3" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="4"><TextBlock Text="Player Stamina Drain"/><TextBlock Text="Player stamina consumption rate. Lower values drain stamina more slowly. Config: PlayerStaminaDrainMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="PlayerStaminaDrainBox" Grid.Row="4" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="5"><TextBlock Text="Dino Stamina Drain"/><TextBlock Text="Creature stamina consumption rate. Config: DinoStaminaDrainMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="DinoStaminaDrainBox" Grid.Row="5" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="6"><TextBlock Text="Player Health Recovery"/><TextBlock Text="Player health regeneration rate. Config: PlayerHealthRecoveryMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="PlayerHealthRecoveryBox" Grid.Row="6" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        <StackPanel Grid.Row="7"><TextBlock Text="Dino Health Recovery"/><TextBlock Text="Creature health regeneration rate. Config: DinoHealthRecoveryMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="DinoHealthRecoveryBox" Grid.Row="7" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+      </Grid>
+    </StackPanel></ScrollViewer>
+  </TabItem>
 </TabControl>
 
 <StackPanel Orientation="Horizontal" Spacing="10">
