@@ -262,70 +262,6 @@
     </StackPanel></ScrollViewer>
   </TabItem>
 
-  <TabItem Header="Mods">
-    <Grid Margin="12" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
-      <StackPanel Grid.Row="0" Spacing="4">
-        <TextBlock Text="ASA Mods" FontSize="20" FontWeight="SemiBold"/>
-        <TextBlock Text="Mods are stored per server profile. Enabled mods are launched in the exact order shown below using ASA's -mods argument." TextWrapping="Wrap" Opacity="0.7"/>
-      </StackPanel>
-
-      <Grid Grid.Row="1" ColumnDefinitions="Auto,180,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-        <TextBlock Text="Mod ID" VerticalAlignment="Center"/>
-        <TextBox x:Name="NewModIdBox" Grid.Column="1" PlaceholderText="e.g. 933029"/>
-        <Button Grid.Column="2" Content="Add Mod" Click="AddMod_Click"/>
-        <Button Grid.Column="3" Content="Remove" Click="RemoveMod_Click"/>
-        <Button Grid.Column="4" Content="Move Up" Click="MoveModUp_Click"/>
-        <Button Grid.Column="5" Content="Move Down" Click="MoveModDown_Click"/>
-        <Button Grid.Column="6" Content="Toggle Enable" Click="ToggleModEnabled_Click"/>
-      </Grid>
-
-      <Grid Grid.Row="2" ColumnDefinitions="360,*" ColumnSpacing="12">
-        <ListBox x:Name="ModsListBox" SelectionChanged="ModsListBox_SelectionChanged">
-          <ListBox.ItemTemplate>
-            <DataTemplate x:DataType="models:AsaModEntry">
-              <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,6">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                  <TextBlock Text="{Binding LoadOrder}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                  <StackPanel Grid.Column="1">
-                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding ModId}" Opacity="0.7"/>
-                  </StackPanel>
-                  <CheckBox Grid.Column="2" IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center"/>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
-
-        <Border Grid.Column="1" BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="14">
-          <ScrollViewer>
-            <StackPanel Spacing="8">
-              <TextBlock Text="Mod Details" FontSize="18" FontWeight="SemiBold"/>
-              <TextBlock x:Name="ModDetailNameText" Text="Select a mod" FontSize="16"/>
-              <TextBlock x:Name="ModDetailIdText" Opacity="0.7"/>
-              <TextBlock x:Name="ModDetailAuthorText"/>
-              <TextBlock x:Name="ModDetailPlatformText"/>
-              <TextBlock x:Name="ModDetailDownloadsText"/>
-              <TextBlock x:Name="ModDetailUpdatedText"/>
-              <TextBlock x:Name="ModDetailFileText" TextWrapping="Wrap"/>
-              <TextBlock x:Name="ModDetailAvailabilityText" TextWrapping="Wrap"/>
-              <TextBlock x:Name="ModDetailDependenciesText" TextWrapping="Wrap"/>
-              <TextBlock x:Name="ModDetailSummaryText" TextWrapping="Wrap" Opacity="0.8"/>
-              <Separator/>
-              <TextBlock x:Name="ModMetadataStatusText" Text="Metadata: not queried" Opacity="0.6"/>
-              <TextBlock Text="Core JAASM mod loading works without CurseForge metadata. Metadata enrichment will remain optional so API/provider failures never block the server." TextWrapping="Wrap" FontSize="11" Opacity="0.55"/>
-            </StackPanel>
-          </ScrollViewer>
-        </Border>
-      </Grid>
-
-      <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10">
-        <TextBlock Text="Generated:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-        <TextBlock x:Name="ModsLaunchPreviewText" FontFamily="Consolas, monospace" VerticalAlignment="Center" TextWrapping="Wrap"/>
-      </StackPanel>
-    </Grid>
-  </TabItem>
-
   <TabItem Header="Per-Level Stats">
     <StackPanel Margin="12" Spacing="10">
       <TextBlock Text="Per-Level Stat Multipliers" FontSize="20" FontWeight="SemiBold"/>
@@ -386,7 +322,168 @@
       <Button Content="Reset Per-Level Stats to 1.0" HorizontalAlignment="Left" Click="ResetPerLevelStats_Click"/>
     </StackPanel>
   </TabItem>
-</TabControl>
+
+
+  <TabItem Header="Mods">
+    <StackPanel Margin="12" Spacing="10">
+      <TextBlock Text="ASA Mod Manager" FontSize="20" FontWeight="SemiBold"/>
+      <TextBlock Text="Manage the selected server's load order, discover CurseForge mods, and review update metadata without making the server dependent on the metadata provider." TextWrapping="Wrap" Opacity="0.7"/>
+
+      <TabControl>
+        <TabItem Header="Installed Mods">
+          <Grid Margin="10" RowDefinitions="Auto,*,Auto" RowSpacing="10">
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,180,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+              <TextBlock Text="Mod ID" VerticalAlignment="Center"/>
+              <TextBox x:Name="NewModIdBox" Grid.Column="1" PlaceholderText="e.g. 933029"/>
+              <Button Grid.Column="2" Content="Add by ID" Click="AddMod_Click"/>
+              <Button Grid.Column="3" Content="Remove" Click="RemoveMod_Click"/>
+              <Button Grid.Column="4" Content="Move Up" Click="MoveModUp_Click"/>
+              <Button Grid.Column="5" Content="Move Down" Click="MoveModDown_Click"/>
+              <Button Grid.Column="6" Content="Enable / Disable" Click="ToggleModEnabled_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="1" ColumnDefinitions="380,*" ColumnSpacing="12">
+              <ListBox x:Name="ModsListBox" SelectionChanged="ModsListBox_SelectionChanged">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="models:AsaModEntry">
+                    <Border BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
+                      <Grid ColumnDefinitions="32,*,Auto" ColumnSpacing="10">
+                        <TextBlock Text="{Binding LoadOrder}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1">
+                          <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                          <TextBlock Text="{Binding ModId}" FontSize="11" Opacity="0.65"/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="2" IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center"/>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+
+              <Border Grid.Column="1" BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="14">
+                <ScrollViewer>
+                  <StackPanel Spacing="8">
+                    <TextBlock Text="Selected Mod" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="ModDetailNameText" Text="Select a mod" FontSize="17"/>
+                    <TextBlock x:Name="ModDetailIdText" Opacity="0.7"/>
+                    <TextBlock x:Name="ModDetailAuthorText"/>
+                    <TextBlock x:Name="ModDetailPlatformText"/>
+                    <TextBlock x:Name="ModDetailRatingText"/>
+                    <TextBlock x:Name="ModDetailDownloadsText"/>
+                    <TextBlock x:Name="ModDetailUpdatedText"/>
+                    <TextBlock x:Name="ModDetailFileText" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="ModDetailAvailabilityText" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="ModDetailDependenciesText" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="ModDetailSummaryText" TextWrapping="Wrap" Opacity="0.8"/>
+                    <Separator/>
+                    <TextBlock x:Name="ModMetadataStatusText" Text="Metadata: not queried" Opacity="0.6"/>
+                  </StackPanel>
+                </ScrollViewer>
+              </Border>
+            </Grid>
+
+            <Border Grid.Row="2" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="8">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="Launch order:" FontWeight="SemiBold"/>
+                <TextBlock x:Name="ModsLaunchPreviewText" FontFamily="Consolas, monospace" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </TabItem>
+
+        <TabItem Header="Browse Mods">
+          <Grid Margin="10" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+            <Grid Grid.Row="0" ColumnDefinitions="*,180,150,120,Auto" ColumnSpacing="8">
+              <TextBox x:Name="ModBrowseSearchBox" PlaceholderText="Search by mod name, keyword, or author"/>
+              <ComboBox x:Name="ModBrowseSortBox" Grid.Column="1" SelectedIndex="0">
+                <ComboBoxItem Content="Popularity" Tag="Popularity"/>
+                <ComboBoxItem Content="Last Updated" Tag="LastUpdated"/>
+                <ComboBoxItem Content="Downloads" Tag="Downloads"/>
+                <ComboBoxItem Content="Rating" Tag="Rating"/>
+                <ComboBoxItem Content="Released Date" Tag="ReleasedDate"/>
+                <ComboBoxItem Content="Name" Tag="Name"/>
+                <ComboBoxItem Content="Author" Tag="Author"/>
+                <ComboBoxItem Content="File Size" Tag="Size"/>
+              </ComboBox>
+              <ComboBox x:Name="ModBrowseDirectionBox" Grid.Column="2" SelectedIndex="0">
+                <ComboBoxItem Content="Descending" Tag="desc"/>
+                <ComboBoxItem Content="Ascending" Tag="asc"/>
+              </ComboBox>
+              <ComboBox x:Name="ModBrowsePageSizeBox" Grid.Column="3" SelectedIndex="1">
+                <ComboBoxItem Content="20 results" Tag="20"/>
+                <ComboBoxItem Content="50 results" Tag="50"/>
+              </ComboBox>
+              <Button Grid.Column="4" Content="Search" Padding="18,6" Click="BrowseModsSearch_Click"/>
+            </Grid>
+
+            <Border Grid.Row="1" BorderBrush="#444" BorderThickness="1" CornerRadius="5" Padding="8">
+              <TextBlock x:Name="ModBrowseStatusText" Text="Catalogue ready. CurseForge browsing requires a JAASM application-level provider key; manual Mod ID loading remains available without it." TextWrapping="Wrap" Opacity="0.7"/>
+            </Border>
+
+            <ListBox x:Name="ModBrowseResultsList" Grid.Row="2" SelectionChanged="ModBrowseResultsList_SelectionChanged">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:AsaModEntry">
+                  <Border BorderBrush="#444" BorderThickness="1" CornerRadius="7" Padding="12" Margin="0,0,0,8">
+                    <Grid ColumnDefinitions="2*,Auto,Auto,Auto,Auto" ColumnSpacing="18">
+                      <StackPanel>
+                        <TextBlock Text="{Binding DisplayName}" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding Author}" Opacity="0.7"/>
+                        <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" MaxHeight="42" FontSize="11" Opacity="0.65"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1">
+                        <TextBlock Text="Downloads" FontSize="10" Opacity="0.55"/>
+                        <TextBlock Text="{Binding Downloads}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="2">
+                        <TextBlock Text="Rating" FontSize="10" Opacity="0.55"/>
+                        <TextBlock Text="{Binding Rating}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="3">
+                        <TextBlock Text="Updated" FontSize="10" Opacity="0.55"/>
+                        <TextBlock Text="{Binding LastUpdated}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="4">
+                        <TextBlock Text="Size" FontSize="10" Opacity="0.55"/>
+                        <TextBlock Text="{Binding MainFileSizeBytes}"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <TextBlock x:Name="ModBrowseSelectionText" Text="Select a result to add it to this server profile." VerticalAlignment="Center" Opacity="0.7"/>
+              <Button Grid.Column="1" Content="Add Selected to Server" Click="AddBrowseModToServer_Click"/>
+            </Grid>
+          </Grid>
+        </TabItem>
+
+        <TabItem Header="Updates">
+          <StackPanel Margin="16" Spacing="10">
+            <TextBlock Text="Mod Update Status" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Text="This view will compare installed profile metadata with the latest CurseForge file metadata. Core server start remains available even when the metadata provider is unavailable." TextWrapping="Wrap" Opacity="0.7"/>
+            <Button Content="Refresh Mod Metadata" HorizontalAlignment="Left" Click="RefreshInstalledModMetadata_Click"/>
+            <ListBox x:Name="ModUpdatesListBox">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:AsaModEntry">
+                  <Border BorderBrush="#444" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,6">
+                    <Grid ColumnDefinitions="2*,*,*" ColumnSpacing="12">
+                      <StackPanel><TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/><TextBlock Text="{Binding ModId}" FontSize="11" Opacity="0.6"/></StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding LastUpdated}" VerticalAlignment="Center"/>
+                      <TextBlock Grid.Column="2" Text="{Binding MetadataStatus}" VerticalAlignment="Center"/>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+        </TabItem>
+      </TabControl>
+    </StackPanel>
+  </TabItem>
+
+  </TabControl>
 
 <StackPanel Orientation="Horizontal" Spacing="10">
   <Button Content="Save Profile &amp; Generate Config" Click="SaveProfile_Click"/>
