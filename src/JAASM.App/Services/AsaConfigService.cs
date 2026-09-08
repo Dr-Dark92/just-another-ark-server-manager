@@ -4,6 +4,8 @@ using JAASM.App.Models;
 
 namespace JAASM.App.Services;
 
+public sealed record AsaConfigWriteResult(string LivePath, string ProfileSnapshotPath);
+
 public sealed class AsaConfigService
 {
     public string GetGameUserSettingsPath(string asaInstallDirectory) =>
@@ -15,7 +17,15 @@ public sealed class AsaConfigService
             "WindowsServer",
             "GameUserSettings.ini");
 
-    public async Task<string> WriteGameUserSettingsAsync(
+    public string GetProfileSnapshotPath(string profileId) =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "JAASM",
+            "profiles",
+            profileId,
+            "GameUserSettings.ini");
+
+    public async Task<AsaConfigWriteResult> WriteGameUserSettingsAsync(
         string asaInstallDirectory,
         AsaServerProfile profile,
         CancellationToken ct = default)
@@ -23,9 +33,21 @@ public sealed class AsaConfigService
         if (string.IsNullOrWhiteSpace(asaInstallDirectory))
             throw new ArgumentException("ASA installation directory is not configured.");
 
-        var path = GetGameUserSettingsPath(asaInstallDirectory);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var content = BuildGameUserSettings(profile);
 
+        var snapshotPath = GetProfileSnapshotPath(profile.Id);
+        Directory.CreateDirectory(Path.GetDirectoryName(snapshotPath)!);
+        await File.WriteAllTextAsync(snapshotPath, content, Encoding.UTF8, ct);
+
+        var livePath = GetGameUserSettingsPath(asaInstallDirectory);
+        Directory.CreateDirectory(Path.GetDirectoryName(livePath)!);
+        await File.WriteAllTextAsync(livePath, content, Encoding.UTF8, ct);
+
+        return new(livePath, snapshotPath);
+    }
+
+    public string BuildGameUserSettings(AsaServerProfile profile)
+    {
         var c = profile.Customization;
         var sb = new StringBuilder();
 
@@ -58,8 +80,7 @@ public sealed class AsaConfigService
         Add(sb, "GlobalItemDecompositionTimeMultiplier", c.GlobalItemDecompositionTimeMultiplier);
         Add(sb, "GlobalCorpseDecompositionTimeMultiplier", c.GlobalCorpseDecompositionTimeMultiplier);
 
-        await File.WriteAllTextAsync(path, sb.ToString(), Encoding.UTF8, ct);
-        return path;
+        return sb.ToString();
     }
 
     private static void Add(StringBuilder sb, string key, bool value) =>
