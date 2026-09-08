@@ -11,6 +11,7 @@ public partial class MainWindow : Window
     private readonly SteamCmdService _steamCmd = new();
     private readonly SettingsService _settingsService = new();
     private readonly AsaServerService _asaServer;
+    private readonly AsaProcessService _asaProcess = new();
     private AppSettings _settings = new();
     private bool _loading;
 
@@ -34,6 +35,8 @@ public partial class MainWindow : Window
         SteamCmdInstallDirectoryBox.Text = _settings.SteamCmdInstallDirectory ?? string.Empty;
         AsaInstallDirectoryBox.Text = _settings.AsaServerInstallDirectory ?? string.Empty;
         WebGuiToggle.IsChecked = _settings.WebGui.Enabled;
+        LoadProfileControls();
+        RefreshProcessState();
 
         _loading = false;
 
@@ -311,6 +314,116 @@ public partial class MainWindow : Window
             AppendConsole($"[ASA READY] {result.ExecutablePath}");
         else
             AppendConsole($"[ASA VALIDATION FAILED] {result.Message}");
+    }
+
+    private void LoadProfileControls()
+    {
+        var p = _settings.AsaProfile;
+        ServerNameBox.Text = p.ServerName;
+        MapBox.Text = p.Map;
+        MaxPlayersBox.Value = p.MaxPlayers;
+        GamePortBox.Value = p.GamePort;
+        QueryPortBox.Value = p.QueryPort;
+        RconPortBox.Value = p.RconPort;
+        ServerPasswordBox.Text = p.ServerPassword;
+        AdminPasswordBox.Text = p.AdminPassword;
+        ExtraArgumentsBox.Text = p.ExtraArguments;
+        LaunchPreviewText.Text = BuildLaunchArguments();
+    }
+
+    private void ReadProfileControls()
+    {
+        var p = _settings.AsaProfile;
+        p.ServerName = ServerNameBox.Text?.Trim() ?? "JAASM Server";
+        p.Map = MapBox.Text?.Trim() ?? "TheIsland_WP";
+        p.MaxPlayers = (int)(MaxPlayersBox.Value ?? 70);
+        p.GamePort = (int)(GamePortBox.Value ?? 7777);
+        p.QueryPort = (int)(QueryPortBox.Value ?? 27015);
+        p.RconPort = (int)(RconPortBox.Value ?? 27020);
+        p.ServerPassword = ServerPasswordBox.Text ?? string.Empty;
+        p.AdminPassword = AdminPasswordBox.Text ?? string.Empty;
+        p.ExtraArguments = ExtraArgumentsBox.Text?.Trim() ?? string.Empty;
+    }
+
+    private string BuildLaunchArguments()
+    {
+        var p = _settings.AsaProfile;
+        var args = $"{p.Map}?SessionName={QuoteUrl(p.ServerName)}?Port={p.GamePort}?QueryPort={p.QueryPort}?RCONPort={p.RconPort}?MaxPlayers={p.MaxPlayers}";
+
+        if (!string.IsNullOrWhiteSpace(p.ServerPassword))
+            args += $"?ServerPassword={QuoteUrl(p.ServerPassword)}";
+        if (!string.IsNullOrWhiteSpace(p.AdminPassword))
+            args += $"?ServerAdminPassword={QuoteUrl(p.AdminPassword)}";
+
+        args += " -server -log";
+        if (!string.IsNullOrWhiteSpace(p.ExtraArguments))
+            args += " " + p.ExtraArguments;
+
+        return args;
+    }
+
+    private static string QuoteUrl(string value) => Uri.EscapeDataString(value);
+
+    private async void SaveProfile_Click(object? sender, RoutedEventArgs e)
+    {
+        ReadProfileControls();
+        await _settingsService.SaveAsync(_settings);
+        LaunchPreviewText.Text = BuildLaunchArguments();
+        AppendConsole("[PROFILE] ASA server profile saved.");
+    }
+
+    private async void StartAsa_Click(object? sender, RoutedEventArgs e)
+    {
+        ReadProfileControls();
+        await _settingsService.SaveAsync(_settings);
+
+        var validation = _asaServer.ValidateInstallation(_settings.AsaServerInstallDirectory ?? string.Empty);
+        if (!validation.Success || validation.ExecutablePath is null)
+        {
+            ProcessStatusText.Text = "Not installed";
+            AppendConsole($"[ASA START BLOCKED] {validation.Message}");
+            return;
+        }
+
+        var args = BuildLaunchArguments();
+        LaunchPreviewText.Text = args;
+        var state = await _asaProcess.StartAsync(validation.ExecutablePath, args, CreateConsoleProgress());
+        RefreshProcessState(state);
+    }
+
+    private async void StopAsa_Click(object? sender, RoutedEventArgs e)
+    {
+        var state = await _asaProcess.StopAsync(CreateConsoleProgress());
+        RefreshProcessState(state);
+    }
+
+    private async void RestartAsa_Click(object? sender, RoutedEventArgs e)
+    {
+        ReadProfileControls();
+        var validation = _asaServer.ValidateInstallation(_settings.AsaServerInstallDirectory ?? string.Empty);
+        if (!validation.Success || validation.ExecutablePath is null)
+        {
+            AppendConsole($"[ASA RESTART BLOCKED] {validation.Message}");
+            return;
+        }
+
+        var args = BuildLaunchArguments();
+        var state = await _asaProcess.RestartAsync(validation.ExecutablePath, args, CreateConsoleProgress());
+        RefreshProcessState(state);
+    }
+
+    private async void ForceStopAsa_Click(object? sender, RoutedEventArgs e)
+    {
+        var state = await _asaProcess.ForceStopAsync(CreateConsoleProgress());
+        RefreshProcessState(state);
+    }
+
+    private void RefreshProcessState(AsaProcessState? state = null)
+    {
+        state ??= _asaProcess.GetState();
+        ProcessStatusText.Text = state.Running ? "Running" : "Stopped";
+        PidText.Text = state.ProcessId?.ToString() ?? "-";
+        UptimeText.Text = state.Uptime is null ? "-" : state.Uptime.Value.ToString(@"dd\.hh\:mm\:ss");
     }
 
     private async void WebGuiToggle_Changed(object? sender, RoutedEventArgs e)
