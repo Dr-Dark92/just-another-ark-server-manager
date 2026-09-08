@@ -44,6 +44,11 @@ public sealed class AsaModEntry
     public string Summary { get; set; } = string.Empty;
     public string Platform { get; set; } = string.Empty;
     public long Downloads { get; set; }
+    public double? Rating { get; set; }
+    public int ThumbsUpCount { get; set; }
+    public string LogoUrl { get; set; } = string.Empty;
+    public string WebsiteUrl { get; set; } = string.Empty;
+    public string PrimaryCategory { get; set; } = string.Empty;
     public DateTimeOffset? LastUpdated { get; set; }
     public int? MainFileId { get; set; }
     public string MainFileName { get; set; } = string.Empty;
