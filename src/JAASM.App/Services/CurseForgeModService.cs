@@ -33,6 +33,8 @@ public sealed class CurseForgeModService
     public const int AsaGameId = 83374;
     private const string ApiBase = "https://api.curseforge.com/v1";
     private readonly HttpClient _http;
+    private string? _publicSearchIndexHtml;
+    private DateTimeOffset _publicSearchIndexFetchedAt = DateTimeOffset.MinValue;
 
     public CurseForgeModService()
     {
@@ -218,62 +220,102 @@ public sealed class CurseForgeModService
             var pageSize = Math.Clamp(query.PageSize, 1, 50);
             var search = query.Search?.Trim() ?? string.Empty;
 
-            // CurseForge's public website currently rejects non-browser catalogue
-            // requests with HTTP 403. ArkCodes exposes a public ASA mod index and
-            // individual numeric project pages, so use it as the no-key discovery
-            // source. The official CurseForge API remains the preferred path when
-            // a JAASM application key is configured.
-            var candidates = new[]
+            // CurseForge's public catalogue returns HTTP 403 to non-browser clients.
+            // ArkCodes provides a public ASA catalogue page at /search/ containing
+            // thousands of mod links. We use that page only for discovery, then
+            // enrich the selected candidates through the already-working numeric
+            // mod-ID metadata pages.
+            if (_publicSearchIndexHtml is null ||
+                DateTimeOffset.UtcNow - _publicSearchIndexFetchedAt > TimeSpan.FromMinutes(20))
             {
-                string.IsNullOrWhiteSpace(search)
-                    ? "https://arkcodes.com/mods/"
-                    : $"https://arkcodes.com/mods/?search={Uri.EscapeDataString(search)}",
-                string.IsNullOrWhiteSpace(search)
-                    ? "https://arkcodes.com/mods/"
-                    : $"https://arkcodes.com/?s={Uri.EscapeDataString(search)}"
-            };
-
-            string? html = null;
-            string? usedUrl = null;
-            HttpStatusCode lastStatus = 0;
-
-            foreach (var url in candidates.Distinct())
-            {
-                using var response = await _http.GetAsync(url, ct);
-                lastStatus = response.StatusCode;
+                using var response = await _http.GetAsync("https://arkcodes.com/search/", ct);
                 if (!response.IsSuccessStatusCode)
-                    continue;
-
-                var body = await response.Content.ReadAsStringAsync(ct);
-                if (body.Contains("/mods/", StringComparison.OrdinalIgnoreCase))
                 {
-                    html = body;
-                    usedUrl = url;
-                    break;
+                    return new(false,
+                        $"Public ASA catalogue returned HTTP {(int)response.StatusCode}.",
+                        Array.Empty<AsaModEntry>());
                 }
+
+                _publicSearchIndexHtml = await response.Content.ReadAsStringAsync(ct);
+                _publicSearchIndexFetchedAt = DateTimeOffset.UtcNow;
             }
 
-            if (string.IsNullOrWhiteSpace(html))
-                return new(false,
-                    $"Public ASA mod index returned HTTP {(int)lastStatus}.",
-                    Array.Empty<AsaModEntry>());
+            var html = _publicSearchIndexHtml!;
+            var normalized = html
+                .Replace(@"\/", "/")
+                .Replace(@"\u002F", "/", StringComparison.OrdinalIgnoreCase)
+                .Replace("&quot;", "\"");
 
-            var ids = Regex.Matches(
-                    html,
-                    @"(?:https?://arkcodes\.com)?/mods/([0-9]{4,10})/?",
-                    RegexOptions.IgnoreCase)
-                .Select(m => m.Groups[1].Value)
-                .Distinct()
-                .Take(Math.Max(pageSize * 3, 50))
+            // Capture every numeric ArkCodes mod URL and a small surrounding text
+            // window so search can match names, summaries, or authors without
+            // fetching thousands of individual mod pages.
+            var matches = Regex.Matches(
+                normalized,
+                @"(?:https?://arkcodes\.com)?/mods/([0-9]{4,10})/([a-z0-9][a-z0-9-]{1,160})/?",
+                RegexOptions.IgnoreCase);
+
+            var candidates = new Dictionary<string, (string Slug, string Context)>();
+
+            foreach (Match match in matches)
+            {
+                var id = match.Groups[1].Value;
+                var slug = match.Groups[2].Value;
+
+                if (candidates.ContainsKey(id))
+                    continue;
+
+                var contextStart = Math.Max(0, match.Index - 700);
+                var contextLength = Math.Min(
+                    normalized.Length - contextStart,
+                    match.Length + 1400);
+
+                var contextHtml = normalized.Substring(contextStart, contextLength);
+                var context = HtmlToText(contextHtml);
+
+                candidates[id] = (slug, context);
+            }
+
+            if (candidates.Count == 0)
+            {
+                return new(false,
+                    $"Public ASA catalogue loaded but exposed no numeric mod links. " +
+                    $"Response length: {html.Length:N0} bytes.",
+                    Array.Empty<AsaModEntry>());
+            }
+
+            IEnumerable<KeyValuePair<string, (string Slug, string Context)>> filtered =
+                candidates;
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var terms = search
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                filtered = filtered.Where(entry =>
+                {
+                    var haystack = entry.Value.Slug + " " + entry.Value.Context;
+                    return terms.All(term =>
+                        haystack.Contains(term, StringComparison.OrdinalIgnoreCase));
+                });
+            }
+
+            // Enrich a bounded candidate set. We intentionally fetch more than
+            // pageSize so local sorting by downloads/date/size has useful depth.
+            var enrichLimit = Math.Clamp(pageSize * 3, 30, 150);
+            var selectedIds = filtered
+                .Take(enrichLimit)
+                .Select(entry => entry.Key)
                 .ToList();
 
-            if (ids.Count == 0)
-                return new(false,
-                    $"Public ASA mod index loaded but exposed no numeric project IDs. Source: {usedUrl}",
+            if (selectedIds.Count == 0)
+            {
+                return new(true,
+                    $"No ASA mods matched '{search}'.",
                     Array.Empty<AsaModEntry>());
+            }
 
             var gate = new SemaphoreSlim(8);
-            var tasks = ids.Select(async id =>
+            var tasks = selectedIds.Select(async id =>
             {
                 await gate.WaitAsync(ct);
                 try { return await GetModFromPublicMetadataAsync(id, ct); }
@@ -283,12 +325,6 @@ public sealed class CurseForgeModService
             var resolved = (await Task.WhenAll(tasks))
                 .Where(m => m is not null)
                 .Cast<AsaModEntry>()
-                .Where(m =>
-                    string.IsNullOrWhiteSpace(search) ||
-                    m.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    m.Author.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    m.Summary.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    m.PrimaryCategory.Contains(search, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             IEnumerable<AsaModEntry> ordered = query.Sort switch
@@ -296,28 +332,36 @@ public sealed class CurseForgeModService
                 ModBrowseSort.LastUpdated => query.Descending
                     ? resolved.OrderByDescending(m => m.LastUpdated)
                     : resolved.OrderBy(m => m.LastUpdated),
+
                 ModBrowseSort.Downloads or ModBrowseSort.Popularity => query.Descending
                     ? resolved.OrderByDescending(m => m.Downloads)
                     : resolved.OrderBy(m => m.Downloads),
+
                 ModBrowseSort.Rating => query.Descending
                     ? resolved.OrderByDescending(m => m.Rating ?? 0)
                     : resolved.OrderBy(m => m.Rating ?? 0),
+
                 ModBrowseSort.Size => query.Descending
                     ? resolved.OrderByDescending(m => m.MainFileSizeBytes ?? 0)
                     : resolved.OrderBy(m => m.MainFileSizeBytes ?? 0),
+
                 ModBrowseSort.ReleasedDate => query.Descending
                     ? resolved.OrderByDescending(m => m.LastUpdated)
                     : resolved.OrderBy(m => m.LastUpdated),
+
                 ModBrowseSort.Name => query.Descending
                     ? resolved.OrderByDescending(m => m.DisplayName)
                     : resolved.OrderBy(m => m.DisplayName),
+
                 ModBrowseSort.Author => query.Descending
                     ? resolved.OrderByDescending(m => m.Author)
                     : resolved.OrderBy(m => m.Author),
+
                 _ => resolved
             };
 
             var result = ordered.Take(pageSize).ToList();
+
             return new(true,
                 $"Loaded {result.Count} matching ASA mods from the public catalogue.",
                 result);
