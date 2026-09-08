@@ -20,6 +20,7 @@ public sealed class AsaServerProfile
     public string ServerPassword { get; set; } = string.Empty;
     public string AdminPassword { get; set; } = string.Empty;
     public string ExtraArguments { get; set; } = string.Empty;
+    public List<string> SelectedExtraArguments { get; set; } = new();
 }
 
 public sealed class WebGuiSettings
