@@ -80,6 +80,30 @@ public sealed class AsaConfigService
         Add(sb, "GlobalItemDecompositionTimeMultiplier", c.GlobalItemDecompositionTimeMultiplier);
         Add(sb, "GlobalCorpseDecompositionTimeMultiplier", c.GlobalCorpseDecompositionTimeMultiplier);
 
+        Add(sb, "MatingIntervalMultiplier", c.MatingIntervalMultiplier);
+        Add(sb, "EggHatchSpeedMultiplier", c.EggHatchSpeedMultiplier);
+        Add(sb, "BabyMatureSpeedMultiplier", c.BabyMatureSpeedMultiplier);
+        Add(sb, "BabyCuddleIntervalMultiplier", c.BabyCuddleIntervalMultiplier);
+        Add(sb, "BabyImprintAmountMultiplier", c.BabyImprintAmountMultiplier);
+        Add(sb, "BabyFoodConsumptionSpeedMultiplier", c.BabyFoodConsumptionSpeedMultiplier);
+
+        Add(sb, "StructureResistanceMultiplier", c.StructureResistanceMultiplier);
+        Add(sb, "StructureDamageMultiplier", c.StructureDamageMultiplier);
+        Add(sb, "PvEStructureDecayPeriodMultiplier", c.PvEStructureDecayPeriodMultiplier);
+        Add(sb, "PvEDinoDecayPeriodMultiplier", c.PvEDinoDecayPeriodMultiplier);
+        Add(sb, "AllowCaveBuildingPvE", c.AllowCaveBuildingPvE);
+        Add(sb, "EnableExtraStructurePreventionVolumes", c.EnableExtraStructurePreventionVolumes);
+        Add(sb, "PvPStructureDecay", c.PvPStructureDecay);
+
+        Add(sb, "PlayerDamageMultiplier", c.PlayerDamageMultiplier);
+        Add(sb, "PlayerResistanceMultiplier", c.PlayerResistanceMultiplier);
+        Add(sb, "DinoDamageMultiplier", c.DinoDamageMultiplier);
+        Add(sb, "DinoResistanceMultiplier", c.DinoResistanceMultiplier);
+        Add(sb, "PlayerStaminaDrainMultiplier", c.PlayerStaminaDrainMultiplier);
+        Add(sb, "DinoStaminaDrainMultiplier", c.DinoStaminaDrainMultiplier);
+        Add(sb, "PlayerHealthRecoveryMultiplier", c.PlayerHealthRecoveryMultiplier);
+        Add(sb, "DinoHealthRecoveryMultiplier", c.DinoHealthRecoveryMultiplier);
+
         return sb.ToString();
     }
 
