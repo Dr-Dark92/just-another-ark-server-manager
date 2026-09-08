@@ -74,7 +74,115 @@
 <TextBlock x:Name="ExtraArgumentsSummaryText" Text="None selected" VerticalAlignment="Center" Opacity="0.7"/>
 </StackPanel>
 </Grid>
-<StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Save Profile" Click="SaveProfile_Click"/><Button Content="Delete Profile" Click="DeleteProfile_Click"/></StackPanel>
+<Separator/>
+<TextBlock Text="Server Customization" FontSize="22" FontWeight="SemiBold"/>
+<TextBlock Text="JAASM generates GameUserSettings.ini from these controls. Each option shows what it changes and the underlying ARK configuration key." Opacity="0.7" TextWrapping="Wrap"/>
+
+<TabControl>
+  <TabItem Header="General">
+    <ScrollViewer>
+      <StackPanel Margin="12" Spacing="12">
+        <Grid ColumnDefinitions="320,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+          <StackPanel Grid.Row="0"><TextBlock Text="Server Mode"/><TextBlock Text="PvE disables normal player-vs-player combat. Config: ServerPVE. Default: PvE." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ComboBox x:Name="PveModeBox" Grid.Row="0" Grid.Column="1" SelectedIndex="0"><ComboBoxItem Content="PvE" Tag="true"/><ComboBoxItem Content="PvP" Tag="false"/></ComboBox>
+
+          <StackPanel Grid.Row="1"><TextBlock Text="Allow Third Person"/><TextBlock Text="Allows players to use third-person camera. Config: AllowThirdPersonPlayer. Default: enabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ToggleSwitch x:Name="AllowThirdPersonToggle" Grid.Row="1" Grid.Column="1"/>
+
+          <StackPanel Grid.Row="2"><TextBlock Text="Show Player on Map"/><TextBlock Text="Displays the player's own position on the map. Config: ShowMapPlayerLocation. Default: enabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ToggleSwitch x:Name="ShowMapPlayerLocationToggle" Grid.Row="2" Grid.Column="1"/>
+
+          <StackPanel Grid.Row="3"><TextBlock Text="Server Crosshair"/><TextBlock Text="Enables the aiming crosshair. Config: ServerCrosshair. Default: enabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ToggleSwitch x:Name="ServerCrosshairToggle" Grid.Row="3" Grid.Column="1"/>
+
+          <StackPanel Grid.Row="4"><TextBlock Text="Hit Markers"/><TextBlock Text="Shows hit confirmation markers. Config: AllowHitMarkers. Default: enabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ToggleSwitch x:Name="AllowHitMarkersToggle" Grid.Row="4" Grid.Column="1"/>
+
+          <StackPanel Grid.Row="5"><TextBlock Text="Disable PvE Structure Decay"/><TextBlock Text="Stops automatic structure decay on PvE servers. Config: DisableStructureDecayPvE. Default: disabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ToggleSwitch x:Name="DisableStructureDecayPveToggle" Grid.Row="5" Grid.Column="1"/>
+
+          <StackPanel Grid.Row="6"><TextBlock Text="Disable PvE Dino Decay"/><TextBlock Text="Stops automatic tame decay on PvE servers. Config: DisableDinoDecayPvE. Default: disabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ToggleSwitch x:Name="DisableDinoDecayPveToggle" Grid.Row="6" Grid.Column="1"/>
+
+          <StackPanel Grid.Row="7"><TextBlock Text="Offline Raid Protection"/><TextBlock Text="Enables ARK's offline PvP protection behavior. Config: PreventOfflinePvP. Default: disabled." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <ToggleSwitch x:Name="PreventOfflinePvpToggle" Grid.Row="7" Grid.Column="1"/>
+
+          <StackPanel Grid.Row="8"><TextBlock Text="Difficulty Offset"/><TextBlock Text="Base difficulty scaling. Config: DifficultyOffset. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="DifficultyOffsetBox" Grid.Row="8" Grid.Column="1" Minimum="0" Maximum="10" Increment="0.1" FormatString="0.0"/>
+
+          <StackPanel Grid.Row="9"><TextBlock Text="Override Official Difficulty"/><TextBlock Text="Controls maximum wild creature level scaling; 5.0 commonly yields level 150. Config: OverrideOfficialDifficulty. Default: 5.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="OverrideOfficialDifficultyBox" Grid.Row="9" Grid.Column="1" Minimum="0.1" Maximum="100" Increment="0.5" FormatString="0.0"/>
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+  </TabItem>
+
+  <TabItem Header="Rates">
+    <ScrollViewer>
+      <StackPanel Margin="12" Spacing="12">
+        <Grid ColumnDefinitions="320,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+          <StackPanel Grid.Row="0"><TextBlock Text="XP Multiplier"/><TextBlock Text="Global experience gain rate. 3.0 means roughly 3× XP. Config: XPMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="XpMultiplierBox" Grid.Row="0" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="1"><TextBlock Text="Taming Speed"/><TextBlock Text="How quickly creatures tame. Higher values reduce taming time. Config: TamingSpeedMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="TamingSpeedBox" Grid.Row="1" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="2"><TextBlock Text="Harvest Amount"/><TextBlock Text="Amount of resources received per harvest. Config: HarvestAmountMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="HarvestAmountBox" Grid.Row="2" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="3"><TextBlock Text="Harvest Health"/><TextBlock Text="Resource-node health before depletion; higher values generally allow more harvesting hits. Config: HarvestHealthMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="HarvestHealthBox" Grid.Row="3" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="4"><TextBlock Text="Player Food Drain"/><TextBlock Text="Player hunger drain rate. Lower values make food drain more slowly. Config: PlayerCharacterFoodDrainMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="PlayerFoodDrainBox" Grid.Row="4" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="5"><TextBlock Text="Player Water Drain"/><TextBlock Text="Player thirst drain rate. Lower values make water drain more slowly. Config: PlayerCharacterWaterDrainMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="PlayerWaterDrainBox" Grid.Row="5" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="6"><TextBlock Text="Dino Food Drain"/><TextBlock Text="Creature food drain rate. Affects hunger and can influence taming behavior. Config: DinoCharacterFoodDrainMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="DinoFoodDrainBox" Grid.Row="6" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.1" FormatString="0.00"/>
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+  </TabItem>
+
+  <TabItem Header="World">
+    <ScrollViewer>
+      <StackPanel Margin="12" Spacing="12">
+        <Grid ColumnDefinitions="320,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+          <StackPanel Grid.Row="0"><TextBlock Text="Day Cycle Speed"/><TextBlock Text="Overall day/night cycle speed. Lower values make a full cycle longer. Config: DayCycleSpeedScale. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="DayCycleSpeedBox" Grid.Row="0" Grid.Column="1" Minimum="0.01" Maximum="100" Increment="0.1" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="1"><TextBlock Text="Day Time Speed"/><TextBlock Text="Daytime passage speed. Lower values make daytime last longer. Config: DayTimeSpeedScale. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="DayTimeSpeedBox" Grid.Row="1" Grid.Column="1" Minimum="0.01" Maximum="100" Increment="0.1" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="2"><TextBlock Text="Night Time Speed"/><TextBlock Text="Nighttime passage speed. Higher values make nights pass faster. Config: NightTimeSpeedScale. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="NightTimeSpeedBox" Grid.Row="2" Grid.Column="1" Minimum="0.01" Maximum="100" Increment="0.1" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="3"><TextBlock Text="Wild Dino Count"/><TextBlock Text="Global wild creature population multiplier. Config: DinoCountMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="DinoCountBox" Grid.Row="3" Grid.Column="1" Minimum="0.01" Maximum="20" Increment="0.1" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="4"><TextBlock Text="Resource Respawn Period"/><TextBlock Text="Time before harvested resources respawn. Lower values respawn resources faster. Config: ResourcesRespawnPeriodMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="ResourceRespawnBox" Grid.Row="4" Grid.Column="1" Minimum="0.01" Maximum="100" Increment="0.1" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="5"><TextBlock Text="Spoiling Time"/><TextBlock Text="Multiplier applied to item spoil timers. Higher values make perishables last longer. Config: GlobalSpoilingTimeMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="SpoilingTimeBox" Grid.Row="5" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="6"><TextBlock Text="Dropped Item Decomposition"/><TextBlock Text="How long dropped items remain before disappearing. Config: GlobalItemDecompositionTimeMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="ItemDecompositionBox" Grid.Row="6" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+
+          <StackPanel Grid.Row="7"><TextBlock Text="Corpse Decomposition"/><TextBlock Text="How long corpses remain before disappearing. Config: GlobalCorpseDecompositionTimeMultiplier. Default: 1.0." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
+          <NumericUpDown x:Name="CorpseDecompositionBox" Grid.Row="7" Grid.Column="1" Minimum="0.01" Maximum="1000" Increment="0.25" FormatString="0.00"/>
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+  </TabItem>
+</TabControl>
+
+<StackPanel Orientation="Horizontal" Spacing="10">
+  <Button Content="Save Profile &amp; Generate Config" Click="SaveProfile_Click"/>
+  <Button Content="Delete Profile" Click="DeleteProfile_Click"/>
+</StackPanel>
 <Separator/><TextBlock Text="Server Controls" FontSize="22" FontWeight="SemiBold"/>
 <TextBlock Text="Start launches only the selected profile. Stop requests shutdown and currently falls back to process termination until RCON graceful shutdown is implemented. Restart stops then starts this profile. Force Stop immediately terminates its process tree." Opacity="0.7" TextWrapping="Wrap"/>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Start" Click="StartAsa_Click"/><Button Content="Stop" Click="StopAsa_Click"/><Button Content="Restart" Click="RestartAsa_Click"/><Button Content="Force Stop" Click="ForceStopAsa_Click"/></StackPanel>
