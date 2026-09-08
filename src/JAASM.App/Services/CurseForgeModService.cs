@@ -36,13 +36,19 @@ public sealed class CurseForgeModService
     public CurseForgeModService()
     {
         _http = new HttpClient();
-        var apiKey = Environment.GetEnvironmentVariable("JAASM_CURSEFORGE_API_KEY");
-        if (!string.IsNullOrWhiteSpace(apiKey))
-            _http.DefaultRequestHeaders.TryAddWithoutValidation("x-api-key", apiKey);
+        ConfigureApiKey(Environment.GetEnvironmentVariable("JAASM_CURSEFORGE_API_KEY"));
     }
 
     public bool IsConfigured =>
         _http.DefaultRequestHeaders.Contains("x-api-key");
+
+    public void ConfigureApiKey(string? apiKey)
+    {
+        _http.DefaultRequestHeaders.Remove("x-api-key");
+
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            _http.DefaultRequestHeaders.TryAddWithoutValidation("x-api-key", apiKey.Trim());
+    }
 
     public async Task<AsaModEntry?> GetModAsync(string modId, CancellationToken ct = default)
     {
@@ -77,8 +83,7 @@ public sealed class CurseForgeModService
         if (!IsConfigured)
         {
             return new(false,
-                "CurseForge catalogue is not configured. JAASM core mod loading still works. " +
-                "For development, set JAASM_CURSEFORGE_API_KEY to an application-level CurseForge key.",
+                "CurseForge API key is not configured. Manual Mod ID loading remains available.",
                 Array.Empty<AsaModEntry>());
         }
 
