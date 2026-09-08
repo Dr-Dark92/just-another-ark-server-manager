@@ -417,35 +417,34 @@
             </Grid>
 
             <Border Grid.Row="1" BorderBrush="#444" BorderThickness="1" CornerRadius="5" Padding="8">
-              <TextBlock x:Name="ModBrowseStatusText" Text="Catalogue ready. CurseForge browsing requires a JAASM application-level provider key; manual Mod ID loading remains available without it." TextWrapping="Wrap" Opacity="0.7"/>
+              <TextBlock x:Name="ModBrowseStatusText" Text="Mod catalogue ready." TextWrapping="Wrap" Opacity="0.7"/>
             </Border>
 
             <ListBox x:Name="ModBrowseResultsList" Grid.Row="2" SelectionChanged="ModBrowseResultsList_SelectionChanged">
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:AsaModEntry">
-                  <Border BorderBrush="#444" BorderThickness="1" CornerRadius="7" Padding="12" Margin="0,0,0,8">
-                    <Grid ColumnDefinitions="2*,Auto,Auto,Auto,Auto" ColumnSpacing="18">
-                      <StackPanel>
+                  <Border BorderBrush="#444" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                      <StackPanel Spacing="4">
                         <TextBlock Text="{Binding DisplayName}" FontSize="16" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding Author}" Opacity="0.7"/>
-                        <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" MaxHeight="42" FontSize="11" Opacity="0.65"/>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                          <TextBlock Text="{Binding Author}" Opacity="0.72"/>
+                          <TextBlock Text="{Binding PrimaryCategory}" Opacity="0.6"/>
+                          <TextBlock Text="{Binding Platform}" Opacity="0.6"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" MaxHeight="44" FontSize="11" Opacity="0.65"/>
                       </StackPanel>
-                      <StackPanel Grid.Column="1">
-                        <TextBlock Text="Downloads" FontSize="10" Opacity="0.55"/>
-                        <TextBlock Text="{Binding Downloads}"/>
-                      </StackPanel>
-                      <StackPanel Grid.Column="2">
-                        <TextBlock Text="Rating" FontSize="10" Opacity="0.55"/>
-                        <TextBlock Text="{Binding Rating}"/>
-                      </StackPanel>
-                      <StackPanel Grid.Column="3">
-                        <TextBlock Text="Updated" FontSize="10" Opacity="0.55"/>
-                        <TextBlock Text="{Binding LastUpdated}"/>
-                      </StackPanel>
-                      <StackPanel Grid.Column="4">
-                        <TextBlock Text="Size" FontSize="10" Opacity="0.55"/>
-                        <TextBlock Text="{Binding MainFileSizeBytes}"/>
-                      </StackPanel>
+
+                      <Grid Grid.Column="1" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="3">
+                        <TextBlock Grid.Row="0" Text="Downloads" FontSize="10" Opacity="0.5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Downloads}"/>
+                        <TextBlock Grid.Row="1" Text="Rating" FontSize="10" Opacity="0.5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Rating}"/>
+                        <TextBlock Grid.Row="2" Text="Updated" FontSize="10" Opacity="0.5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LastUpdated}"/>
+                        <TextBlock Grid.Row="3" Text="File bytes" FontSize="10" Opacity="0.5"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MainFileSizeBytes}"/>
+                      </Grid>
                     </Grid>
                   </Border>
                 </DataTemplate>
