@@ -480,6 +480,7 @@ public partial class MainWindow : Window
     {
         NoProfilePanel.IsVisible = true;
         ProfileEditorPanel.IsVisible = false;
+        ProfileOverviewPanel.IsVisible = false;
         ProcessStatusText.Text = "Stopped";
         PidText.Text = "-";
         UptimeText.Text = "-";
@@ -509,6 +510,11 @@ public partial class MainWindow : Window
         ExtraArgumentsSummaryText.Text = p.SelectedExtraArguments.Count == 0
             ? "None selected"
             : $"{p.SelectedExtraArguments.Count} selected";
+
+        ProfileOverviewPanel.IsVisible = true;
+        ActiveProfileNameText.Text = p.ServerName;
+        ActiveProfileMapText.Text = (MapBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? p.Map;
+        ActiveProfilePortsText.Text = $"{p.GamePort} / {p.QueryPort} / {p.RconPort}";
 
         LoadCustomizationControls(p.Customization);
         LoadPerLevelStatsControls(p.PerLevelStats);
@@ -722,6 +728,7 @@ public partial class MainWindow : Window
 
         state ??= _asaProcess.GetState(profile.Id);
         ProcessStatusText.Text = state.Running ? "Running" : "Stopped";
+        ActiveProfileStateText.Text = state.Running ? "Running" : "Stopped";
         PidText.Text = state.ProcessId?.ToString() ?? "-";
         UptimeText.Text = state.Uptime is null ? "-" : state.Uptime.Value.ToString(@"dd\.hh\:mm\:ss");
     }
@@ -933,6 +940,10 @@ public partial class MainWindow : Window
         ModsLaunchPreviewText.Text = enabledIds.Count == 0
             ? "No enabled mods"
             : "-mods=" + string.Join(",", enabledIds);
+
+        ActiveProfileModsText.Text = enabledIds.Count == 1
+            ? "1 enabled"
+            : $"{enabledIds.Count} enabled";
 
         if (ModsListBox.SelectedItem is AsaModEntry selected)
             ShowModDetails(selected);
