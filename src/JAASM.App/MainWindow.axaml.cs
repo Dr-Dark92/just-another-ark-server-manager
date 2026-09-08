@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     private readonly SettingsService _settingsService = new();
     private readonly AsaServerService _asaServer;
     private readonly AsaProcessService _asaProcess = new();
+    private readonly AsaConfigService _asaConfig = new();
     private AppSettings _settings = new();
     private bool _loading;
     private AsaServerProfile? ActiveProfile =>
@@ -508,6 +509,8 @@ public partial class MainWindow : Window
         ExtraArgumentsSummaryText.Text = p.SelectedExtraArguments.Count == 0
             ? "None selected"
             : $"{p.SelectedExtraArguments.Count} selected";
+
+        LoadCustomizationControls(p.Customization);
         LaunchPreviewText.Text = BuildLaunchArguments();
     }
 
@@ -525,6 +528,7 @@ public partial class MainWindow : Window
         p.ServerPassword = ServerPasswordBox.Text ?? string.Empty;
         p.AdminPassword = AdminPasswordBox.Text ?? string.Empty;
         p.ExtraArguments = string.Join(" ", p.SelectedExtraArguments);
+        ReadCustomizationControls(p.Customization);
     }
 
     private string BuildLaunchArguments()
@@ -536,10 +540,13 @@ public partial class MainWindow : Window
 
         if (!string.IsNullOrWhiteSpace(p.ServerPassword))
             args += $"?ServerPassword={QuoteUrl(p.ServerPassword)}";
+        var saveName = $"JAASM_{p.Id[..Math.Min(8, p.Id.Length)]}";
+        args += $"?AltSaveDirectoryName={saveName}";
+
         if (!string.IsNullOrWhiteSpace(p.AdminPassword))
             args += $"?ServerAdminPassword={QuoteUrl(p.AdminPassword)}";
 
-        args += " -server -log";
+        args += $" -server -log -AltLogDirectoryName=\"{saveName}/Logs\"";
         if (!string.IsNullOrWhiteSpace(p.ExtraArguments))
             args += " " + p.ExtraArguments;
 
@@ -578,6 +585,23 @@ public partial class MainWindow : Window
         await _settingsService.SaveAsync(_settings);
         LaunchPreviewText.Text = BuildLaunchArguments();
         RefreshProfileTabs();
+
+        if (!string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory))
+        {
+            try
+            {
+                var result = await _asaConfig.WriteGameUserSettingsAsync(
+                    _settings.AsaServerInstallDirectory,
+                    profile);
+                AppendConsole($"[CONFIG] Generated {result.LivePath}");
+                AppendConsole($"[CONFIG SNAPSHOT] {result.ProfileSnapshotPath}");
+            }
+            catch (Exception ex)
+            {
+                AppendConsole($"[CONFIG ERROR] {ex.Message}");
+            }
+        }
+
         AppendConsole($"[PROFILE] {profile.ServerName} saved.");
     }
 
@@ -595,6 +619,19 @@ public partial class MainWindow : Window
         {
             ProcessStatusText.Text = "Not installed";
             AppendConsole($"[ASA START BLOCKED] {validation.Message}");
+            return;
+        }
+
+        try
+        {
+            var configResult = await _asaConfig.WriteGameUserSettingsAsync(
+                _settings.AsaServerInstallDirectory ?? string.Empty,
+                profile);
+            AppendConsole($"[CONFIG] Activated profile config: {configResult.LivePath}");
+        }
+        catch (Exception ex)
+        {
+            AppendConsole($"[ASA START BLOCKED] Could not generate configuration: {ex.Message}");
             return;
         }
 
@@ -628,6 +665,19 @@ public partial class MainWindow : Window
             return;
         }
 
+        try
+        {
+            var configResult = await _asaConfig.WriteGameUserSettingsAsync(
+                _settings.AsaServerInstallDirectory ?? string.Empty,
+                profile);
+            AppendConsole($"[CONFIG] Activated profile config: {configResult.LivePath}");
+        }
+        catch (Exception ex)
+        {
+            AppendConsole($"[ASA RESTART BLOCKED] Could not generate configuration: {ex.Message}");
+            return;
+        }
+
         var args = BuildLaunchArguments();
         var state = await _asaProcess.RestartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
         RefreshProcessState(state);
@@ -656,6 +706,68 @@ public partial class MainWindow : Window
         ProcessStatusText.Text = state.Running ? "Running" : "Stopped";
         PidText.Text = state.ProcessId?.ToString() ?? "-";
         UptimeText.Text = state.Uptime is null ? "-" : state.Uptime.Value.ToString(@"dd\.hh\:mm\:ss");
+    }
+
+    private void LoadCustomizationControls(AsaCustomizationSettings s)
+    {
+        PveModeBox.SelectedIndex = s.PvE ? 0 : 1;
+        AllowThirdPersonToggle.IsChecked = s.AllowThirdPerson;
+        ShowMapPlayerLocationToggle.IsChecked = s.ShowMapPlayerLocation;
+        ServerCrosshairToggle.IsChecked = s.ServerCrosshair;
+        AllowHitMarkersToggle.IsChecked = s.AllowHitMarkers;
+        DisableStructureDecayPveToggle.IsChecked = s.DisableStructureDecayPvE;
+        DisableDinoDecayPveToggle.IsChecked = s.DisableDinoDecayPvE;
+        PreventOfflinePvpToggle.IsChecked = s.PreventOfflinePvP;
+        DifficultyOffsetBox.Value = (decimal)s.DifficultyOffset;
+        OverrideOfficialDifficultyBox.Value = (decimal)s.OverrideOfficialDifficulty;
+
+        XpMultiplierBox.Value = (decimal)s.XpMultiplier;
+        TamingSpeedBox.Value = (decimal)s.TamingSpeedMultiplier;
+        HarvestAmountBox.Value = (decimal)s.HarvestAmountMultiplier;
+        HarvestHealthBox.Value = (decimal)s.HarvestHealthMultiplier;
+        PlayerFoodDrainBox.Value = (decimal)s.PlayerCharacterFoodDrainMultiplier;
+        PlayerWaterDrainBox.Value = (decimal)s.PlayerCharacterWaterDrainMultiplier;
+        DinoFoodDrainBox.Value = (decimal)s.DinoCharacterFoodDrainMultiplier;
+
+        DayCycleSpeedBox.Value = (decimal)s.DayCycleSpeedScale;
+        DayTimeSpeedBox.Value = (decimal)s.DayTimeSpeedScale;
+        NightTimeSpeedBox.Value = (decimal)s.NightTimeSpeedScale;
+        DinoCountBox.Value = (decimal)s.DinoCountMultiplier;
+        ResourceRespawnBox.Value = (decimal)s.ResourcesRespawnPeriodMultiplier;
+        SpoilingTimeBox.Value = (decimal)s.GlobalSpoilingTimeMultiplier;
+        ItemDecompositionBox.Value = (decimal)s.GlobalItemDecompositionTimeMultiplier;
+        CorpseDecompositionBox.Value = (decimal)s.GlobalCorpseDecompositionTimeMultiplier;
+    }
+
+    private void ReadCustomizationControls(AsaCustomizationSettings s)
+    {
+        s.PvE = PveModeBox.SelectedIndex != 1;
+        s.AllowThirdPerson = AllowThirdPersonToggle.IsChecked == true;
+        s.ShowMapPlayerLocation = ShowMapPlayerLocationToggle.IsChecked == true;
+        s.ServerCrosshair = ServerCrosshairToggle.IsChecked == true;
+        s.AllowHitMarkers = AllowHitMarkersToggle.IsChecked == true;
+        s.DisableStructureDecayPvE = DisableStructureDecayPveToggle.IsChecked == true;
+        s.DisableDinoDecayPvE = DisableDinoDecayPveToggle.IsChecked == true;
+        s.PreventOfflinePvP = PreventOfflinePvpToggle.IsChecked == true;
+        s.DifficultyOffset = (float)(DifficultyOffsetBox.Value ?? 1m);
+        s.OverrideOfficialDifficulty = (float)(OverrideOfficialDifficultyBox.Value ?? 5m);
+
+        s.XpMultiplier = (float)(XpMultiplierBox.Value ?? 1m);
+        s.TamingSpeedMultiplier = (float)(TamingSpeedBox.Value ?? 1m);
+        s.HarvestAmountMultiplier = (float)(HarvestAmountBox.Value ?? 1m);
+        s.HarvestHealthMultiplier = (float)(HarvestHealthBox.Value ?? 1m);
+        s.PlayerCharacterFoodDrainMultiplier = (float)(PlayerFoodDrainBox.Value ?? 1m);
+        s.PlayerCharacterWaterDrainMultiplier = (float)(PlayerWaterDrainBox.Value ?? 1m);
+        s.DinoCharacterFoodDrainMultiplier = (float)(DinoFoodDrainBox.Value ?? 1m);
+
+        s.DayCycleSpeedScale = (float)(DayCycleSpeedBox.Value ?? 1m);
+        s.DayTimeSpeedScale = (float)(DayTimeSpeedBox.Value ?? 1m);
+        s.NightTimeSpeedScale = (float)(NightTimeSpeedBox.Value ?? 1m);
+        s.DinoCountMultiplier = (float)(DinoCountBox.Value ?? 1m);
+        s.ResourcesRespawnPeriodMultiplier = (float)(ResourceRespawnBox.Value ?? 1m);
+        s.GlobalSpoilingTimeMultiplier = (float)(SpoilingTimeBox.Value ?? 1m);
+        s.GlobalItemDecompositionTimeMultiplier = (float)(ItemDecompositionBox.Value ?? 1m);
+        s.GlobalCorpseDecompositionTimeMultiplier = (float)(CorpseDecompositionBox.Value ?? 1m);
     }
 
     private async void WebGuiToggle_Changed(object? sender, RoutedEventArgs e)
