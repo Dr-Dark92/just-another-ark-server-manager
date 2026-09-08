@@ -79,21 +79,23 @@ public sealed class PerLevelStatsWindow : Window
         buttons.Children.Add(cancel);
         buttons.Children.Add(apply);
 
-        Content = new Grid
+        var root = new Grid
         {
             RowDefinitions = new RowDefinitions("*,Auto"),
-            Margin = new Thickness(16),
-            Children =
-            {
-                tabs,
-                new Border
-                {
-                    GridRow = 1,
-                    Padding = new Thickness(0, 12, 0, 0),
-                    Child = buttons
-                }
-            }
+            Margin = new Thickness(16)
         };
+
+        root.Children.Add(tabs);
+
+        var buttonBorder = new Border
+        {
+            Padding = new Thickness(0, 12, 0, 0),
+            Child = buttons
+        };
+        Grid.SetRow(buttonBorder, 1);
+        root.Children.Add(buttonBorder);
+
+        Content = root;
     }
 
     private TabItem CreateStatTab(string title, Dictionary<int, float> target, string description)
