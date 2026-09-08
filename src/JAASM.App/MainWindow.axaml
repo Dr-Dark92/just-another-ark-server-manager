@@ -339,7 +339,10 @@
               <Button Grid.Column="3" Content="Remove" Click="RemoveMod_Click"/>
               <Button Grid.Column="4" Content="Move Up" Click="MoveModUp_Click"/>
               <Button Grid.Column="5" Content="Move Down" Click="MoveModDown_Click"/>
-              <Button Grid.Column="6" Content="Enable / Disable" Click="ToggleModEnabled_Click"/>
+              <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="8">
+                <Button Content="Enable / Disable" Click="ToggleModEnabled_Click"/>
+                <Button Content="Refresh Metadata" Click="RefreshSelectedModMetadata_Click"/>
+              </StackPanel>
             </Grid>
 
             <Grid Grid.Row="1" ColumnDefinitions="380,*" ColumnSpacing="12">
