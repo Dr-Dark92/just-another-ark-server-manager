@@ -44,6 +44,32 @@ public sealed class CurseForgeModService
     public bool IsConfigured =>
         _http.DefaultRequestHeaders.Contains("x-api-key");
 
+    public async Task<AsaModEntry?> GetModAsync(string modId, CancellationToken ct = default)
+    {
+        if (!IsConfigured || !int.TryParse(modId, out var id))
+            return null;
+
+        try
+        {
+            using var response = await _http.GetAsync($"{ApiBase}/mods/{id}", ct);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var json = await response.Content.ReadAsStringAsync(ct);
+            using var doc = JsonDocument.Parse(json);
+
+            if (!doc.RootElement.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Object)
+                return null;
+
+            return ParseMod(data);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<ModBrowseResponse> SearchAsync(
         ModBrowseQuery query,
         CancellationToken ct = default)
