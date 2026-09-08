@@ -1,4 +1,5 @@
 <Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:JAASM.App.Models"
  x:Class="JAASM.App.MainWindow" Title="Just Another ARK Server Manager" Width="1080" Height="900" MinWidth="860" MinHeight="720">
 <Grid RowDefinitions="Auto,*" Margin="28">
 <StackPanel Grid.Row="0" Margin="0,0,0,18"><TextBlock Text="JAASM" FontSize="34" FontWeight="Bold"/><TextBlock Text="Just Another ARK Server Manager" Opacity="0.65"/></StackPanel>
@@ -281,7 +282,7 @@
       <Grid Grid.Row="2" ColumnDefinitions="360,*" ColumnSpacing="12">
         <ListBox x:Name="ModsListBox" SelectionChanged="ModsListBox_SelectionChanged">
           <ListBox.ItemTemplate>
-            <DataTemplate>
+            <DataTemplate x:DataType="models:AsaModEntry">
               <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,6">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                   <TextBlock Text="{Binding LoadOrder}" FontWeight="SemiBold" VerticalAlignment="Center"/>
