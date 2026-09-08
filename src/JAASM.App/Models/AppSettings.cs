@@ -28,6 +28,19 @@ public sealed class AsaServerProfile
     public string ExtraArguments { get; set; } = string.Empty;
     public List<string> SelectedExtraArguments { get; set; } = new();
     public AsaCustomizationSettings Customization { get; set; } = new();
+    public PerLevelStatSettings PerLevelStats { get; set; } = new();
+}
+
+public sealed class PerLevelStatSettings
+{
+    public Dictionary<int, float> Player { get; set; } = CreateDefaults();
+    public Dictionary<int, float> DinoWild { get; set; } = CreateDefaults();
+    public Dictionary<int, float> DinoTamed { get; set; } = CreateDefaults();
+    public Dictionary<int, float> DinoTamedAdd { get; set; } = CreateDefaults();
+    public Dictionary<int, float> DinoTamedAffinity { get; set; } = CreateDefaults();
+
+    private static Dictionary<int, float> CreateDefaults() =>
+        Enumerable.Range(0, 12).ToDictionary(i => i, _ => 1.0f);
 }
 
 public sealed class AsaCustomizationSettings
