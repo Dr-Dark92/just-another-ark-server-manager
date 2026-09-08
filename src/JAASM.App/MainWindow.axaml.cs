@@ -13,6 +13,8 @@ public partial class MainWindow : Window
     private readonly AsaServerService _asaServer;
     private readonly AsaProcessService _asaProcess = new();
     private readonly AsaConfigService _asaConfig = new();
+    private readonly CurseForgeModService _curseForgeMods = new();
+    private List<AsaModEntry> _browseMods = new();
     private AppSettings _settings = new();
     private bool _loading;
     private AsaServerProfile? ActiveProfile =>
@@ -1074,6 +1076,9 @@ public partial class MainWindow : Window
         ModDetailIdText.Text = $"Mod ID: {mod.ModId}   Load order: {mod.LoadOrder}   Enabled: {(mod.Enabled ? "Yes" : "No")}";
         ModDetailAuthorText.Text = string.IsNullOrWhiteSpace(mod.Author) ? "Author: Unknown" : $"Author: {mod.Author}";
         ModDetailPlatformText.Text = string.IsNullOrWhiteSpace(mod.Platform) ? "Platform: Unknown" : $"Platform: {mod.Platform}";
+        ModDetailRatingText.Text = mod.Rating is null
+            ? "Rating: Unknown"
+            : $"Rating: {mod.Rating:0.0}   Thumbs up: {mod.ThumbsUpCount:N0}";
         ModDetailDownloadsText.Text = mod.Downloads > 0 ? $"Downloads: {mod.Downloads:N0}" : "Downloads: Unknown";
         ModDetailUpdatedText.Text = mod.LastUpdated is null ? "Last updated: Unknown" : $"Last updated: {mod.LastUpdated:yyyy-MM-dd}";
         ModDetailFileText.Text = string.IsNullOrWhiteSpace(mod.MainFileName)
@@ -1101,6 +1106,7 @@ public partial class MainWindow : Window
         ModDetailIdText.Text = string.Empty;
         ModDetailAuthorText.Text = string.Empty;
         ModDetailPlatformText.Text = string.Empty;
+        ModDetailRatingText.Text = string.Empty;
         ModDetailDownloadsText.Text = string.Empty;
         ModDetailUpdatedText.Text = string.Empty;
         ModDetailFileText.Text = string.Empty;
@@ -1108,6 +1114,186 @@ public partial class MainWindow : Window
         ModDetailDependenciesText.Text = string.Empty;
         ModDetailSummaryText.Text = string.Empty;
         ModMetadataStatusText.Text = "Metadata: not queried";
+    }
+
+    private async void BrowseModsSearch_Click(object? sender, RoutedEventArgs e)
+    {
+        var sortTag = (ModBrowseSortBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Popularity";
+        var sort = Enum.TryParse<ModBrowseSort>(sortTag, out var parsedSort)
+            ? parsedSort
+            : ModBrowseSort.Popularity;
+
+        var descending =
+            !string.Equals(
+                (ModBrowseDirectionBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(),
+                "asc",
+                StringComparison.OrdinalIgnoreCase);
+
+        var pageSizeText = (ModBrowsePageSizeBox.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+        var pageSize = int.TryParse(pageSizeText, out var parsedPageSize) ? parsedPageSize : 50;
+
+        ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
+            ? "Searching CurseForge..."
+            : "CurseForge catalogue provider is not configured. Manual Mod ID management remains fully available.";
+
+        var result = await _curseForgeMods.SearchAsync(
+            new ModBrowseQuery(
+                ModBrowseSearchBox.Text ?? string.Empty,
+                sort,
+                descending,
+                pageSize));
+
+        ModBrowseStatusText.Text = result.Message;
+        _browseMods = result.Mods.ToList();
+
+        ModBrowseResultsList.ItemsSource = null;
+        ModBrowseResultsList.ItemsSource = _browseMods;
+        ModBrowseSelectionText.Text = _browseMods.Count == 0
+            ? "No browse results."
+            : $"{_browseMods.Count} result(s). Select a mod to add it to this server.";
+    }
+
+    private void ModBrowseResultsList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (ModBrowseResultsList.SelectedItem is not AsaModEntry mod)
+        {
+            ModBrowseSelectionText.Text = "Select a result to add it to this server profile.";
+            return;
+        }
+
+        var rating = mod.Rating is null ? "unrated" : $"{mod.Rating:0.0}/5";
+        var size = FormatBytes(mod.MainFileSizeBytes);
+        var updated = mod.LastUpdated?.ToString("yyyy-MM-dd") ?? "unknown date";
+
+        ModBrowseSelectionText.Text =
+            $"{mod.DisplayName} • {mod.Downloads:N0} downloads • {rating} • {size} • updated {updated}";
+    }
+
+    private async void AddBrowseModToServer_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null || ModBrowseResultsList.SelectedItem is not AsaModEntry source)
+            return;
+
+        if (profile.Mods.Any(m => m.ModId == source.ModId))
+        {
+            ModBrowseSelectionText.Text = $"{source.DisplayName} is already in this server profile.";
+            return;
+        }
+
+        var mod = new AsaModEntry
+        {
+            ModId = source.ModId,
+            Enabled = true,
+            LoadOrder = profile.Mods.Count + 1,
+            DisplayName = source.DisplayName,
+            Author = source.Author,
+            Summary = source.Summary,
+            Platform = source.Platform,
+            Downloads = source.Downloads,
+            Rating = source.Rating,
+            ThumbsUpCount = source.ThumbsUpCount,
+            LogoUrl = source.LogoUrl,
+            WebsiteUrl = source.WebsiteUrl,
+            PrimaryCategory = source.PrimaryCategory,
+            LastUpdated = source.LastUpdated,
+            MainFileId = source.MainFileId,
+            MainFileName = source.MainFileName,
+            MainFileSizeBytes = source.MainFileSizeBytes,
+            ReleaseType = source.ReleaseType,
+            IsAvailable = source.IsAvailable,
+            AllowDistribution = source.AllowDistribution,
+            Dependencies = source.Dependencies.ToList(),
+            MetadataStatus = source.MetadataStatus
+        };
+
+        profile.Mods.Add(mod);
+        NormalizeModOrder(profile);
+        await _settingsService.SaveAsync(_settings);
+
+        RefreshModsUi();
+        LaunchPreviewText.Text = BuildLaunchArguments();
+        ModBrowseSelectionText.Text = $"Added {mod.DisplayName} to {profile.ServerName}.";
+        AppendConsole($"[MODS] Added browsed mod {mod.ModId} ({mod.DisplayName}).");
+    }
+
+    private async void RefreshInstalledModMetadata_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        if (!_curseForgeMods.IsConfigured)
+        {
+            ModBrowseStatusText.Text =
+                "CurseForge provider is not configured. Set JAASM_CURSEFORGE_API_KEY for development or bundle an application-level provider key later.";
+            return;
+        }
+
+        foreach (var installed in profile.Mods)
+        {
+            var latest = await _curseForgeMods.GetModAsync(installed.ModId);
+            if (latest is null)
+            {
+                installed.MetadataStatus = "Metadata lookup failed";
+                continue;
+            }
+
+            var previousFile = installed.MainFileId;
+
+            installed.DisplayName = latest.DisplayName;
+            installed.Author = latest.Author;
+            installed.Summary = latest.Summary;
+            installed.Platform = latest.Platform;
+            installed.Downloads = latest.Downloads;
+            installed.Rating = latest.Rating;
+            installed.ThumbsUpCount = latest.ThumbsUpCount;
+            installed.LogoUrl = latest.LogoUrl;
+            installed.WebsiteUrl = latest.WebsiteUrl;
+            installed.PrimaryCategory = latest.PrimaryCategory;
+            installed.LastUpdated = latest.LastUpdated;
+            installed.MainFileId = latest.MainFileId;
+            installed.MainFileName = latest.MainFileName;
+            installed.MainFileSizeBytes = latest.MainFileSizeBytes;
+            installed.ReleaseType = latest.ReleaseType;
+            installed.IsAvailable = latest.IsAvailable;
+            installed.AllowDistribution = latest.AllowDistribution;
+            installed.Dependencies = latest.Dependencies.ToList();
+
+            installed.MetadataStatus =
+                previousFile is not null && latest.MainFileId is not null && previousFile != latest.MainFileId
+                    ? $"New file available: {latest.MainFileId}"
+                    : "Metadata current";
+        }
+
+        await _settingsService.SaveAsync(_settings);
+        RefreshModsUi();
+
+        ModUpdatesListBox.ItemsSource = null;
+        ModUpdatesListBox.ItemsSource = profile.Mods
+            .OrderByDescending(m => m.MetadataStatus.StartsWith("New file available", StringComparison.OrdinalIgnoreCase))
+            .ThenBy(m => m.LoadOrder)
+            .ToList();
+
+        AppendConsole($"[MODS] Refreshed metadata for {profile.Mods.Count} mod(s).");
+    }
+
+    private static string FormatBytes(long? bytes)
+    {
+        if (bytes is null || bytes <= 0)
+            return "size unknown";
+
+        double value = bytes.Value;
+        string[] units = { "B", "KB", "MB", "GB", "TB" };
+        var unit = 0;
+
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+
+        return $"{value:0.##} {units[unit]}";
     }
 
     private void RefreshPerLevelStatsSummary()
