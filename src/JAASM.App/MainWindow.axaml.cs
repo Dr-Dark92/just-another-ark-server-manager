@@ -349,38 +349,34 @@ public partial class MainWindow : Window
     {
         _loading = true;
 
-        var tabs = new List<TabItem>();
+        ProfileTabStrip.Children.Clear();
 
         foreach (var profile in _settings.AsaProfiles)
         {
-            tabs.Add(new TabItem
+            var button = new Button
             {
-                Header = profile.ServerName,
-                Tag = profile.Id
-            });
+                Content = profile.ServerName,
+                Tag = profile.Id,
+                Margin = new Avalonia.Thickness(0, 0, 4, 0),
+                Padding = new Avalonia.Thickness(14, 8)
+            };
+
+            if (ActiveProfile?.Id == profile.Id)
+                button.FontWeight = Avalonia.Media.FontWeight.SemiBold;
+
+            button.Click += ProfileTabButton_Click;
+            ProfileTabStrip.Children.Add(button);
         }
 
-        tabs.Add(new TabItem
+        var addButton = new Button
         {
-            Header = "+",
+            Content = "Add New Server +",
             Tag = "__add__",
-            MinWidth = 44
-        });
-
-        ServerProfileTabs.ItemsSource = tabs;
-
-        if (ActiveProfile is not null)
-        {
-            ServerProfileTabs.SelectedItem =
-                tabs.FirstOrDefault(t => string.Equals(
-                    t.Tag?.ToString(),
-                    ActiveProfile.Id,
-                    StringComparison.OrdinalIgnoreCase));
-        }
-        else
-        {
-            ServerProfileTabs.SelectedIndex = -1;
-        }
+            Margin = new Avalonia.Thickness(4, 0, 0, 0),
+            Padding = new Avalonia.Thickness(14, 8)
+        };
+        addButton.Click += CreateProfile_Click;
+        ProfileTabStrip.Children.Add(addButton);
 
         _loading = false;
 
@@ -388,20 +384,13 @@ public partial class MainWindow : Window
         ProfileEditorPanel.IsVisible = ActiveProfile is not null;
     }
 
-    private async void ServerProfileTabs_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private async void ProfileTabButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (_loading || ServerProfileTabs.SelectedItem is not TabItem tab)
+        if (_loading || sender is not Button button)
             return;
 
-        var tag = tab.Tag?.ToString();
-
-        if (tag == "__add__")
-        {
-            await CreateProfileAsync();
-            return;
-        }
-
-        var selected = _settings.AsaProfiles.FirstOrDefault(p => p.Id == tag);
+        var id = button.Tag?.ToString();
+        var selected = _settings.AsaProfiles.FirstOrDefault(p => p.Id == id);
         if (selected is null)
             return;
 
@@ -411,6 +400,7 @@ public partial class MainWindow : Window
         _settings.ActiveAsaProfileId = selected.Id;
         await _settingsService.SaveAsync(_settings);
 
+        RefreshProfileTabs();
         LoadProfileControls();
         RefreshProcessState();
         NoProfilePanel.IsVisible = false;
