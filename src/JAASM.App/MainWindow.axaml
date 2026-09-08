@@ -12,14 +12,24 @@
 <Separator/><TextBlock Text="ARK: Survival Ascended Server Bootstrap" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="ASA Dedicated Server App ID: 2430930" Opacity="0.65"/>
 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><TextBox x:Name="AsaInstallDirectoryBox" IsReadOnly="True" PlaceholderText="Select ASA server installation directory"/><Button Grid.Column="1" Content="Browse" Click="BrowseAsaInstallDirectory_Click"/></Grid>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Install / Update ASA" Click="InstallOrUpdateAsa_Click"/><Button Content="Validate ASA" Click="ValidateAsa_Click"/></StackPanel><TextBlock x:Name="AsaStatusText" Text="ASA server is not configured." TextWrapping="Wrap"/>
+<Separator/>
+<TextBlock Text="ARK Server Profiles" FontSize="22" FontWeight="SemiBold"/>
+<TextBlock Text="Create separate server profiles. Each profile has its own map, ports, passwords, launch options and process controls." Opacity="0.65" TextWrapping="Wrap"/>
+<Button Content="+  Create ARK Server Profile" HorizontalAlignment="Left" Click="CreateProfile_Click"/>
 <Separator/><TextBlock Text="Optional Web GUI" FontSize="18" FontWeight="SemiBold"/><ToggleSwitch x:Name="WebGuiToggle" Content="Enable Web GUI" IsCheckedChanged="WebGuiToggle_Changed"/><TextBlock Text="Default bind: 127.0.0.1:8484" Opacity="0.65"/>
 </StackPanel></ScrollViewer></TabItem>
 
 <TabItem Header="Server Control"><ScrollViewer><StackPanel Margin="18" Spacing="12">
-<TextBlock Text="ASA Server Profile" FontSize="22" FontWeight="SemiBold"/>
+<Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+<StackPanel><TextBlock Text="ASA Server Profiles" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="Select a profile to configure and control." Opacity="0.65"/></StackPanel>
+<ComboBox x:Name="ProfileSelector" Grid.Column="1" MinWidth="240" SelectionChanged="ProfileSelector_SelectionChanged"/>
+<Button Grid.Column="2" Content="+ New Profile" Click="CreateProfile_Click"/>
+</Grid>
+<TextBlock x:Name="ProfileExplanationText" Text="Each profile can run independently. Ports must not conflict with another running profile." Opacity="0.7" TextWrapping="Wrap"/>
+<TextBlock Text="Profile Configuration" FontSize="18" FontWeight="SemiBold"/>
 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-<TextBlock Grid.Row="0" Text="Server Name" VerticalAlignment="Center"/><TextBox x:Name="ServerNameBox" Grid.Row="0" Grid.Column="1"/>
-<TextBlock Grid.Row="1" Text="Map" VerticalAlignment="Center"/>
+<StackPanel Grid.Row="0"><TextBlock Text="Server Name"/><TextBlock Text="Public session name shown in the ARK server browser." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><TextBox x:Name="ServerNameBox" Grid.Row="0" Grid.Column="1"/>
+<StackPanel Grid.Row="1"><TextBlock Text="Map"/><TextBlock Text="World loaded by this server profile. Each profile may run a different map." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
 <ComboBox x:Name="MapBox" Grid.Row="1" Grid.Column="1" SelectedIndex="0">
 <ComboBoxItem Content="The Island" Tag="TheIsland_WP"/>
 <ComboBoxItem Content="Scorched Earth" Tag="ScorchedEarth_WP"/>
@@ -32,20 +42,21 @@
 <ComboBoxItem Content="Genesis Ascended Part 1" Tag="Genesis_WP"/>
 <ComboBoxItem Content="Lost Colony" Tag="LostColony_WP"/>
 </ComboBox>
-<TextBlock Grid.Row="2" Text="Max Players" VerticalAlignment="Center"/><NumericUpDown x:Name="MaxPlayersBox" Grid.Row="2" Grid.Column="1" Minimum="1" Maximum="500"/>
-<TextBlock Grid.Row="3" Text="Game Port" VerticalAlignment="Center"/><NumericUpDown x:Name="GamePortBox" Grid.Row="3" Grid.Column="1" Minimum="1" Maximum="65535"/>
-<TextBlock Grid.Row="4" Text="Query Port" VerticalAlignment="Center"/><NumericUpDown x:Name="QueryPortBox" Grid.Row="4" Grid.Column="1" Minimum="1" Maximum="65535"/>
-<TextBlock Grid.Row="5" Text="RCON Port" VerticalAlignment="Center"/><NumericUpDown x:Name="RconPortBox" Grid.Row="5" Grid.Column="1" Minimum="1" Maximum="65535"/>
-<TextBlock Grid.Row="6" Text="Server Password" VerticalAlignment="Center"/><TextBox x:Name="ServerPasswordBox" Grid.Row="6" Grid.Column="1" PasswordChar="●"/>
-<TextBlock Grid.Row="7" Text="Admin Password" VerticalAlignment="Center"/><TextBox x:Name="AdminPasswordBox" Grid.Row="7" Grid.Column="1" PasswordChar="●"/>
-<TextBlock Grid.Row="8" Text="Extra Arguments" VerticalAlignment="Center"/>
+<StackPanel Grid.Row="2"><TextBlock Text="Max Players"/><TextBlock Text="Maximum simultaneous player connections allowed." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="MaxPlayersBox" Grid.Row="2" Grid.Column="1" Minimum="1" Maximum="500"/>
+<StackPanel Grid.Row="3"><TextBlock Text="Game Port"/><TextBlock Text="Primary UDP gameplay port. Must be unique per profile." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="GamePortBox" Grid.Row="3" Grid.Column="1" Minimum="1" Maximum="65535"/>
+<StackPanel Grid.Row="4"><TextBlock Text="Query Port"/><TextBlock Text="Steam/server-browser query port. Must be unique per profile." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="QueryPortBox" Grid.Row="4" Grid.Column="1" Minimum="1" Maximum="65535"/>
+<StackPanel Grid.Row="5"><TextBlock Text="RCON Port"/><TextBlock Text="Remote administration port. JAASM will later use this for graceful save/shutdown and commands." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><NumericUpDown x:Name="RconPortBox" Grid.Row="5" Grid.Column="1" Minimum="1" Maximum="65535"/>
+<StackPanel Grid.Row="6"><TextBlock Text="Server Password"/><TextBlock Text="Optional password players must enter to join this server." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><TextBox x:Name="ServerPasswordBox" Grid.Row="6" Grid.Column="1" PasswordChar="●"/>
+<StackPanel Grid.Row="7"><TextBlock Text="Admin Password"/><TextBlock Text="Administrative password used for privileged server/RCON operations." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><TextBox x:Name="AdminPasswordBox" Grid.Row="7" Grid.Column="1" PasswordChar="●"/>
+<StackPanel Grid.Row="8"><TextBlock Text="Extra Arguments"/><TextBlock Text="Optional advanced startup switches. Use Choose Arguments for descriptions instead of typing flags manually." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
 <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Spacing="10">
 <Button Content="Choose Arguments..." Click="ChooseExtraArguments_Click"/>
 <TextBlock x:Name="ExtraArgumentsSummaryText" Text="None selected" VerticalAlignment="Center" Opacity="0.7"/>
 </StackPanel>
 </Grid>
-<Button Content="Save Profile" HorizontalAlignment="Left" Click="SaveProfile_Click"/>
-<Separator/><TextBlock Text="Process Control" FontSize="22" FontWeight="SemiBold"/>
+<StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Save Profile" Click="SaveProfile_Click"/><Button Content="Delete Profile" Click="DeleteProfile_Click"/></StackPanel>
+<Separator/><TextBlock Text="Server Controls" FontSize="22" FontWeight="SemiBold"/>
+<TextBlock Text="Start launches only the selected profile. Stop requests shutdown and currently falls back to process termination until RCON graceful shutdown is implemented. Restart stops then starts this profile. Force Stop immediately terminates its process tree." Opacity="0.7" TextWrapping="Wrap"/>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Start" Click="StartAsa_Click"/><Button Content="Stop" Click="StopAsa_Click"/><Button Content="Restart" Click="RestartAsa_Click"/><Button Content="Force Stop" Click="ForceStopAsa_Click"/></StackPanel>
 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8"><TextBlock Text="Status:"/><TextBlock x:Name="ProcessStatusText" Grid.Column="1" Text="Stopped" FontWeight="SemiBold"/><TextBlock Grid.Column="2" Text="PID:"/><TextBlock x:Name="PidText" Grid.Column="3" Text="-"/><TextBlock Grid.Column="4" Text="Uptime:"/><TextBlock x:Name="UptimeText" Grid.Column="5" Text="-"/></Grid>
 <TextBlock x:Name="LaunchPreviewText" TextWrapping="Wrap" Opacity="0.7"/>
