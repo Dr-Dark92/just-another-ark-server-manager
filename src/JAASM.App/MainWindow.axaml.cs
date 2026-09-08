@@ -320,14 +320,24 @@ public partial class MainWindow : Window
     {
         var p = _settings.AsaProfile;
         ServerNameBox.Text = p.ServerName;
-        MapBox.Text = p.Map;
+        for (var i = 0; i < MapBox.ItemCount; i++)
+        {
+            if (MapBox.Items[i] is ComboBoxItem item &&
+                string.Equals(item.Tag?.ToString(), p.Map, StringComparison.OrdinalIgnoreCase))
+            {
+                MapBox.SelectedIndex = i;
+                break;
+            }
+        }
         MaxPlayersBox.Value = p.MaxPlayers;
         GamePortBox.Value = p.GamePort;
         QueryPortBox.Value = p.QueryPort;
         RconPortBox.Value = p.RconPort;
         ServerPasswordBox.Text = p.ServerPassword;
         AdminPasswordBox.Text = p.AdminPassword;
-        ExtraArgumentsBox.Text = p.ExtraArguments;
+        ExtraArgumentsSummaryText.Text = p.SelectedExtraArguments.Count == 0
+            ? "None selected"
+            : $"{p.SelectedExtraArguments.Count} selected";
         LaunchPreviewText.Text = BuildLaunchArguments();
     }
 
@@ -335,14 +345,14 @@ public partial class MainWindow : Window
     {
         var p = _settings.AsaProfile;
         p.ServerName = ServerNameBox.Text?.Trim() ?? "JAASM Server";
-        p.Map = MapBox.Text?.Trim() ?? "TheIsland_WP";
+        p.Map = (MapBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "TheIsland_WP";
         p.MaxPlayers = (int)(MaxPlayersBox.Value ?? 70);
         p.GamePort = (int)(GamePortBox.Value ?? 7777);
         p.QueryPort = (int)(QueryPortBox.Value ?? 27015);
         p.RconPort = (int)(RconPortBox.Value ?? 27020);
         p.ServerPassword = ServerPasswordBox.Text ?? string.Empty;
         p.AdminPassword = AdminPasswordBox.Text ?? string.Empty;
-        p.ExtraArguments = ExtraArgumentsBox.Text?.Trim() ?? string.Empty;
+        p.ExtraArguments = string.Join(" ", p.SelectedExtraArguments);
     }
 
     private string BuildLaunchArguments()
@@ -363,6 +373,22 @@ public partial class MainWindow : Window
     }
 
     private static string QuoteUrl(string value) => Uri.EscapeDataString(value);
+
+    private async void ChooseExtraArguments_Click(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new ExtraArgumentsWindow(_settings.AsaProfile.SelectedExtraArguments);
+        await dialog.ShowDialog(this);
+
+        if (dialog.Selection is null)
+            return;
+
+        _settings.AsaProfile.SelectedExtraArguments = dialog.Selection.ToList();
+        _settings.AsaProfile.ExtraArguments = string.Join(" ", dialog.Selection);
+        ExtraArgumentsSummaryText.Text = dialog.Selection.Count == 0
+            ? "None selected"
+            : $"{dialog.Selection.Count} selected";
+        LaunchPreviewText.Text = BuildLaunchArguments();
+    }
 
     private async void SaveProfile_Click(object? sender, RoutedEventArgs e)
     {
