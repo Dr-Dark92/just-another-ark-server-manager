@@ -1,5 +1,6 @@
-using System.Net.Http.Json;
+using System.Net;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using JAASM.App.Models;
 
 namespace JAASM.App.Services;
@@ -35,7 +36,12 @@ public sealed class CurseForgeModService
 
     public CurseForgeModService()
     {
-        _http = new HttpClient();
+        _http = new HttpClient(new HttpClientHandler
+        {
+            AllowAutoRedirect = true,
+            AutomaticDecompression = DecompressionMethods.All
+        });
+        _http.DefaultRequestHeaders.UserAgent.ParseAdd("JAASM/0.1 (+https://github.com/Dr-Dark92/just-another-ark-server-manager)");
         ConfigureApiKey(Environment.GetEnvironmentVariable("JAASM_CURSEFORGE_API_KEY"));
     }
 
@@ -52,28 +58,35 @@ public sealed class CurseForgeModService
 
     public async Task<AsaModEntry?> GetModAsync(string modId, CancellationToken ct = default)
     {
-        if (!IsConfigured || !int.TryParse(modId, out var id))
+        if (!int.TryParse(modId, out var id))
             return null;
 
-        try
+        // Preferred path: official CurseForge API when a project key is configured.
+        if (IsConfigured)
         {
-            using var response = await _http.GetAsync($"{ApiBase}/mods/{id}", ct);
-            if (!response.IsSuccessStatusCode)
-                return null;
+            try
+            {
+                using var response = await _http.GetAsync($"{ApiBase}/mods/{id}", ct);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync(ct);
+                    using var doc = JsonDocument.Parse(json);
 
-            var json = await response.Content.ReadAsStringAsync(ct);
-            using var doc = JsonDocument.Parse(json);
-
-            if (!doc.RootElement.TryGetProperty("data", out var data) ||
-                data.ValueKind != JsonValueKind.Object)
-                return null;
-
-            return ParseMod(data);
+                    if (doc.RootElement.TryGetProperty("data", out var data) &&
+                        data.ValueKind == JsonValueKind.Object)
+                        return ParseMod(data);
+                }
+            }
+            catch
+            {
+                // Fall through to public metadata fallback.
+            }
         }
-        catch
-        {
-            return null;
-        }
+
+        // Public fallback: ArkCodes mirrors useful ASA project metadata keyed by
+        // the CurseForge numeric project ID. This keeps Add-by-ID useful without
+        // forcing every gamer to obtain a CurseForge developer API key.
+        return await GetModFromPublicMetadataAsync(modId, ct);
     }
 
     public async Task<ModBrowseResponse> SearchAsync(
@@ -81,11 +94,7 @@ public sealed class CurseForgeModService
         CancellationToken ct = default)
     {
         if (!IsConfigured)
-        {
-            return new(false,
-                "CurseForge API key is not configured. Manual Mod ID loading remains available.",
-                Array.Empty<AsaModEntry>());
-        }
+            return await SearchPublicCurseForgeAsync(query, ct);
 
         try
         {
@@ -142,6 +151,282 @@ public sealed class CurseForgeModService
             return new(false, $"CurseForge browse failed: {ex.Message}",
                 Array.Empty<AsaModEntry>());
         }
+    }
+
+    private async Task<AsaModEntry?> GetModFromPublicMetadataAsync(
+        string modId,
+        CancellationToken ct)
+    {
+        try
+        {
+            var url = $"https://arkcodes.com/mods/{modId}/";
+            using var response = await _http.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var html = await response.Content.ReadAsStringAsync(ct);
+            var text = HtmlToText(html);
+
+            var parsedId = MatchValue(text, @"Mod ID\s*:?\s*([0-9]+)");
+            if (!string.Equals(parsedId, modId, StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            var title = HtmlMatch(html, @"<h1[^>]*>(.*?)</h1>");
+            var author = MatchValue(text, @"Author\s*:?\s*([^\r\n]+)");
+            var downloadsText = MatchValue(text, @"Downloads\s*:?\s*([0-9,\.]+[KMB]?)");
+            var fileSizeText = MatchValue(text, @"File Size\s*:?\s*([0-9\.]+\s*(?:KB|MB|GB|TB|B))");
+            var updatedText = MatchValue(text, @"Updated\s*:?\s*([0-9]{4}-[0-9]{2}-[0-9]{2})");
+            var category = MatchValue(text, @"Categories?\s*:?\s*([^\r\n]+)");
+            var summary = ExtractFirstParagraphAfterHeading(html, "Description");
+
+            return new AsaModEntry
+            {
+                ModId = modId,
+                DisplayName = string.IsNullOrWhiteSpace(title) ? $"Mod {modId}" : title,
+                Author = author,
+                Summary = summary,
+                Platform = title.Contains("Crossplay", StringComparison.OrdinalIgnoreCase)
+                    ? "Cross-Platform"
+                    : "Unknown",
+                Downloads = ParseCompactNumber(downloadsText),
+                PrimaryCategory = category,
+                LastUpdated = DateTimeOffset.TryParse(updatedText, out var updated) ? updated : null,
+                MainFileSizeBytes = ParseSizeBytes(fileSizeText),
+                IsAvailable = true,
+                AllowDistribution = null,
+                WebsiteUrl = response.RequestMessage?.RequestUri?.ToString() ?? url,
+                MetadataStatus = "Loaded from public ASA metadata"
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<ModBrowseResponse> SearchPublicCurseForgeAsync(
+        ModBrowseQuery query,
+        CancellationToken ct)
+    {
+        try
+        {
+            var pageSize = Math.Clamp(query.PageSize, 1, 50);
+            var sortBy = query.Sort switch
+            {
+                ModBrowseSort.LastUpdated => "latest+update",
+                ModBrowseSort.Downloads => "total+downloads",
+                ModBrowseSort.Name => "a-z",
+                _ => "relevancy"
+            };
+
+            var url =
+                $"https://www.curseforge.com/ark-survival-ascended/search?class=mods&page=1&pageSize={pageSize}&sortBy={sortBy}";
+
+            if (!string.IsNullOrWhiteSpace(query.Search))
+                url += "&search=" + Uri.EscapeDataString(query.Search.Trim());
+
+            using var response = await _http.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+                return new(false, $"Public catalogue returned HTTP {(int)response.StatusCode}.", Array.Empty<AsaModEntry>());
+
+            var html = await response.Content.ReadAsStringAsync(ct);
+
+            var slugs = Regex.Matches(
+                    html,
+                    "href=\"/ark-survival-ascended/mods/([a-z0-9-]+)\"",
+                    RegexOptions.IgnoreCase)
+                .Select(m => m.Groups[1].Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(pageSize)
+                .ToList();
+
+            if (slugs.Count == 0)
+                return new(false, "Public catalogue did not expose any mod results.", Array.Empty<AsaModEntry>());
+
+            var gate = new SemaphoreSlim(6);
+            var tasks = slugs.Select(async slug =>
+            {
+                await gate.WaitAsync(ct);
+                try { return await GetModFromCurseForgePageAsync(slug, ct); }
+                finally { gate.Release(); }
+            }).ToArray();
+
+            var resolved = (await Task.WhenAll(tasks))
+                .Where(m => m is not null)
+                .Cast<AsaModEntry>()
+                .ToList();
+
+            IEnumerable<AsaModEntry> ordered = resolved;
+            ordered = query.Sort switch
+            {
+                ModBrowseSort.LastUpdated => query.Descending
+                    ? resolved.OrderByDescending(m => m.LastUpdated)
+                    : resolved.OrderBy(m => m.LastUpdated),
+                ModBrowseSort.Downloads => query.Descending
+                    ? resolved.OrderByDescending(m => m.Downloads)
+                    : resolved.OrderBy(m => m.Downloads),
+                ModBrowseSort.Rating => query.Descending
+                    ? resolved.OrderByDescending(m => m.Rating ?? 0)
+                    : resolved.OrderBy(m => m.Rating ?? 0),
+                ModBrowseSort.Size => query.Descending
+                    ? resolved.OrderByDescending(m => m.MainFileSizeBytes ?? 0)
+                    : resolved.OrderBy(m => m.MainFileSizeBytes ?? 0),
+                ModBrowseSort.Name => query.Descending
+                    ? resolved.OrderByDescending(m => m.DisplayName)
+                    : resolved.OrderBy(m => m.DisplayName),
+                ModBrowseSort.Author => query.Descending
+                    ? resolved.OrderByDescending(m => m.Author)
+                    : resolved.OrderBy(m => m.Author),
+                _ => resolved
+            };
+
+            return new(true,
+                $"Loaded {resolved.Count} mods from the public CurseForge catalogue.",
+                ordered.ToList());
+        }
+        catch (Exception ex)
+        {
+            return new(false, $"Public mod catalogue failed: {ex.Message}", Array.Empty<AsaModEntry>());
+        }
+    }
+
+    private async Task<AsaModEntry?> GetModFromCurseForgePageAsync(string slug, CancellationToken ct)
+    {
+        try
+        {
+            var url = $"https://www.curseforge.com/ark-survival-ascended/mods/{slug}";
+            using var response = await _http.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var html = await response.Content.ReadAsStringAsync(ct);
+            var text = HtmlToText(html);
+
+            var id = MatchValue(text, @"Project ID\s*([0-9]+)");
+            if (string.IsNullOrWhiteSpace(id))
+                return null;
+
+            var title = HtmlMatch(html, @"<h1[^>]*>(.*?)</h1>");
+            var author = MatchValue(text, @"\bBy\s+([^\r\n]+)");
+            var downloadsText = MatchValue(text, @"Downloads\s*([0-9,\.]+[KMB]?)");
+            var updatedText = MatchValue(text, @"Updated\s*([^\r\n]+)");
+            var category = MatchValue(text, @"Categories?\s*([^\r\n]+)");
+            var mainFile = MatchValue(text, @"Main File[\s\S]{0,300}?\b([^\r\n]+\.zip)");
+            var platform = text.Contains("Cross-Platform", StringComparison.OrdinalIgnoreCase)
+                ? "Cross-Platform"
+                : "Unknown";
+
+            return new AsaModEntry
+            {
+                ModId = id,
+                DisplayName = string.IsNullOrWhiteSpace(title) ? slug : title,
+                Author = author,
+                Summary = ExtractFirstParagraphAfterHeading(html, "Description"),
+                Platform = platform,
+                Downloads = ParseCompactNumber(downloadsText),
+                PrimaryCategory = category,
+                LastUpdated = DateTimeOffset.TryParse(updatedText, out var updated) ? updated : null,
+                MainFileName = mainFile,
+                IsAvailable = true,
+                WebsiteUrl = url,
+                MetadataStatus = "Loaded from public CurseForge catalogue"
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string HtmlToText(string html)
+    {
+        var withoutScripts = Regex.Replace(html, @"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ",
+            RegexOptions.IgnoreCase);
+        var text = Regex.Replace(withoutScripts, "<[^>]+>", "\n");
+        text = WebUtility.HtmlDecode(text);
+        text = Regex.Replace(text, @"[ \t]+", " ");
+        text = Regex.Replace(text, @"\n\s*\n+", "\n");
+        return text.Trim();
+    }
+
+    private static string HtmlMatch(string html, string pattern)
+    {
+        var match = Regex.Match(html, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return match.Success
+            ? WebUtility.HtmlDecode(Regex.Replace(match.Groups[1].Value, "<[^>]+>", " ")).Trim()
+            : string.Empty;
+    }
+
+    private static string MatchValue(string text, string pattern)
+    {
+        var match = Regex.Match(text, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return match.Success ? match.Groups[1].Value.Trim() : string.Empty;
+    }
+
+    private static string ExtractFirstParagraphAfterHeading(string html, string heading)
+    {
+        var headingIndex = html.IndexOf(heading, StringComparison.OrdinalIgnoreCase);
+        if (headingIndex < 0)
+            return string.Empty;
+
+        var slice = html[headingIndex..Math.Min(html.Length, headingIndex + 12000)];
+        var match = Regex.Match(slice, @"<p[^>]*>(.*?)</p>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return match.Success
+            ? WebUtility.HtmlDecode(Regex.Replace(match.Groups[1].Value, "<[^>]+>", " ")).Trim()
+            : string.Empty;
+    }
+
+    private static long ParseCompactNumber(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return 0;
+
+        var cleaned = value.Replace(",", "").Trim();
+        var multiplier = 1d;
+
+        if (cleaned.EndsWith("K", StringComparison.OrdinalIgnoreCase))
+        {
+            multiplier = 1_000d;
+            cleaned = cleaned[..^1];
+        }
+        else if (cleaned.EndsWith("M", StringComparison.OrdinalIgnoreCase))
+        {
+            multiplier = 1_000_000d;
+            cleaned = cleaned[..^1];
+        }
+        else if (cleaned.EndsWith("B", StringComparison.OrdinalIgnoreCase))
+        {
+            multiplier = 1_000_000_000d;
+            cleaned = cleaned[..^1];
+        }
+
+        return double.TryParse(cleaned, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var number)
+            ? (long)(number * multiplier)
+            : 0;
+    }
+
+    private static long? ParseSizeBytes(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var match = Regex.Match(value, @"([0-9\.]+)\s*(B|KB|MB|GB|TB)", RegexOptions.IgnoreCase);
+        if (!match.Success ||
+            !double.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var number))
+            return null;
+
+        var power = match.Groups[2].Value.ToUpperInvariant() switch
+        {
+            "KB" => 1,
+            "MB" => 2,
+            "GB" => 3,
+            "TB" => 4,
+            _ => 0
+        };
+
+        return (long)(number * Math.Pow(1024, power));
     }
 
     private static AsaModEntry ParseMod(JsonElement item)
