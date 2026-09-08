@@ -531,19 +531,21 @@ public sealed class CurseForgeModService
 
     private static string ExtractModImageUrl(string html)
     {
-        // Prefer social/preview metadata because it normally points at the mod's
-        // actual project artwork and is far less coupled to page layout.
+        // Use ordinary escaped C# strings here. Verbatim strings combined with
+        // quote character classes are easy to break and caused the CI failure.
         var patterns = new[]
         {
-            @"<meta[^>]+property=[\"']og:image[\"'][^>]+content=[\"']([^\"']+)[\"']",
-            @"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+property=[\"']og:image[\"']",
-            @"<meta[^>]+name=[\"']twitter:image(?::src)?[\"'][^>]+content=[\"']([^\"']+)[\"']",
-            @"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+name=[\"']twitter:image(?::src)?[\"']"
+            "<meta[^>]+property=[\\\"']og:image[\\\"'][^>]+content=[\\\"']([^\\\"']+)[\\\"']",
+            "<meta[^>]+content=[\\\"']([^\\\"']+)[\\\"'][^>]+property=[\\\"']og:image[\\\"']",
+            "<meta[^>]+name=[\\\"']twitter:image(?::src)?[\\\"'][^>]+content=[\\\"']([^\\\"']+)[\\\"']",
+            "<meta[^>]+content=[\\\"']([^\\\"']+)[\\\"'][^>]+name=[\\\"']twitter:image(?::src)?[\\\"']"
         };
 
         foreach (var pattern in patterns)
         {
-            var match = Regex.Match(html, pattern,
+            var match = Regex.Match(
+                html,
+                pattern,
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (!match.Success)
@@ -551,26 +553,36 @@ public sealed class CurseForgeModService
 
             var value = WebUtility.HtmlDecode(match.Groups[1].Value).Trim();
             if (Uri.TryCreate(value, UriKind.Absolute, out var absolute) &&
-                (absolute.Scheme == Uri.UriSchemeHttps || absolute.Scheme == Uri.UriSchemeHttp))
+                (absolute.Scheme == Uri.UriSchemeHttps ||
+                 absolute.Scheme == Uri.UriSchemeHttp))
+            {
                 return absolute.ToString();
+            }
         }
 
-        // Last resort: use the first image that looks like project/mod artwork,
-        // but avoid tiny icons, SVGs and site chrome where possible.
+        const string imagePattern =
+            "<img[^>]+(?:src|data-src)=[\\\"']([^\\\"']+)[\\\"'][^>]*>";
+
         foreach (Match match in Regex.Matches(
                      html,
-                     @"<img[^>]+(?:src|data-src)=[\"']([^\"']+)[\"'][^>]*>",
+                     imagePattern,
                      RegexOptions.IgnoreCase | RegexOptions.Singleline))
         {
             var value = WebUtility.HtmlDecode(match.Groups[1].Value).Trim();
+
             if (value.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) ||
                 value.Contains("logo", StringComparison.OrdinalIgnoreCase) ||
                 value.Contains("icon", StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             if (Uri.TryCreate(value, UriKind.Absolute, out var absolute) &&
-                (absolute.Scheme == Uri.UriSchemeHttps || absolute.Scheme == Uri.UriSchemeHttp))
+                (absolute.Scheme == Uri.UriSchemeHttps ||
+                 absolute.Scheme == Uri.UriSchemeHttp))
+            {
                 return absolute.ToString();
+            }
 
             if (Uri.TryCreate(new Uri("https://arkcodes.com/"), value, out var relative))
                 return relative.ToString();
