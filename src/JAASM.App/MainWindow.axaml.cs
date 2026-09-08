@@ -1084,7 +1084,9 @@ public partial class MainWindow : Window
         ModDetailFileText.Text = string.IsNullOrWhiteSpace(mod.MainFileName)
             ? "Main file: Unknown"
             : $"Main file: {mod.MainFileName}" +
-              (mod.MainFileId is null ? string.Empty : $"  (File ID {mod.MainFileId})");
+              (mod.MainFileId is null ? string.Empty : $"  (File ID {mod.MainFileId})") +
+              $"  •  {FormatBytes(mod.MainFileSizeBytes)}" +
+              (string.IsNullOrWhiteSpace(mod.PrimaryCategory) ? string.Empty : $"  •  {mod.PrimaryCategory}");
         ModDetailAvailabilityText.Text =
             $"Available: {FormatNullableBool(mod.IsAvailable)}   Distribution allowed: {FormatNullableBool(mod.AllowDistribution)}" +
             (string.IsNullOrWhiteSpace(mod.ReleaseType) ? string.Empty : $"   Release: {mod.ReleaseType}");
@@ -1133,8 +1135,8 @@ public partial class MainWindow : Window
         var pageSize = int.TryParse(pageSizeText, out var parsedPageSize) ? parsedPageSize : 50;
 
         ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
-            ? "Searching CurseForge..."
-            : "CurseForge catalogue provider is not configured. Manual Mod ID management remains fully available.";
+            ? "Searching mod catalogue..."
+            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
 
         var result = await _curseForgeMods.SearchAsync(
             new ModBrowseQuery(
@@ -1143,7 +1145,12 @@ public partial class MainWindow : Window
                 descending,
                 pageSize));
 
-        ModBrowseStatusText.Text = result.Message;
+        ModBrowseStatusText.Text = result.Success
+            ? result.Message.Replace("CurseForge", "catalogue", StringComparison.OrdinalIgnoreCase)
+            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
+
+        if (!result.Success)
+            AppendConsole($"[MOD CATALOGUE] {result.Message}");
         _browseMods = result.Mods.ToList();
 
         ModBrowseResultsList.ItemsSource = null;
@@ -1166,7 +1173,9 @@ public partial class MainWindow : Window
         var updated = mod.LastUpdated?.ToString("yyyy-MM-dd") ?? "unknown date";
 
         ModBrowseSelectionText.Text =
-            $"{mod.DisplayName} • {mod.Downloads:N0} downloads • {rating} • {size} • updated {updated}";
+            $"{mod.DisplayName} • {mod.Downloads:N0} downloads • {rating} • {size} • updated {updated}" +
+            (string.IsNullOrWhiteSpace(mod.PrimaryCategory) ? string.Empty : $" • {mod.PrimaryCategory}") +
+            (string.IsNullOrWhiteSpace(mod.Platform) ? string.Empty : $" • {mod.Platform}");
     }
 
     private async void AddBrowseModToServer_Click(object? sender, RoutedEventArgs e)
@@ -1226,7 +1235,8 @@ public partial class MainWindow : Window
         if (!_curseForgeMods.IsConfigured)
         {
             ModBrowseStatusText.Text =
-                "CurseForge provider is not configured. Set JAASM_CURSEFORGE_API_KEY for development or bundle an application-level provider key later.";
+                "Mod catalogue temporarily unavailable. Installed mods remain usable.";
+            AppendConsole("[MOD CATALOGUE] Provider is not configured.");
             return;
         }
 
