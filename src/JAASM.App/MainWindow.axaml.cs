@@ -80,6 +80,9 @@ public partial class MainWindow : Window
             var validation = _asaServer.ValidateInstallation(_settings.AsaServerInstallDirectory);
             AsaStatusText.Text = validation.Message;
         }
+
+        if (_curseForgeMods.IsConfigured && ActiveProfile is not null)
+            await ResolveMissingModMetadataAsync(ActiveProfile);
     }
 
     private async void SelectSteamCmd_Click(object? sender, RoutedEventArgs e)
@@ -1228,6 +1231,9 @@ public partial class MainWindow : Window
         AppendConsole(_curseForgeMods.IsConfigured
             ? "[MOD CATALOGUE] CurseForge provider configured."
             : "[MOD CATALOGUE] CurseForge provider cleared.");
+
+        if (_curseForgeMods.IsConfigured && ActiveProfile is not null)
+            await ResolveMissingModMetadataAsync(ActiveProfile);
     }
 
     private void OpenCurseForgeWebsite_Click(object? sender, RoutedEventArgs e)
@@ -1251,6 +1257,46 @@ public partial class MainWindow : Window
         {
             AppendConsole($"[MOD CATALOGUE] Could not open CurseForge website: {ex.Message}");
         }
+    }
+
+    private async Task ResolveMissingModMetadataAsync(AsaServerProfile profile)
+    {
+        var unresolved = profile.Mods
+            .Where(m =>
+                string.IsNullOrWhiteSpace(m.Author) ||
+                m.MetadataStatus is "Not queried" or "Metadata provider unavailable" or "Metadata lookup failed" ||
+                m.DisplayName == $"Mod {m.ModId}")
+            .ToList();
+
+        if (unresolved.Count == 0)
+            return;
+
+        AppendConsole($"[MODS] Resolving metadata for {unresolved.Count} existing mod(s)...");
+
+        foreach (var mod in unresolved)
+        {
+            mod.MetadataStatus = "Querying metadata...";
+            var resolved = await _curseForgeMods.GetModAsync(mod.ModId);
+
+            if (resolved is null)
+            {
+                mod.MetadataStatus = "Metadata lookup failed";
+                AppendConsole($"[MODS] Metadata lookup failed for {mod.ModId}.");
+                continue;
+            }
+
+            ApplyResolvedModMetadata(mod, resolved);
+            mod.MetadataStatus = "Metadata current";
+            AppendConsole($"[MODS] Resolved {mod.ModId}: {mod.DisplayName}.");
+        }
+
+        await _settingsService.SaveAsync(_settings);
+        RefreshModsUi();
+
+        ModUpdatesListBox.ItemsSource = null;
+        ModUpdatesListBox.ItemsSource = profile.Mods
+            .OrderBy(m => m.LoadOrder)
+            .ToList();
     }
 
     private async void BrowseModsSearch_Click(object? sender, RoutedEventArgs e)
