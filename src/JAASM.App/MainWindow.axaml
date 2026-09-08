@@ -20,11 +20,16 @@
 <StackPanel Margin="18" Spacing="12">
 
 <TextBlock Text="ARK Server Profiles" FontSize="22" FontWeight="SemiBold"/>
-<TextBlock Text="Each tab is an independent ASA server profile. Click + to create another server." Opacity="0.65" TextWrapping="Wrap"/>
+<TextBlock Text="Each tab is an independent ASA server profile. Use Add New Server + to create another server." Opacity="0.65" TextWrapping="Wrap"/>
 
-<TabControl x:Name="ServerProfileTabs"
-            Height="44"
-            SelectionChanged="ServerProfileTabs_SelectionChanged"/>
+<Border BorderBrush="#444" BorderThickness="0,0,0,1" Padding="0,0,0,4">
+  <WrapPanel x:Name="ProfileTabStrip" Orientation="Horizontal">
+    <Button Content="Add New Server +"
+            Margin="4,0,0,0"
+            Padding="14,8"
+            Click="CreateProfile_Click"/>
+  </WrapPanel>
+</Border>
 
 <Border x:Name="NoProfilePanel"
         BorderBrush="#444"
@@ -34,7 +39,7 @@
         Margin="0,8,0,0">
   <StackPanel Spacing="8">
     <TextBlock Text="No ARK server profiles" FontSize="20" FontWeight="SemiBold"/>
-    <TextBlock Text="Click the + tab above to create your first server profile." Opacity="0.65"/>
+    <TextBlock Text="Click Add New Server + above to create your first server profile." Opacity="0.65"/>
   </StackPanel>
 </Border>
 
