@@ -513,6 +513,7 @@ public partial class MainWindow : Window
         LoadCustomizationControls(p.Customization);
         LoadPerLevelStatsControls(p.PerLevelStats);
         RefreshPerLevelStatsSummary();
+        RefreshModsUi();
         LaunchPreviewText.Text = BuildLaunchArguments();
     }
 
@@ -550,6 +551,16 @@ public partial class MainWindow : Window
             args += $"?ServerAdminPassword={QuoteUrl(p.AdminPassword)}";
 
         args += $" -server -log -AltLogDirectoryName=\"{saveName}/Logs\"";
+        var enabledMods = p.Mods
+            .Where(m => m.Enabled)
+            .OrderBy(m => m.LoadOrder)
+            .Select(m => m.ModId)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToList();
+
+        if (enabledMods.Count > 0)
+            args += " -mods=" + string.Join(",", enabledMods);
+
         if (!string.IsNullOrWhiteSpace(p.ExtraArguments))
             args += " " + p.ExtraArguments;
 
@@ -884,6 +895,208 @@ public partial class MainWindow : Window
         LoadPerLevelStatsControls(profile.PerLevelStats);
         RefreshPerLevelStatsSummary();
         AppendConsole($"[PER-LEVEL STATS] Reset to defaults for {profile.ServerName}.");
+    }
+
+    private void RefreshModsUi()
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+        {
+            ModsListBox.ItemsSource = null;
+            ModsLaunchPreviewText.Text = "No profile selected";
+            ClearModDetails();
+            return;
+        }
+
+        NormalizeModOrder(profile);
+
+        foreach (var mod in profile.Mods)
+        {
+            if (string.IsNullOrWhiteSpace(mod.DisplayName))
+                mod.DisplayName = $"Mod {mod.ModId}";
+        }
+
+        var selectedId = (ModsListBox.SelectedItem as AsaModEntry)?.ModId;
+
+        ModsListBox.ItemsSource = null;
+        ModsListBox.ItemsSource = profile.Mods.OrderBy(m => m.LoadOrder).ToList();
+
+        if (!string.IsNullOrWhiteSpace(selectedId))
+            ModsListBox.SelectedItem = profile.Mods.FirstOrDefault(m => m.ModId == selectedId);
+
+        var enabledIds = profile.Mods
+            .Where(m => m.Enabled)
+            .OrderBy(m => m.LoadOrder)
+            .Select(m => m.ModId)
+            .ToList();
+
+        ModsLaunchPreviewText.Text = enabledIds.Count == 0
+            ? "No enabled mods"
+            : "-mods=" + string.Join(",", enabledIds);
+
+        if (ModsListBox.SelectedItem is AsaModEntry selected)
+            ShowModDetails(selected);
+        else
+            ClearModDetails();
+    }
+
+    private static void NormalizeModOrder(AsaServerProfile profile)
+    {
+        var ordered = profile.Mods.OrderBy(m => m.LoadOrder).ToList();
+        for (var i = 0; i < ordered.Count; i++)
+            ordered[i].LoadOrder = i + 1;
+
+        profile.Mods = ordered;
+    }
+
+    private async void AddMod_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        var id = NewModIdBox.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(id) || !id.All(char.IsDigit))
+        {
+            AppendConsole("[MODS] Mod ID must contain digits only.");
+            return;
+        }
+
+        if (profile.Mods.Any(m => string.Equals(m.ModId, id, StringComparison.OrdinalIgnoreCase)))
+        {
+            AppendConsole($"[MODS] Mod {id} already exists in this profile.");
+            return;
+        }
+
+        var mod = new AsaModEntry
+        {
+            ModId = id,
+            DisplayName = $"Mod {id}",
+            Enabled = true,
+            LoadOrder = profile.Mods.Count + 1
+        };
+
+        profile.Mods.Add(mod);
+        NewModIdBox.Text = string.Empty;
+        await _settingsService.SaveAsync(_settings);
+
+        RefreshModsUi();
+        ModsListBox.SelectedItem = mod;
+        LaunchPreviewText.Text = BuildLaunchArguments();
+        AppendConsole($"[MODS] Added mod {id} to {profile.ServerName}.");
+    }
+
+    private async void RemoveMod_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null || ModsListBox.SelectedItem is not AsaModEntry mod)
+            return;
+
+        profile.Mods.RemoveAll(m => string.Equals(m.ModId, mod.ModId, StringComparison.OrdinalIgnoreCase));
+        NormalizeModOrder(profile);
+        await _settingsService.SaveAsync(_settings);
+
+        RefreshModsUi();
+        LaunchPreviewText.Text = BuildLaunchArguments();
+        AppendConsole($"[MODS] Removed mod {mod.ModId} from {profile.ServerName}.");
+    }
+
+    private async void MoveModUp_Click(object? sender, RoutedEventArgs e) =>
+        await MoveSelectedModAsync(-1);
+
+    private async void MoveModDown_Click(object? sender, RoutedEventArgs e) =>
+        await MoveSelectedModAsync(1);
+
+    private async Task MoveSelectedModAsync(int direction)
+    {
+        var profile = ActiveProfile;
+        if (profile is null || ModsListBox.SelectedItem is not AsaModEntry selected)
+            return;
+
+        NormalizeModOrder(profile);
+        var ordered = profile.Mods.OrderBy(m => m.LoadOrder).ToList();
+        var index = ordered.FindIndex(m => m.ModId == selected.ModId);
+        var target = index + direction;
+
+        if (index < 0 || target < 0 || target >= ordered.Count)
+            return;
+
+        (ordered[index], ordered[target]) = (ordered[target], ordered[index]);
+        profile.Mods = ordered;
+        NormalizeModOrder(profile);
+        await _settingsService.SaveAsync(_settings);
+
+        RefreshModsUi();
+        ModsListBox.SelectedItem = profile.Mods.First(m => m.ModId == selected.ModId);
+        LaunchPreviewText.Text = BuildLaunchArguments();
+        AppendConsole($"[MODS] Moved mod {selected.ModId} to load order {target + 1}.");
+    }
+
+    private async void ToggleModEnabled_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null || ModsListBox.SelectedItem is not AsaModEntry mod)
+            return;
+
+        mod.Enabled = !mod.Enabled;
+        await _settingsService.SaveAsync(_settings);
+
+        RefreshModsUi();
+        ModsListBox.SelectedItem = profile.Mods.First(m => m.ModId == mod.ModId);
+        LaunchPreviewText.Text = BuildLaunchArguments();
+        AppendConsole($"[MODS] Mod {mod.ModId} {(mod.Enabled ? "enabled" : "disabled")}.");
+    }
+
+    private void ModsListBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (ModsListBox.SelectedItem is AsaModEntry mod)
+            ShowModDetails(mod);
+        else
+            ClearModDetails();
+    }
+
+    private void ShowModDetails(AsaModEntry mod)
+    {
+        ModDetailNameText.Text = string.IsNullOrWhiteSpace(mod.DisplayName)
+            ? $"Mod {mod.ModId}"
+            : mod.DisplayName;
+        ModDetailIdText.Text = $"Mod ID: {mod.ModId}   Load order: {mod.LoadOrder}   Enabled: {(mod.Enabled ? "Yes" : "No")}";
+        ModDetailAuthorText.Text = string.IsNullOrWhiteSpace(mod.Author) ? "Author: Unknown" : $"Author: {mod.Author}";
+        ModDetailPlatformText.Text = string.IsNullOrWhiteSpace(mod.Platform) ? "Platform: Unknown" : $"Platform: {mod.Platform}";
+        ModDetailDownloadsText.Text = mod.Downloads > 0 ? $"Downloads: {mod.Downloads:N0}" : "Downloads: Unknown";
+        ModDetailUpdatedText.Text = mod.LastUpdated is null ? "Last updated: Unknown" : $"Last updated: {mod.LastUpdated:yyyy-MM-dd}";
+        ModDetailFileText.Text = string.IsNullOrWhiteSpace(mod.MainFileName)
+            ? "Main file: Unknown"
+            : $"Main file: {mod.MainFileName}" +
+              (mod.MainFileId is null ? string.Empty : $"  (File ID {mod.MainFileId})");
+        ModDetailAvailabilityText.Text =
+            $"Available: {FormatNullableBool(mod.IsAvailable)}   Distribution allowed: {FormatNullableBool(mod.AllowDistribution)}" +
+            (string.IsNullOrWhiteSpace(mod.ReleaseType) ? string.Empty : $"   Release: {mod.ReleaseType}");
+        ModDetailDependenciesText.Text = mod.Dependencies.Count == 0
+            ? "Dependencies: None known"
+            : "Dependencies: " + string.Join(", ", mod.Dependencies);
+        ModDetailSummaryText.Text = string.IsNullOrWhiteSpace(mod.Summary)
+            ? "No metadata summary loaded."
+            : mod.Summary;
+        ModMetadataStatusText.Text = $"Metadata: {mod.MetadataStatus}";
+    }
+
+    private static string FormatNullableBool(bool? value) =>
+        value is null ? "Unknown" : value.Value ? "Yes" : "No";
+
+    private void ClearModDetails()
+    {
+        ModDetailNameText.Text = "Select a mod";
+        ModDetailIdText.Text = string.Empty;
+        ModDetailAuthorText.Text = string.Empty;
+        ModDetailPlatformText.Text = string.Empty;
+        ModDetailDownloadsText.Text = string.Empty;
+        ModDetailUpdatedText.Text = string.Empty;
+        ModDetailFileText.Text = string.Empty;
+        ModDetailAvailabilityText.Text = string.Empty;
+        ModDetailDependenciesText.Text = string.Empty;
+        ModDetailSummaryText.Text = string.Empty;
+        ModMetadataStatusText.Text = "Metadata: not queried";
     }
 
     private void RefreshPerLevelStatsSummary()
