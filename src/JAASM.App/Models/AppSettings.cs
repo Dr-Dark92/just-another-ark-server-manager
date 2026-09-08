@@ -12,6 +12,14 @@ public sealed class AppSettings
     public List<AsaServerProfile> AsaProfiles { get; set; } = new();
     public string? ActiveAsaProfileId { get; set; }
     public WebGuiSettings WebGui { get; set; } = new();
+    public ModProviderSettings ModProvider { get; set; } = new();
+}
+
+public sealed class ModProviderSettings
+{
+    // Optional developer/maintainer configuration. End users do not need this
+    // when a JAASM build is shipped with a provider key.
+    public string CurseForgeApiKey { get; set; } = string.Empty;
 }
 
 public sealed class AsaServerProfile
