@@ -50,8 +50,8 @@ public partial class MainWindow : Window
         CurseForgeApiKeyBox.Text = _settings.ModProvider.CurseForgeApiKey;
 
         ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
-            ? "Mod catalogue connected."
-            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
+            ? "Mod catalogue connected through CurseForge API."
+            : "Public mod catalogue fallback active.";
 
         EnsureProfiles();
         RefreshProfileTabs();
@@ -81,7 +81,7 @@ public partial class MainWindow : Window
             AsaStatusText.Text = validation.Message;
         }
 
-        if (_curseForgeMods.IsConfigured && ActiveProfile is not null)
+        if (ActiveProfile is not null)
             await ResolveMissingModMetadataAsync(ActiveProfile);
     }
 
@@ -1003,31 +1003,25 @@ public partial class MainWindow : Window
             DisplayName = $"Mod {id}",
             Enabled = true,
             LoadOrder = profile.Mods.Count + 1,
-            MetadataStatus = _curseForgeMods.IsConfigured ? "Querying metadata..." : "Metadata provider unavailable"
+            MetadataStatus = "Querying metadata..."
         };
 
         profile.Mods.Add(mod);
         NewModIdBox.Text = string.Empty;
 
-        // Adding a valid ASA CurseForge project ID should immediately try to
-        // resolve the human-readable metadata. Previously we stored the ID and
-        // left the entry permanently as "Not queried" until a separate refresh.
-        if (_curseForgeMods.IsConfigured)
-        {
-            AppendConsole($"[MODS] Resolving metadata for project {id}...");
-            var resolved = await _curseForgeMods.GetModAsync(id);
+        AppendConsole($"[MODS] Resolving metadata for project {id}...");
+        var resolved = await _curseForgeMods.GetModAsync(id);
 
-            if (resolved is not null)
-            {
-                ApplyResolvedModMetadata(mod, resolved);
-                mod.MetadataStatus = "Metadata current";
-                AppendConsole($"[MODS] Resolved {id}: {mod.DisplayName}.");
-            }
-            else
-            {
-                mod.MetadataStatus = "Metadata lookup failed";
-                AppendConsole($"[MODS] Could not resolve metadata for project {id}; keeping the mod ID.");
-            }
+        if (resolved is not null)
+        {
+            ApplyResolvedModMetadata(mod, resolved);
+            mod.MetadataStatus = "Metadata current";
+            AppendConsole($"[MODS] Resolved {id}: {mod.DisplayName}.");
+        }
+        else
+        {
+            mod.MetadataStatus = "Metadata lookup failed";
+            AppendConsole($"[MODS] Could not resolve metadata for project {id}; keeping the mod ID.");
         }
 
         await _settingsService.SaveAsync(_settings);
@@ -1065,14 +1059,6 @@ public partial class MainWindow : Window
         var profile = ActiveProfile;
         if (profile is null || ModsListBox.SelectedItem is not AsaModEntry mod)
             return;
-
-        if (!_curseForgeMods.IsConfigured)
-        {
-            mod.MetadataStatus = "Metadata provider unavailable";
-            ShowModDetails(mod);
-            AppendConsole("[MOD CATALOGUE] Metadata refresh requires a configured catalogue connection.");
-            return;
-        }
 
         mod.MetadataStatus = "Querying metadata...";
         ShowModDetails(mod);
@@ -1225,14 +1211,14 @@ public partial class MainWindow : Window
         _curseForgeMods.ConfigureApiKey(key);
 
         ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
-            ? "Mod catalogue connection saved. Search is now available."
-            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
+            ? "Mod catalogue connection saved. CurseForge API mode active."
+            : "Public mod catalogue fallback active.";
 
         AppendConsole(_curseForgeMods.IsConfigured
             ? "[MOD CATALOGUE] CurseForge provider configured."
             : "[MOD CATALOGUE] CurseForge provider cleared.");
 
-        if (_curseForgeMods.IsConfigured && ActiveProfile is not null)
+        if (ActiveProfile is not null)
             await ResolveMissingModMetadataAsync(ActiveProfile);
     }
 
@@ -1316,8 +1302,8 @@ public partial class MainWindow : Window
         var pageSize = int.TryParse(pageSizeText, out var parsedPageSize) ? parsedPageSize : 50;
 
         ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
-            ? "Searching mod catalogue..."
-            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
+            ? "Searching CurseForge API catalogue..."
+            : "Searching public mod catalogue...";
 
         var result = await _curseForgeMods.SearchAsync(
             new ModBrowseQuery(
@@ -1327,8 +1313,8 @@ public partial class MainWindow : Window
                 pageSize));
 
         ModBrowseStatusText.Text = result.Success
-            ? result.Message.Replace("CurseForge", "catalogue", StringComparison.OrdinalIgnoreCase)
-            : "Mod catalogue temporarily unavailable. You can still add mods by ID.";
+            ? result.Message
+            : "Mod catalogue search failed. You can still add mods by ID.";
 
         if (!result.Success)
             AppendConsole($"[MOD CATALOGUE] {result.Message}");
@@ -1412,14 +1398,6 @@ public partial class MainWindow : Window
         var profile = ActiveProfile;
         if (profile is null)
             return;
-
-        if (!_curseForgeMods.IsConfigured)
-        {
-            ModBrowseStatusText.Text =
-                "Mod catalogue temporarily unavailable. Installed mods remain usable.";
-            AppendConsole("[MOD CATALOGUE] Provider is not configured.");
-            return;
-        }
 
         foreach (var installed in profile.Mods)
         {
