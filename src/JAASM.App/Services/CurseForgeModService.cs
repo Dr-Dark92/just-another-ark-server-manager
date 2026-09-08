@@ -185,6 +185,7 @@ public sealed class CurseForgeModService
             var updatedText = MatchValue(text, @"Updated\s*:?\s*([0-9]{4}-[0-9]{2}-[0-9]{2})");
             var category = MatchValue(text, @"Categories?\s*:?\s*([^\r\n]+)");
             var summary = ExtractFirstParagraphAfterHeading(html, "Description");
+            var logoUrl = ExtractModImageUrl(html);
 
             return new AsaModEntry
             {
@@ -192,6 +193,7 @@ public sealed class CurseForgeModService
                 DisplayName = string.IsNullOrWhiteSpace(title) ? $"Mod {modId}" : title,
                 Author = author,
                 Summary = summary,
+                LogoUrl = logoUrl,
                 Platform = title.Contains("Crossplay", StringComparison.OrdinalIgnoreCase)
                     ? "Cross-Platform"
                     : "Unknown",
@@ -525,6 +527,56 @@ public sealed class CurseForgeModService
         {
             return null;
         }
+    }
+
+    private static string ExtractModImageUrl(string html)
+    {
+        // Prefer social/preview metadata because it normally points at the mod's
+        // actual project artwork and is far less coupled to page layout.
+        var patterns = new[]
+        {
+            @"<meta[^>]+property=[\"']og:image[\"'][^>]+content=[\"']([^\"']+)[\"']",
+            @"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+property=[\"']og:image[\"']",
+            @"<meta[^>]+name=[\"']twitter:image(?::src)?[\"'][^>]+content=[\"']([^\"']+)[\"']",
+            @"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+name=[\"']twitter:image(?::src)?[\"']"
+        };
+
+        foreach (var pattern in patterns)
+        {
+            var match = Regex.Match(html, pattern,
+                RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            if (!match.Success)
+                continue;
+
+            var value = WebUtility.HtmlDecode(match.Groups[1].Value).Trim();
+            if (Uri.TryCreate(value, UriKind.Absolute, out var absolute) &&
+                (absolute.Scheme == Uri.UriSchemeHttps || absolute.Scheme == Uri.UriSchemeHttp))
+                return absolute.ToString();
+        }
+
+        // Last resort: use the first image that looks like project/mod artwork,
+        // but avoid tiny icons, SVGs and site chrome where possible.
+        foreach (Match match in Regex.Matches(
+                     html,
+                     @"<img[^>]+(?:src|data-src)=[\"']([^\"']+)[\"'][^>]*>",
+                     RegexOptions.IgnoreCase | RegexOptions.Singleline))
+        {
+            var value = WebUtility.HtmlDecode(match.Groups[1].Value).Trim();
+            if (value.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) ||
+                value.Contains("logo", StringComparison.OrdinalIgnoreCase) ||
+                value.Contains("icon", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (Uri.TryCreate(value, UriKind.Absolute, out var absolute) &&
+                (absolute.Scheme == Uri.UriSchemeHttps || absolute.Scheme == Uri.UriSchemeHttp))
+                return absolute.ToString();
+
+            if (Uri.TryCreate(new Uri("https://arkcodes.com/"), value, out var relative))
+                return relative.ToString();
+        }
+
+        return string.Empty;
     }
 
     private static string HtmlToText(string html)
