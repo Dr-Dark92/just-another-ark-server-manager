@@ -233,6 +233,70 @@
     </StackPanel></ScrollViewer>
   </TabItem>
 
+  <TabItem Header="Mods">
+    <Grid Margin="12" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+      <StackPanel Grid.Row="0" Spacing="4">
+        <TextBlock Text="ASA Mods" FontSize="20" FontWeight="SemiBold"/>
+        <TextBlock Text="Mods are stored per server profile. Enabled mods are launched in the exact order shown below using ASA's -mods argument." TextWrapping="Wrap" Opacity="0.7"/>
+      </StackPanel>
+
+      <Grid Grid.Row="1" ColumnDefinitions="Auto,180,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+        <TextBlock Text="Mod ID" VerticalAlignment="Center"/>
+        <TextBox x:Name="NewModIdBox" Grid.Column="1" PlaceholderText="e.g. 933029"/>
+        <Button Grid.Column="2" Content="Add Mod" Click="AddMod_Click"/>
+        <Button Grid.Column="3" Content="Remove" Click="RemoveMod_Click"/>
+        <Button Grid.Column="4" Content="Move Up" Click="MoveModUp_Click"/>
+        <Button Grid.Column="5" Content="Move Down" Click="MoveModDown_Click"/>
+        <Button Grid.Column="6" Content="Toggle Enable" Click="ToggleModEnabled_Click"/>
+      </Grid>
+
+      <Grid Grid.Row="2" ColumnDefinitions="360,*" ColumnSpacing="12">
+        <ListBox x:Name="ModsListBox" SelectionChanged="ModsListBox_SelectionChanged">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                  <TextBlock Text="{Binding LoadOrder}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ModId}" Opacity="0.7"/>
+                  </StackPanel>
+                  <CheckBox Grid.Column="2" IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center"/>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Border Grid.Column="1" BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="14">
+          <ScrollViewer>
+            <StackPanel Spacing="8">
+              <TextBlock Text="Mod Details" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock x:Name="ModDetailNameText" Text="Select a mod" FontSize="16"/>
+              <TextBlock x:Name="ModDetailIdText" Opacity="0.7"/>
+              <TextBlock x:Name="ModDetailAuthorText"/>
+              <TextBlock x:Name="ModDetailPlatformText"/>
+              <TextBlock x:Name="ModDetailDownloadsText"/>
+              <TextBlock x:Name="ModDetailUpdatedText"/>
+              <TextBlock x:Name="ModDetailFileText" TextWrapping="Wrap"/>
+              <TextBlock x:Name="ModDetailAvailabilityText" TextWrapping="Wrap"/>
+              <TextBlock x:Name="ModDetailDependenciesText" TextWrapping="Wrap"/>
+              <TextBlock x:Name="ModDetailSummaryText" TextWrapping="Wrap" Opacity="0.8"/>
+              <Separator/>
+              <TextBlock x:Name="ModMetadataStatusText" Text="Metadata: not queried" Opacity="0.6"/>
+              <TextBlock Text="Core JAASM mod loading works without CurseForge metadata. Metadata enrichment will remain optional so API/provider failures never block the server." TextWrapping="Wrap" FontSize="11" Opacity="0.55"/>
+            </StackPanel>
+          </ScrollViewer>
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10">
+        <TextBlock Text="Generated:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        <TextBlock x:Name="ModsLaunchPreviewText" FontFamily="Consolas, monospace" VerticalAlignment="Center" TextWrapping="Wrap"/>
+      </StackPanel>
+    </Grid>
+  </TabItem>
+
   <TabItem Header="Per-Level Stats">
     <StackPanel Margin="12" Spacing="10">
       <TextBlock Text="Per-Level Stat Multipliers" FontSize="20" FontWeight="SemiBold"/>
