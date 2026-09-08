@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private readonly AsaProcessService _asaProcess = new();
     private AppSettings _settings = new();
     private bool _loading;
+    private AsaServerProfile ActiveProfile => _settings.AsaProfiles.First(p => p.Id == _settings.ActiveAsaProfileId);
 
     public MainWindow()
     {
@@ -35,6 +36,8 @@ public partial class MainWindow : Window
         SteamCmdInstallDirectoryBox.Text = _settings.SteamCmdInstallDirectory ?? string.Empty;
         AsaInstallDirectoryBox.Text = _settings.AsaServerInstallDirectory ?? string.Empty;
         WebGuiToggle.IsChecked = _settings.WebGui.Enabled;
+        EnsureProfiles();
+        RefreshProfileSelector();
         LoadProfileControls();
         RefreshProcessState();
 
@@ -316,9 +319,86 @@ public partial class MainWindow : Window
             AppendConsole($"[ASA VALIDATION FAILED] {result.Message}");
     }
 
+    private void EnsureProfiles()
+    {
+        if (_settings.AsaProfiles.Count == 0)
+        {
+            var migrated = _settings.AsaProfile;
+            if (string.IsNullOrWhiteSpace(migrated.Id))
+                migrated.Id = Guid.NewGuid().ToString("N");
+            _settings.AsaProfiles.Add(migrated);
+        }
+
+        if (string.IsNullOrWhiteSpace(_settings.ActiveAsaProfileId) ||
+            !_settings.AsaProfiles.Any(p => p.Id == _settings.ActiveAsaProfileId))
+            _settings.ActiveAsaProfileId = _settings.AsaProfiles[0].Id;
+    }
+
+    private void RefreshProfileSelector()
+    {
+        _loading = true;
+        ProfileSelector.ItemsSource = _settings.AsaProfiles;
+        ProfileSelector.DisplayMemberBinding = new Avalonia.Data.Binding(nameof(AsaServerProfile.ServerName));
+        ProfileSelector.SelectedItem = ActiveProfile;
+        _loading = false;
+    }
+
+    private async void CreateProfile_Click(object? sender, RoutedEventArgs e)
+    {
+        var index = _settings.AsaProfiles.Count + 1;
+        var profile = new AsaServerProfile
+        {
+            ServerName = $"JAASM Server {index}",
+            GamePort = 7777 + ((index - 1) * 10),
+            QueryPort = 27015 + (index - 1),
+            RconPort = 27020 + (index - 1)
+        };
+        _settings.AsaProfiles.Add(profile);
+        _settings.ActiveAsaProfileId = profile.Id;
+        await _settingsService.SaveAsync(_settings);
+        RefreshProfileSelector();
+        LoadProfileControls();
+        AppendConsole($"[PROFILE] Created {profile.ServerName} ({profile.Id}).");
+    }
+
+    private async void DeleteProfile_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_settings.AsaProfiles.Count <= 1)
+        {
+            AppendConsole("[PROFILE] At least one ASA profile must remain.");
+            return;
+        }
+
+        var profile = ActiveProfile;
+        if (_asaProcess.GetState(profile.Id).Running)
+        {
+            AppendConsole("[PROFILE] Stop the server before deleting its profile.");
+            return;
+        }
+
+        _settings.AsaProfiles.Remove(profile);
+        _settings.ActiveAsaProfileId = _settings.AsaProfiles[0].Id;
+        await _settingsService.SaveAsync(_settings);
+        RefreshProfileSelector();
+        LoadProfileControls();
+        AppendConsole($"[PROFILE] Deleted {profile.ServerName}.");
+    }
+
+    private async void ProfileSelector_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || ProfileSelector.SelectedItem is not AsaServerProfile profile)
+            return;
+
+        ReadProfileControls();
+        _settings.ActiveAsaProfileId = profile.Id;
+        await _settingsService.SaveAsync(_settings);
+        LoadProfileControls();
+        RefreshProcessState();
+    }
+
     private void LoadProfileControls()
     {
-        var p = _settings.AsaProfile;
+        var p = ActiveProfile;
         ServerNameBox.Text = p.ServerName;
         for (var i = 0; i < MapBox.ItemCount; i++)
         {
@@ -343,7 +423,7 @@ public partial class MainWindow : Window
 
     private void ReadProfileControls()
     {
-        var p = _settings.AsaProfile;
+        var p = ActiveProfile;
         p.ServerName = ServerNameBox.Text?.Trim() ?? "JAASM Server";
         p.Map = (MapBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "TheIsland_WP";
         p.MaxPlayers = (int)(MaxPlayersBox.Value ?? 70);
@@ -376,14 +456,14 @@ public partial class MainWindow : Window
 
     private async void ChooseExtraArguments_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new ExtraArgumentsWindow(_settings.AsaProfile.SelectedExtraArguments);
+        var dialog = new ExtraArgumentsWindow(ActiveProfile.SelectedExtraArguments);
         await dialog.ShowDialog(this);
 
         if (dialog.Selection is null)
             return;
 
-        _settings.AsaProfile.SelectedExtraArguments = dialog.Selection.ToList();
-        _settings.AsaProfile.ExtraArguments = string.Join(" ", dialog.Selection);
+        ActiveProfile.SelectedExtraArguments = dialog.Selection.ToList();
+        ActiveProfile.ExtraArguments = string.Join(" ", dialog.Selection);
         ExtraArgumentsSummaryText.Text = dialog.Selection.Count == 0
             ? "None selected"
             : $"{dialog.Selection.Count} selected";
@@ -413,13 +493,13 @@ public partial class MainWindow : Window
 
         var args = BuildLaunchArguments();
         LaunchPreviewText.Text = args;
-        var state = await _asaProcess.StartAsync(validation.ExecutablePath, args, CreateConsoleProgress());
+        var state = await _asaProcess.StartAsync(ActiveProfile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
         RefreshProcessState(state);
     }
 
     private async void StopAsa_Click(object? sender, RoutedEventArgs e)
     {
-        var state = await _asaProcess.StopAsync(CreateConsoleProgress());
+        var state = await _asaProcess.StopAsync(ActiveProfile.Id, CreateConsoleProgress());
         RefreshProcessState(state);
     }
 
@@ -434,19 +514,19 @@ public partial class MainWindow : Window
         }
 
         var args = BuildLaunchArguments();
-        var state = await _asaProcess.RestartAsync(validation.ExecutablePath, args, CreateConsoleProgress());
+        var state = await _asaProcess.RestartAsync(ActiveProfile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
         RefreshProcessState(state);
     }
 
     private async void ForceStopAsa_Click(object? sender, RoutedEventArgs e)
     {
-        var state = await _asaProcess.ForceStopAsync(CreateConsoleProgress());
+        var state = await _asaProcess.ForceStopAsync(ActiveProfile.Id, CreateConsoleProgress());
         RefreshProcessState(state);
     }
 
     private void RefreshProcessState(AsaProcessState? state = null)
     {
-        state ??= _asaProcess.GetState();
+        state ??= _asaProcess.GetState(ActiveProfile.Id);
         ProcessStatusText.Text = state.Running ? "Running" : "Stopped";
         PidText.Text = state.ProcessId?.ToString() ?? "-";
         UptimeText.Text = state.Uptime is null ? "-" : state.Uptime.Value.ToString(@"dd\.hh\:mm\:ss");
