@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using System.Diagnostics;
 using JAASM.App.Models;
 using JAASM.App.Services;
@@ -15,6 +16,7 @@ public partial class MainWindow : Window
     private readonly AsaProcessService _asaProcess = new();
     private readonly AsaConfigService _asaConfig = new();
     private readonly CurseForgeModService _curseForgeMods = new();
+    private readonly BrowserModBridgeService _browserModBridge;
     private List<AsaModEntry> _browseMods = new();
     private AppSettings _settings = new();
     private bool _loading;
@@ -25,11 +27,27 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _asaServer = new AsaServerService(_steamCmd);
+        _browserModBridge = new BrowserModBridgeService(AddModFromBrowserExtensionAsync);
 
         PlatformText.Text =
             $"Platform: {Environment.OSVersion.Platform} / {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}";
 
-        Opened += async (_, _) => await LoadSettingsAsync();
+        Opened += async (_, _) =>
+        {
+            await LoadSettingsAsync();
+
+            try
+            {
+                await _browserModBridge.StartAsync();
+                AppendConsole($"[MOD BRIDGE] Listening on 127.0.0.1:{_browserModBridge.Port}.");
+            }
+            catch (Exception ex)
+            {
+                AppendConsole($"[MOD BRIDGE] Could not start browser bridge: {ex.Message}");
+            }
+        };
+
+        Closed += async (_, _) => await _browserModBridge.DisposeAsync();
     }
 
     private async Task LoadSettingsAsync()
@@ -985,6 +1003,46 @@ public partial class MainWindow : Window
             return;
 
         NewModIdBox.Text = string.Empty;
+    }
+
+    private Task<BrowserModBridgeResult> AddModFromBrowserExtensionAsync(string modId)
+    {
+        var tcs = new TaskCompletionSource<BrowserModBridgeResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                var profile = ActiveProfile;
+                if (profile is null)
+                {
+                    tcs.TrySetResult(new BrowserModBridgeResult(
+                        false,
+                        "JAASM has no active server profile."));
+                    return;
+                }
+
+                var before = profile.Mods.Count;
+                var added = await AddModByIdAsync(modId);
+
+                var message = added
+                    ? $"Added mod {modId} to {profile.ServerName}."
+                    : profile.Mods.Any(m => m.ModId == modId)
+                        ? $"Mod {modId} is already in {profile.ServerName}."
+                        : $"JAASM could not add mod {modId}.";
+
+                tcs.TrySetResult(new BrowserModBridgeResult(added, message));
+            }
+            catch (Exception ex)
+            {
+                tcs.TrySetResult(new BrowserModBridgeResult(
+                    false,
+                    $"JAASM failed to add mod {modId}: {ex.Message}"));
+            }
+        });
+
+        return tcs.Task;
     }
 
     private async Task<bool> AddModByIdAsync(string id)
