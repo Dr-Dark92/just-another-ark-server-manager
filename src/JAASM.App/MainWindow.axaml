@@ -471,10 +471,21 @@
                       </StackPanel>
 
                       <StackPanel Grid.Column="2" Spacing="8">
-                        <Button Content="+ Add"
-                                HorizontalAlignment="Right"
-                                Padding="12,5"
-                                Click="AddBrowseModCard_Click"/>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="6">
+                          <Button Content="+ Add"
+                                  IsVisible="{Binding IsNotInstalledInActiveProfile}"
+                                  Padding="12,5"
+                                  Click="AddBrowseModCard_Click"/>
+                          <Button Content="✓ Added"
+                                  IsVisible="{Binding IsInstalledInActiveProfile}"
+                                  IsEnabled="False"
+                                  Padding="12,5"
+                                  Background="#15803D"
+                                  BorderBrush="#22C55E"
+                                  Foreground="White"/>
+                        </StackPanel>
                         <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="3">
                           <TextBlock Grid.Row="0" Text="Downloads" FontSize="10" Opacity="0.5"/>
                           <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Downloads}"/>
