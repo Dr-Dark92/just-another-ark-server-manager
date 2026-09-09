@@ -980,21 +980,30 @@ public partial class MainWindow : Window
 
     private async void AddMod_Click(object? sender, RoutedEventArgs e)
     {
-        var profile = ActiveProfile;
-        if (profile is null)
+        var id = NewModIdBox.Text?.Trim() ?? string.Empty;
+
+        if (!await AddModByIdAsync(id))
             return;
 
-        var id = NewModIdBox.Text?.Trim() ?? string.Empty;
+        NewModIdBox.Text = string.Empty;
+    }
+
+    private async Task<bool> AddModByIdAsync(string id)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return false;
+
         if (string.IsNullOrWhiteSpace(id) || !id.All(char.IsDigit))
         {
             AppendConsole("[MODS] Mod ID must contain digits only.");
-            return;
+            return false;
         }
 
         if (profile.Mods.Any(m => string.Equals(m.ModId, id, StringComparison.OrdinalIgnoreCase)))
         {
             AppendConsole($"[MODS] Mod {id} already exists in this profile.");
-            return;
+            return false;
         }
 
         var mod = new AsaModEntry
@@ -1007,7 +1016,6 @@ public partial class MainWindow : Window
         };
 
         profile.Mods.Add(mod);
-        NewModIdBox.Text = string.Empty;
 
         AppendConsole($"[MODS] Resolving metadata for project {id}...");
         var resolved = await _curseForgeMods.GetModAsync(id);
@@ -1030,6 +1038,29 @@ public partial class MainWindow : Window
         ModsListBox.SelectedItem = mod;
         LaunchPreviewText.Text = BuildLaunchArguments();
         AppendConsole($"[MODS] Added mod {id} to {profile.ServerName}.");
+        return true;
+    }
+
+    private async void OpenEmbeddedModBrowser_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ActiveProfile is null)
+        {
+            AppendConsole("[MOD BROWSER] Select or create a server profile first.");
+            return;
+        }
+
+        var browser = new ModBrowserWindow(ModBrowseSearchBox.Text);
+        await browser.ShowDialog(this);
+
+        if (string.IsNullOrWhiteSpace(browser.SelectedModId))
+            return;
+
+        var added = await AddModByIdAsync(browser.SelectedModId);
+        if (added)
+        {
+            ModBrowseStatusText.Text =
+                $"Added mod {browser.SelectedModId} from the embedded CurseForge browser.";
+        }
     }
 
     private static void ApplyResolvedModMetadata(AsaModEntry target, AsaModEntry source)
