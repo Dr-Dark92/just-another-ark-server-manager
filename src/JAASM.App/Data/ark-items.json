@@ -1,6 +1,6 @@
 {
   "source": "https://ark.fandom.com/wiki/Item_IDs",
-  "generatedBy": "JAASM seed catalogue; refresh with tools/build_ark_item_catalog.py",
+  "generatedBy": "bundled JAASM offline catalogue",
   "items": [
     {
       "displayName": "Amarberry",
@@ -387,5 +387,8 @@
       "iconFile": "",
       "sourceUrl": ""
     }
-  ]
+  ],
+  "sourceMode": "offline-snapshot",
+  "snapshotDate": "2026-09-09",
+  "runtimeNetworkRequired": false
 }
