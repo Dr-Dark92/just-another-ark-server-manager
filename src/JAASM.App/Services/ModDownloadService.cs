@@ -228,7 +228,7 @@ public sealed class ModDownloadService
 
         var candidates = Regex.Matches(
                 searchHtml,
-                @"href=[\"'](/ark-survival-ascended/mods/[a-z0-9-]+)[\"']",
+                "href=[\\\"\'](/ark-survival-ascended/mods/[a-z0-9-]+)[\\\"\']",
                 RegexOptions.IgnoreCase)
             .Select(m => "https://www.curseforge.com" + WebUtility.HtmlDecode(m.Groups[1].Value))
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -287,7 +287,7 @@ public sealed class ModDownloadService
         // For ASA project pages the Main File is normally the Windows-server package.
         var downloadMatches = Regex.Matches(
             html,
-            @"href=[\"']([^ \"']*/ark-survival-ascended/mods/[a-z0-9-]+/download/(\d+))[\"']",
+            "href=[\\\"\']([^ \\\"\']*/ark-survival-ascended/mods/[a-z0-9-]+/download/(\\d+))[\\\"\']",
             RegexOptions.IgnoreCase);
 
         Match? chosen = downloadMatches.Cast<Match>().FirstOrDefault();
@@ -295,7 +295,7 @@ public sealed class ModDownloadService
         {
             chosen = Regex.Matches(
                     html,
-                    @"href=[\"']([^ \"']*/download/(\d+))[\"']",
+                    "href=[\\\"\']([^ \\\"\']*/download/(\\d+))[\\\"\']",
                     RegexOptions.IgnoreCase)
                 .Cast<Match>()
                 .FirstOrDefault();
