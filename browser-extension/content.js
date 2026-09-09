@@ -79,13 +79,21 @@
         if (response?.ok) {
           button.dataset.state = "success";
           button.textContent = "✓ Added";
-          button.title = response.message || "Added to JAASM.";
+          button.title = (response.message || "Added to JAASM.") +
+            (response.modId ? " [ID " + response.modId + "]" : "");
+          return;
+        }
+
+        if (response?.alreadyExists === true) {
+          button.dataset.state = "success";
+          button.textContent = "✓ Already added";
+          button.title = (response.message || "Already in JAASM.") +
+            (response.modId ? " [ID " + response.modId + "]" : "");
           return;
         }
 
         button.dataset.state = "error";
-        button.textContent =
-          response?.status === 409 ? "Already added" : "Add failed";
+        button.textContent = "Add failed";
         button.title = response?.message || "JAASM could not add this mod.";
         button.disabled = false;
       }
@@ -182,6 +190,29 @@
     return findCard(link);
   }
 
+  function findCanonicalCardModLink(card, fallbackLink, provider) {
+    const candidates = Array.from(card.querySelectorAll("a[href]"))
+      .filter((candidate) =>
+        provider === "curseforge"
+          ? isCurseForgeModLink(candidate)
+          : isArkCodesModLink(candidate)
+      );
+
+    if (candidates.length === 0) return fallbackLink;
+
+    const visibleWithText = candidates
+      .filter((candidate) => {
+        const rect = candidate.getBoundingClientRect();
+        const text = (candidate.innerText || "").trim();
+        return rect.width > 0 && rect.height > 0 && text.length > 1;
+      })
+      .sort((a, b) =>
+        (b.innerText || "").trim().length - (a.innerText || "").trim().length
+      );
+
+    return visibleWithText[0] || candidates[0] || fallbackLink;
+  }
+
   function attachCardButton(link) {
     if (!link) return;
 
@@ -200,7 +231,9 @@
       card.setAttribute(CARD_MARK, "1");
       card.classList.add("jaasm-card-host");
 
-      const button = makeButton(link.href, () => card.innerText || "");
+      const canonicalLink = findCanonicalCardModLink(card, link, "arkcodes");
+      const button = makeButton(canonicalLink.href, () => card.innerText || "");
+      button.dataset.sourceUrl = canonicalLink.href;
       button.classList.add("jaasm-card-button");
       card.appendChild(button);
       return;
@@ -209,10 +242,13 @@
     const card = findCard(link);
     if (!card || card.hasAttribute(CARD_MARK)) return;
 
+    const canonicalLink = findCanonicalCardModLink(card, link, "curseforge");
+
     card.setAttribute(CARD_MARK, "1");
     card.classList.add("jaasm-card-host");
 
-    const button = makeButton(link.href, () => card.innerText || "");
+    const button = makeButton(canonicalLink.href, () => card.innerText || "");
+    button.dataset.sourceUrl = canonicalLink.href;
     button.classList.add("jaasm-card-button");
     card.appendChild(button);
   }
