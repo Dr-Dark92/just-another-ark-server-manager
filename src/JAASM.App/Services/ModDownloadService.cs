@@ -214,11 +214,15 @@ public sealed class ModDownloadService
             // Fall through to CurseForge search-by-ID.
         }
 
-        // Final public fallback: search CurseForge with the numeric project ID,
-        // then verify candidates by the Project ID printed on each project page.
+        // Final public fallback: search CurseForge by the human mod name first.
+        // CurseForge search does not reliably return results for numeric Project IDs.
+        var searchTerm = !string.IsNullOrWhiteSpace(mod.DisplayName)
+            ? mod.DisplayName
+            : mod.ModId;
+
         var searchUrl =
             "https://www.curseforge.com/ark-survival-ascended/search?class=mods&search=" +
-            Uri.EscapeDataString(mod.ModId);
+            Uri.EscapeDataString(searchTerm);
 
         using var searchResponse = await _http.GetAsync(searchUrl, ct);
         if (!searchResponse.IsSuccessStatusCode)
@@ -271,7 +275,7 @@ public sealed class ModDownloadService
         // CurseForge exposes the current ASA server package reliably on the Files page
         // as a /files/<fileId> link. The project landing-page Download link is not a
         // stable source for scraping and was the reason the first downloader failed.
-        var filesUrl = projectUrl.TrimEnd('/') + "/files/all?page=1&version=1.0";
+        var filesUrl = projectUrl.TrimEnd('/') + "/files/all?page=1";
 
         using var response = await _http.GetAsync(filesUrl, ct);
         if (!response.IsSuccessStatusCode)
@@ -285,65 +289,50 @@ public sealed class ModDownloadService
             @"Project\s*ID\s*:?\s*(\d{4,10})",
             RegexOptions.IgnoreCase);
 
-        if (!projectId.Success || projectId.Groups[1].Value != modId)
+        if (projectId.Success && projectId.Groups[1].Value != modId)
             return null;
 
-        // Find the first Windows-server ZIP row and its associated /files/<id> link.
-        // The files list is newest-first, so the first match is the latest server build.
-        var anchors = Regex.Matches(
-                html,
-                "<a[^>]+href=[\\\"']([^\\\"']*/files/(\\d+)[^\\\"']*)[\\\"'][^>]*>([\\s\\S]*?)</a>",
+        // CurseForge's current HTML does not guarantee that the filename is inside
+        // the /files/<id> anchor. Resolve the visible newest windowsserver filename
+        // first, then search the surrounding raw HTML for the associated file link.
+        var serverNameMatch = Regex.Match(
+            text,
+            @"([^\r\n]*windowsserver[^\r\n]*\.zip)",
+            RegexOptions.IgnoreCase);
+
+        if (!serverNameMatch.Success)
+            return null;
+
+        var fileName = serverNameMatch.Groups[1].Value.Trim();
+
+        var escapedName = Regex.Escape(fileName);
+        var rawNameIndex = html.IndexOf(
+            fileName,
+            StringComparison.OrdinalIgnoreCase);
+
+        // HTML may encode spaces/entities, so if the exact visible filename is not
+        // present, anchor on the first windowsserver token instead.
+        if (rawNameIndex < 0)
+            rawNameIndex = html.IndexOf("windowsserver", StringComparison.OrdinalIgnoreCase);
+
+        if (rawNameIndex < 0)
+            return null;
+
+        var windowStart = Math.Max(0, rawNameIndex - 5000);
+        var windowLength = Math.Min(10000, html.Length - windowStart);
+        var window = html.Substring(windowStart, windowLength);
+
+        var fileLinkMatches = Regex.Matches(
+                window,
+                "href=[\\\"']([^\\\"']*/files/(\\d+)[^\\\"']*)[\\\"']",
                 RegexOptions.IgnoreCase)
             .Cast<Match>()
             .ToList();
 
-        Match? chosen = null;
-        string? fileName = null;
-
-        foreach (var anchor in anchors)
-        {
-            var anchorText = HtmlToText(anchor.Groups[3].Value);
-            if (!anchorText.Contains("windowsserver", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            if (!anchorText.Contains(".zip", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            chosen = anchor;
-            fileName = anchorText
-                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .FirstOrDefault(line =>
-                    line.Contains("windowsserver", StringComparison.OrdinalIgnoreCase) &&
-                    line.Contains(".zip", StringComparison.OrdinalIgnoreCase));
-            break;
-        }
-
-        // Some CurseForge layouts put the filename outside the anchor. Fall back to
-        // matching a small HTML window around each /files/<id> link.
-        if (chosen is null)
-        {
-            foreach (Match anchor in Regex.Matches(
-                         html,
-                         "href=[\\\"']([^\\\"']*/files/(\\d+)[^\\\"']*)[\\\"']",
-                         RegexOptions.IgnoreCase))
-            {
-                var index = anchor.Index;
-                var length = Math.Min(1200, html.Length - index);
-                var nearby = HtmlToText(html.Substring(index, length));
-
-                var serverName = Regex.Match(
-                    nearby,
-                    @"([^\r\n]*windowsserver[^\r\n]*\.zip)",
-                    RegexOptions.IgnoreCase);
-
-                if (!serverName.Success)
-                    continue;
-
-                chosen = anchor;
-                fileName = serverName.Groups[1].Value.Trim();
-                break;
-            }
-        }
+        // Prefer the closest file link to the windowsserver filename.
+        var chosen = fileLinkMatches
+            .OrderBy(match => Math.Abs((windowStart + match.Index) - rawNameIndex))
+            .FirstOrDefault();
 
         if (chosen is null || !int.TryParse(chosen.Groups[2].Value, out var fileId))
             return null;
