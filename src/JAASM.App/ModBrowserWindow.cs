@@ -40,7 +40,7 @@ public sealed class ModBrowserWindow : Window
         home.Click += (_, _) => Navigate(BuildSearchUrl(string.Empty));
 
         _addressBox.HorizontalAlignment = HorizontalAlignment.Stretch;
-        _addressBox.Watermark = "CurseForge URL";
+        _addressBox.PlaceholderText = "CurseForge URL";
 
         var go = new Button { Content = "Go" };
         go.Click += (_, _) =>
