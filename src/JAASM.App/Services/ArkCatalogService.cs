@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JAASM.App.Models;
 
 namespace JAASM.App.Services;
@@ -6,52 +7,51 @@ public static class ArkCatalogService
 {
     // Built-in safe catalogue. Class identifiers are never typed by normal users.
     // Keep this catalogue version-controlled and extend it only with verified ARK identifiers.
-    public static List<HarvestResourceCatalogEntry> CreateHarvestResources() =>
-        new()
+    public static List<HarvestResourceCatalogEntry> CreateHarvestResources()
+    {
+        var catalogPath = Path.Combine(AppContext.BaseDirectory, "Data", "ark-items.json");
+
+        try
+        {
+            if (File.Exists(catalogPath))
+            {
+                var json = File.ReadAllText(catalogPath);
+                var root = JsonSerializer.Deserialize<ItemCatalogDocument>(
+                    json,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                if (root?.Items is { Count: > 0 })
+                    return root.Items;
+            }
+        }
+        catch
+        {
+            // Fall back to the minimal embedded list below. Catalogue failures must
+            // never prevent JAASM from starting.
+        }
+
+        return new()
         {
             R("Wood", "PrimalItemResource_Wood_C"),
             R("Thatch", "PrimalItemResource_Thatch_C"),
             R("Stone", "PrimalItemResource_Stone_C"),
             R("Flint", "PrimalItemResource_Flint_C"),
             R("Metal", "PrimalItemResource_Metal_C"),
-            R("Metal Ingot", "PrimalItemResource_MetalIngot_C"),
             R("Fiber", "PrimalItemResource_Fibers_C"),
             R("Hide", "PrimalItemResource_Hide_C"),
-            R("Chitin", "PrimalItemResource_Chitin_C"),
-            R("Keratin", "PrimalItemResource_Keratin_C"),
-            R("Crystal", "PrimalItemResource_Crystal_C"),
-            R("Obsidian", "PrimalItemResource_Obsidian_C"),
-            R("Oil", "PrimalItemResource_Oil_C"),
-            R("Silica Pearls", "PrimalItemResource_Silicon_C"),
-            R("Black Pearl", "PrimalItemResource_BlackPearl_C"),
-            R("Cementing Paste", "PrimalItemResource_ChitinPaste_C"),
-            R("Organic Polymer", "PrimalItemResource_Polymer_Organic_C"),
-            R("Polymer", "PrimalItemResource_Polymer_C"),
-            R("Pelt", "PrimalItemResource_Pelt_C"),
-            R("Charcoal", "PrimalItemResource_Charcoal_C"),
-            R("Gunpowder", "PrimalItemResource_Gunpowder_C"),
-            R("Sparkpowder", "PrimalItemResource_Sparkpowder_C"),
-            R("Rare Flower", "PrimalItemResource_RareFlower_C"),
-            R("Rare Mushroom", "PrimalItemResource_RareMushroom_C"),
-            R("Sap", "PrimalItemResource_Sap_C"),
-            R("Sand", "PrimalItemResource_Sand_C"),
-            R("Clay", "PrimalItemResource_Clay_C"),
-            R("Sulfur", "PrimalItemResource_Sulfur_C"),
-            R("Silk", "PrimalItemResource_Silk_C"),
-            R("Preserving Salt", "PrimalItemResource_PreservingSalt_C"),
-            R("Raw Salt", "PrimalItemResource_RawSalt_C"),
-            R("Fungal Wood", "PrimalItemResource_FungalWood_C"),
-            R("Green Gem", "PrimalItemResource_Gem_Fertile_C"),
-            R("Blue Gem", "PrimalItemResource_Gem_BioLum_C"),
-            R("Red Gem", "PrimalItemResource_Gem_Element_C"),
-            R("Congealed Gas Ball", "PrimalItemResource_Gas_C"),
-            R("Element", "PrimalItemResource_Element_C"),
-            R("Element Shard", "PrimalItemResource_ElementShard_C"),
-            R("Element Dust", "PrimalItemResource_ElementDust_C"),
-            R("Element Ore", "PrimalItemResource_ElementOre_C"),
-            R("Scrap Metal", "PrimalItemResource_ScrapMetal_C"),
-            R("Scrap Metal Ingot", "PrimalItemResource_ScrapMetalIngot_C")
+            R("Raw Meat", "PrimalItemConsumable_RawMeat_C", "Consumables", "Meat", "meat"),
+            R("Raw Prime Meat", "PrimalItemConsumable_RawPrimeMeat_C", "Consumables", "Meat", "meat", "prime"),
+            R("Amarberry", "PrimalItemConsumable_Berry_Amarberry_C", "Consumables", "Berries", "berry", "berries"),
+            R("Azulberry", "PrimalItemConsumable_Berry_Azulberry_C", "Consumables", "Berries", "berry", "berries"),
+            R("Tintoberry", "PrimalItemConsumable_Berry_Tintoberry_C", "Consumables", "Berries", "berry", "berries"),
+            R("Mejoberry", "PrimalItemConsumable_Berry_Mejoberry_C", "Consumables", "Berries", "berry", "berries"),
+            R("Narcoberry", "PrimalItemConsumable_Berry_Narcoberry_C", "Consumables", "Berries", "berry", "berries"),
+            R("Stimberry", "PrimalItemConsumable_Berry_Stimberry_C", "Consumables", "Berries", "berry", "berries")
         };
+    }
 
     public static List<EngramCatalogEntry> CreateEngrams() =>
         new()
@@ -93,8 +93,27 @@ public static class ArkCatalogService
             E("Umbra Saddle", "EngramEntry_Dragontopia_Saddle_Umbra_C", 18, 65, "Dragontopia")
         };
 
-    private static HarvestResourceCatalogEntry R(string name, string className) =>
-        new() { DisplayName = name, ClassName = className };
+    private static HarvestResourceCatalogEntry R(
+        string name,
+        string className,
+        string category = "Resources",
+        string subCategory = "",
+        params string[] aliases) =>
+        new()
+        {
+            DisplayName = name,
+            ClassName = className,
+            Category = category,
+            SubCategory = subCategory,
+            Aliases = aliases.ToList()
+        };
+
+    private sealed class ItemCatalogDocument
+    {
+        public string Source { get; set; } = string.Empty;
+        public string GeneratedBy { get; set; } = string.Empty;
+        public List<HarvestResourceCatalogEntry> Items { get; set; } = new();
+    }
 
     private static EngramCatalogEntry E(
         string name, string className, int points, int level, string category = "Base Game") =>
