@@ -142,7 +142,7 @@
     try {
       const u = new URL(link.href, location.href);
       return /arkcodes\.com$/i.test(u.hostname) &&
-        /^\/mods\/\d{4,10}\/?$/i.test(u.pathname);
+        /^\/mods\/\d{4,10}(?:\/[a-z0-9-]+)?\/?$/i.test(u.pathname);
     } catch {
       return false;
     }
@@ -198,13 +198,28 @@
 
     const isArkCodesDetail =
       provider === "arkcodes" &&
-      /\/mods\/\d{4,10}\/?(?:[?#].*)?$/i.test(current);
+      /\/mods\/\d{4,10}(?:\/[a-z0-9-]+)?\/?(?:[?#].*)?$/i.test(current);
 
     if (!isCurseForgeDetail && !isArkCodesDetail) return;
 
-    const target = provider === "curseforge"
+    let target = provider === "curseforge"
       ? findElementContainingLabel(/Project\s*ID/i)
       : findElementContainingLabel(/Mod\s*ID/i);
+
+    if (!target) {
+      const all = document.querySelectorAll("body *");
+      for (const node of all) {
+        const text = node.textContent?.trim() || "";
+        const match = provider === "curseforge"
+          ? /Project\s*ID\s*:?\s*\d{4,10}/i.test(text)
+          : /Mod\s*ID\s*:?\s*\d{4,10}/i.test(text);
+
+        if (match && node.children.length <= 4) {
+          target = node;
+          break;
+        }
+      }
+    }
 
     if (!target) return;
 
