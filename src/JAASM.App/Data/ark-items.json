@@ -7,388 +7,956 @@
       "className": "PrimalItemConsumable_Berry_Amarberry_C",
       "category": "Consumables",
       "subCategory": "Berries",
+      "itemId": "",
       "aliases": [
         "berry",
         "berries",
         "amar"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Azulberry",
       "className": "PrimalItemConsumable_Berry_Azulberry_C",
       "category": "Consumables",
       "subCategory": "Berries",
+      "itemId": "",
       "aliases": [
         "berry",
         "berries",
         "azul"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Tintoberry",
       "className": "PrimalItemConsumable_Berry_Tintoberry_C",
       "category": "Consumables",
       "subCategory": "Berries",
+      "itemId": "",
       "aliases": [
         "berry",
         "berries",
         "tinto"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Mejoberry",
       "className": "PrimalItemConsumable_Berry_Mejoberry_C",
       "category": "Consumables",
       "subCategory": "Berries",
+      "itemId": "",
       "aliases": [
         "berry",
         "berries",
         "mejo"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Narcoberry",
       "className": "PrimalItemConsumable_Berry_Narcoberry_C",
       "category": "Consumables",
       "subCategory": "Berries",
+      "itemId": "",
       "aliases": [
         "berry",
         "berries",
         "narco"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Stimberry",
       "className": "PrimalItemConsumable_Berry_Stimberry_C",
       "category": "Consumables",
       "subCategory": "Berries",
+      "itemId": "",
       "aliases": [
         "berry",
         "berries",
         "stim"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Raw Meat",
       "className": "PrimalItemConsumable_RawMeat_C",
       "category": "Consumables",
       "subCategory": "Meat",
+      "itemId": "",
       "aliases": [
         "meat",
         "raw meat"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Cooked Meat",
       "className": "PrimalItemConsumable_CookedMeat_C",
       "category": "Consumables",
       "subCategory": "Meat",
+      "itemId": "",
       "aliases": [
         "meat",
         "cooked meat"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
     },
     {
       "displayName": "Raw Prime Meat",
       "className": "PrimalItemConsumable_RawPrimeMeat_C",
       "category": "Consumables",
       "subCategory": "Meat",
+      "itemId": "",
       "aliases": [
         "meat",
         "prime",
         "raw prime"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Cooked Prime Meat",
       "className": "PrimalItemConsumable_CookedPrimeMeat_C",
       "category": "Consumables",
       "subCategory": "Meat",
+      "itemId": "",
       "aliases": [
         "meat",
         "prime",
         "cooked prime"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
     },
     {
       "displayName": "Raw Fish Meat",
       "className": "PrimalItemConsumable_RawMeat_Fish_C",
       "category": "Consumables",
       "subCategory": "Fish",
+      "itemId": "",
       "aliases": [
         "meat",
         "fish",
         "raw fish"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Cooked Fish Meat",
       "className": "PrimalItemConsumable_CookedMeat_Fish_C",
       "category": "Consumables",
       "subCategory": "Fish",
+      "itemId": "",
       "aliases": [
         "meat",
         "fish",
         "cooked fish"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
     },
     {
       "displayName": "Raw Prime Fish Meat",
       "className": "PrimalItemConsumable_RawPrimeMeat_Fish_C",
       "category": "Consumables",
       "subCategory": "Fish",
+      "itemId": "",
       "aliases": [
         "meat",
         "fish",
         "prime fish"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Cooked Prime Fish Meat",
       "className": "PrimalItemConsumable_CookedPrimeMeat_Fish_C",
       "category": "Consumables",
       "subCategory": "Fish",
+      "itemId": "",
       "aliases": [
         "meat",
         "fish",
         "prime fish"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
     },
     {
       "displayName": "Raw Mutton",
       "className": "PrimalItemConsumable_RawMutton_C",
       "category": "Consumables",
       "subCategory": "Meat",
+      "itemId": "",
       "aliases": [
         "meat",
-        "mutton"
+        "mutton",
+        "sheep"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Cooked Lamb Chop",
       "className": "PrimalItemConsumable_CookedLambChop_C",
       "category": "Consumables",
       "subCategory": "Meat",
+      "itemId": "",
       "aliases": [
         "meat",
         "mutton",
         "lamb"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Bio Toxin",
+      "className": "PrimalItemConsumable_JellyVenom_C",
+      "category": "Consumables",
+      "subCategory": "Creature",
+      "itemId": "",
+      "aliases": [
+        "toxin",
+        "jellyfish",
+        "cnidaria"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Giant Bee Honey",
+      "className": "PrimalItemConsumable_Honey_C",
+      "category": "Consumables",
+      "subCategory": "Creature",
+      "itemId": "",
+      "aliases": [
+        "honey",
+        "bee"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Cactus Sap",
+      "className": "PrimalItemConsumable_CactusSap_C",
+      "category": "Consumables",
+      "subCategory": "Plant",
+      "itemId": "",
+      "aliases": [
+        "cactus",
+        "sap"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Wood",
       "className": "PrimalItemResource_Wood_C",
       "category": "Resources",
       "subCategory": "Basic",
+      "itemId": "",
       "aliases": [
         "wood"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Thatch",
       "className": "PrimalItemResource_Thatch_C",
       "category": "Resources",
       "subCategory": "Basic",
+      "itemId": "",
       "aliases": [
         "thatch"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Stone",
       "className": "PrimalItemResource_Stone_C",
       "category": "Resources",
       "subCategory": "Basic",
+      "itemId": "",
       "aliases": [
         "stone"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Flint",
       "className": "PrimalItemResource_Flint_C",
       "category": "Resources",
       "subCategory": "Basic",
+      "itemId": "",
       "aliases": [
         "flint"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Metal",
       "className": "PrimalItemResource_Metal_C",
       "category": "Resources",
-      "subCategory": "Basic",
+      "subCategory": "Mineral",
+      "itemId": "",
       "aliases": [
         "metal",
         "ore"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Fiber",
       "className": "PrimalItemResource_Fibers_C",
       "category": "Resources",
-      "subCategory": "Basic",
+      "subCategory": "Plant",
+      "itemId": "",
       "aliases": [
-        "fiber"
+        "fiber",
+        "fibers"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Hide",
       "className": "PrimalItemResource_Hide_C",
       "category": "Resources",
       "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
         "hide"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Chitin",
       "className": "PrimalItemResource_Chitin_C",
       "category": "Resources",
       "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
         "chitin"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Keratin",
       "className": "PrimalItemResource_Keratin_C",
       "category": "Resources",
       "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
         "keratin"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
-      "displayName": "Crystal",
-      "className": "PrimalItemResource_Crystal_C",
+      "displayName": "Pelt",
+      "className": "PrimalItemResource_Pelt_C",
       "category": "Resources",
-      "subCategory": "Mineral",
+      "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
-        "crystal"
+        "pelt",
+        "fur"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
-      "displayName": "Obsidian",
-      "className": "PrimalItemResource_Obsidian_C",
+      "displayName": "Wool",
+      "className": "PrimalItemResource_Wool_C",
       "category": "Resources",
-      "subCategory": "Mineral",
+      "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
-        "obsidian"
+        "wool",
+        "sheep"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
-      "displayName": "Oil",
-      "className": "PrimalItemResource_Oil_C",
+      "displayName": "Achatina Paste",
+      "className": "PrimalItemResource_SnailPaste_C",
       "category": "Resources",
-      "subCategory": "Mineral",
+      "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
-        "oil"
+        "achatina",
+        "snail",
+        "paste"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
-      "displayName": "Silica Pearls",
-      "className": "PrimalItemResource_Silicon_C",
+      "displayName": "Ammonite Bile",
+      "className": "PrimalItemResource_AmmoniteBlood_C",
       "category": "Resources",
-      "subCategory": "Mineral",
+      "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
-        "pearls",
-        "silica"
+        "ammonite",
+        "bile"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
-      "displayName": "Black Pearl",
-      "className": "PrimalItemResource_BlackPearl_C",
+      "displayName": "AnglerGel",
+      "className": "PrimalItemResource_AnglerGel_C",
       "category": "Resources",
-      "subCategory": "Mineral",
+      "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
-        "pearl",
-        "black pearls"
+        "angler",
+        "gel"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Leech Blood",
+      "className": "PrimalItemResource_LeechBlood_C",
+      "category": "Resources",
+      "subCategory": "Creature",
+      "itemId": "",
+      "aliases": [
+        "leech",
+        "blood"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
     },
     {
       "displayName": "Organic Polymer",
       "className": "PrimalItemResource_Polymer_Organic_C",
       "category": "Resources",
       "subCategory": "Creature",
+      "itemId": "",
       "aliases": [
         "polymer",
         "organic poly"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Crystal",
+      "className": "PrimalItemResource_Crystal_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "crystal"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Obsidian",
+      "className": "PrimalItemResource_Obsidian_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "obsidian"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Oil",
+      "className": "PrimalItemResource_Oil_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "oil"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Silica Pearls",
+      "className": "PrimalItemResource_Silicon_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "pearls",
+        "silica",
+        "pearl"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Black Pearl",
+      "className": "PrimalItemResource_BlackPearl_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "pearl",
+        "black pearls"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Sand",
+      "className": "PrimalItemResource_Sand_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "sand"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Sulfur",
+      "className": "PrimalItemResource_Sulfur_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "sulfur",
+        "sulphur"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Raw Salt",
+      "className": "PrimalItemResource_RawSalt_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "salt",
+        "raw salt"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Clay",
+      "className": "PrimalItemResource_Clay_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "clay"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Cementing Paste",
+      "className": "PrimalItemResource_ChitinPaste_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "paste",
+        "cementing"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
     },
     {
       "displayName": "Polymer",
       "className": "PrimalItemResource_Polymer_C",
       "category": "Resources",
       "subCategory": "Crafted",
+      "itemId": "",
       "aliases": [
         "polymer"
       ],
       "iconFile": "",
-      "sourceUrl": ""
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Metal Ingot",
+      "className": "PrimalItemResource_MetalIngot_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "metal",
+        "ingot"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Scrap Metal",
+      "className": "PrimalItemResource_ScrapMetal_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "itemId": "",
+      "aliases": [
+        "scrap",
+        "metal"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Scrap Metal Ingot",
+      "className": "PrimalItemResource_ScrapMetalIngot_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "scrap",
+        "ingot"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Rare Flower",
+      "className": "PrimalItemResource_RareFlower_C",
+      "category": "Resources",
+      "subCategory": "Plant",
+      "itemId": "",
+      "aliases": [
+        "flower",
+        "rare flower"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Rare Mushroom",
+      "className": "PrimalItemResource_RareMushroom_C",
+      "category": "Resources",
+      "subCategory": "Plant",
+      "itemId": "",
+      "aliases": [
+        "mushroom",
+        "rare mushroom"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Sap",
+      "className": "PrimalItemResource_Sap_C",
+      "category": "Resources",
+      "subCategory": "Plant",
+      "itemId": "",
+      "aliases": [
+        "sap",
+        "tree sap"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Silk",
+      "className": "PrimalItemResource_Silk_C",
+      "category": "Resources",
+      "subCategory": "Creature",
+      "itemId": "",
+      "aliases": [
+        "silk",
+        "moth"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Fungal Wood",
+      "className": "PrimalItemResource_FungalWood_C",
+      "category": "Resources",
+      "subCategory": "Plant",
+      "itemId": "",
+      "aliases": [
+        "fungal",
+        "wood"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Green Gem",
+      "className": "PrimalItemResource_Gem_Fertile_C",
+      "category": "Resources",
+      "subCategory": "Gem",
+      "itemId": "",
+      "aliases": [
+        "green gem",
+        "gem"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Blue Gem",
+      "className": "PrimalItemResource_Gem_BioLum_C",
+      "category": "Resources",
+      "subCategory": "Gem",
+      "itemId": "",
+      "aliases": [
+        "blue gem",
+        "gem"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Red Gem",
+      "className": "PrimalItemResource_Gem_Element_C",
+      "category": "Resources",
+      "subCategory": "Gem",
+      "itemId": "",
+      "aliases": [
+        "red gem",
+        "gem"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Congealed Gas Ball",
+      "className": "PrimalItemResource_Gas_C",
+      "category": "Resources",
+      "subCategory": "Gas",
+      "itemId": "",
+      "aliases": [
+        "gas",
+        "gas ball"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Element",
+      "className": "PrimalItemResource_Element_C",
+      "category": "Resources",
+      "subCategory": "Element",
+      "itemId": "",
+      "aliases": [
+        "element"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Element Shard",
+      "className": "PrimalItemResource_ElementShard_C",
+      "category": "Resources",
+      "subCategory": "Element",
+      "itemId": "",
+      "aliases": [
+        "element",
+        "shard"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Element Dust",
+      "className": "PrimalItemResource_ElementDust_C",
+      "category": "Resources",
+      "subCategory": "Element",
+      "itemId": "",
+      "aliases": [
+        "element",
+        "dust"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Element Ore",
+      "className": "PrimalItemResource_ElementOre_C",
+      "category": "Resources",
+      "subCategory": "Element",
+      "itemId": "",
+      "aliases": [
+        "element",
+        "ore"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Ambergris",
+      "className": "PrimalItemResource_Ambergris_C",
+      "category": "Resources",
+      "subCategory": "Creature",
+      "itemId": "",
+      "aliases": [
+        "ambergris"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": true
+    },
+    {
+      "displayName": "Absorbent Substrate",
+      "className": "PrimalItemResource_SubstrateAbsorbent_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "absorbent",
+        "substrate"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Charcoal",
+      "className": "PrimalItemResource_Charcoal_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "charcoal"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Gunpowder",
+      "className": "PrimalItemResource_Gunpowder_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "gunpowder"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Sparkpowder",
+      "className": "PrimalItemResource_Sparkpowder_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "sparkpowder"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
+    },
+    {
+      "displayName": "Preserving Salt",
+      "className": "PrimalItemResource_PreservingSalt_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "itemId": "",
+      "aliases": [
+        "salt",
+        "preserving"
+      ],
+      "iconFile": "",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
+      "harvestEligible": false
     }
   ],
   "sourceMode": "offline-snapshot",
   "snapshotDate": "2026-09-09",
-  "runtimeNetworkRequired": false
+  "runtimeNetworkRequired": false,
+  "itemCount": 68,
+  "harvestEligibleCount": 53
 }
