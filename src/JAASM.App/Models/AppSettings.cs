@@ -64,6 +64,7 @@ public sealed class HarvestResourceCatalogEntry
     public List<string> Aliases { get; set; } = new();
     public string IconFile { get; set; } = string.Empty;
     public string SourceUrl { get; set; } = string.Empty;
+    public bool HarvestEligible { get; set; } = true;
     public bool Selected { get; set; }
     public float Multiplier { get; set; } = 1.0f;
 
