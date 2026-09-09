@@ -51,7 +51,12 @@ public sealed class EngramCatalogEntry
     public string Category { get; set; } = "Base Game";
     public int DefaultPointsCost { get; set; }
     public int DefaultLevelRequirement { get; set; }
+    public string IconFile { get; set; } = string.Empty;
+    public string SourceUrl { get; set; } = string.Empty;
     public bool Selected { get; set; }
+
+    [JsonIgnore]
+    public Bitmap? IconBitmap { get; set; }
 }
 
 public sealed class HarvestResourceCatalogEntry
