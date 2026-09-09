@@ -1025,16 +1025,26 @@ public partial class MainWindow : Window
                     return;
                 }
 
-                var before = profile.Mods.Count;
+                var alreadyExists = profile.Mods.Any(m =>
+                    string.Equals(m.ModId, modId, StringComparison.OrdinalIgnoreCase));
+
+                if (alreadyExists)
+                {
+                    tcs.TrySetResult(new BrowserModBridgeResult(
+                        false,
+                        $"Mod {modId} is already in {profile.ServerName}.",
+                        true));
+                    return;
+                }
+
                 var added = await AddModByIdAsync(modId);
 
-                var message = added
-                    ? $"Added mod {modId} to {profile.ServerName}."
-                    : profile.Mods.Any(m => m.ModId == modId)
-                        ? $"Mod {modId} is already in {profile.ServerName}."
-                        : $"JAASM could not add mod {modId}.";
-
-                tcs.TrySetResult(new BrowserModBridgeResult(added, message));
+                tcs.TrySetResult(new BrowserModBridgeResult(
+                    added,
+                    added
+                        ? $"Added mod {modId} to {profile.ServerName}."
+                        : $"JAASM could not add mod {modId}.",
+                    false));
             }
             catch (Exception ex)
             {
