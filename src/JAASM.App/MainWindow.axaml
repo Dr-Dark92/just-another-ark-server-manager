@@ -358,10 +358,22 @@
                   <TextBlock Text="{Binding ClassName}" FontSize="10" Opacity="0.55"/>
                   <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#55D7FF"/>
                 </StackPanel>
-                <ToggleSwitch Grid.Column="2" Content="Hidden"/>
-                <NumericUpDown Grid.Column="3" Minimum="0" Maximum="10000" Value="{Binding DefaultPointsCost}"/>
-                <NumericUpDown Grid.Column="4" Minimum="0" Maximum="10000" Value="{Binding DefaultLevelRequirement}"/>
-                <ToggleSwitch Grid.Column="5" Content="No prereq"/>
+                <StackPanel Grid.Column="2" Spacing="3">
+                  <TextBlock Text="Hidden" FontSize="10" Opacity="0.55"/>
+                  <ToggleSwitch/>
+                </StackPanel>
+                <StackPanel Grid.Column="3" Spacing="3">
+                  <TextBlock Text="Engram Points" FontSize="10" Opacity="0.55"/>
+                  <NumericUpDown Minimum="0" Maximum="10000" Value="{Binding DefaultPointsCost}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="4" Spacing="3">
+                  <TextBlock Text="Unlock Level" FontSize="10" Opacity="0.55"/>
+                  <NumericUpDown Minimum="0" Maximum="10000" Value="{Binding DefaultLevelRequirement}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="5" Spacing="3">
+                  <TextBlock Text="Prerequisite" FontSize="10" Opacity="0.55"/>
+                  <ToggleSwitch Content="No prereq"/>
+                </StackPanel>
               </Grid>
             </Border>
           </DataTemplate>
