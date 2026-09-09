@@ -556,6 +556,8 @@ public partial class MainWindow : Window
         LoadCustomizationControls(p.Customization);
         LoadPerLevelStatsControls(p.PerLevelStats);
         RefreshPerLevelStatsSummary();
+        RefreshEngramOverridesUi();
+        RefreshHarvestResourceMultipliersUi();
         RefreshModsUi();
         LaunchPreviewText.Text = BuildLaunchArguments();
     }
@@ -939,6 +941,140 @@ public partial class MainWindow : Window
         LoadPerLevelStatsControls(profile.PerLevelStats);
         RefreshPerLevelStatsSummary();
         AppendConsole($"[PER-LEVEL STATS] Reset to defaults for {profile.ServerName}.");
+    }
+
+    private void RefreshEngramOverridesUi()
+    {
+        var profile = ActiveProfile;
+        EngramOverridesList.ItemsSource = null;
+        EngramOverridesList.ItemsSource = profile?.EngramOverrides
+            .OrderBy(x => x.EngramClassName, StringComparer.OrdinalIgnoreCase)
+            .ToList()
+            ?? new List<EngramOverrideEntry>();
+    }
+
+    private async void AddEngramOverride_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        var className = EngramClassNameBox.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(className))
+        {
+            AppendConsole("[ENGRAM] Engram class name is required.");
+            return;
+        }
+
+        if (profile.EngramOverrides.Any(x =>
+                string.Equals(x.EngramClassName, className, StringComparison.OrdinalIgnoreCase)))
+        {
+            AppendConsole($"[ENGRAM] Override already exists for {className}.");
+            return;
+        }
+
+        var entry = new EngramOverrideEntry
+        {
+            EngramClassName = className,
+            Hidden = EngramHiddenToggle.IsChecked == true,
+            PointsCost = (int)(EngramPointsCostBox.Value ?? 0),
+            LevelRequirement = (int)(EngramLevelRequirementBox.Value ?? 0),
+            RemovePrerequisite = EngramRemovePrereqToggle.IsChecked == true
+        };
+
+        profile.EngramOverrides.Add(entry);
+        await _settingsService.SaveAsync(_settings);
+
+        EngramClassNameBox.Text = string.Empty;
+        EngramHiddenToggle.IsChecked = false;
+        EngramPointsCostBox.Value = 0;
+        EngramLevelRequirementBox.Value = 0;
+        EngramRemovePrereqToggle.IsChecked = false;
+
+        RefreshEngramOverridesUi();
+        AppendConsole($"[ENGRAM] Added override for {entry.EngramClassName}.");
+    }
+
+    private async void RemoveEngramOverride_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null ||
+            sender is not Button button ||
+            button.DataContext is not EngramOverrideEntry entry)
+        {
+            return;
+        }
+
+        profile.EngramOverrides.Remove(entry);
+        await _settingsService.SaveAsync(_settings);
+        RefreshEngramOverridesUi();
+        AppendConsole($"[ENGRAM] Removed override for {entry.EngramClassName}.");
+    }
+
+    private void RefreshHarvestResourceMultipliersUi()
+    {
+        var profile = ActiveProfile;
+        HarvestResourceMultipliersList.ItemsSource = null;
+        HarvestResourceMultipliersList.ItemsSource = profile?.HarvestResourceMultipliers
+            .OrderBy(x => x.ResourceClassName, StringComparer.OrdinalIgnoreCase)
+            .ToList()
+            ?? new List<HarvestResourceMultiplierEntry>();
+    }
+
+    private async void AddHarvestResourceMultiplier_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        var className = HarvestResourceClassBox.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(className))
+        {
+            AppendConsole("[HARVEST] Resource class name is required.");
+            return;
+        }
+
+        if (profile.HarvestResourceMultipliers.Any(x =>
+                string.Equals(x.ResourceClassName, className, StringComparison.OrdinalIgnoreCase)))
+        {
+            AppendConsole($"[HARVEST] Per-item rate already exists for {className}.");
+            return;
+        }
+
+        var multiplier = (float)(HarvestResourceMultiplierBox.Value ?? 1m);
+        if (multiplier < 0)
+            multiplier = 0;
+
+        var entry = new HarvestResourceMultiplierEntry
+        {
+            ResourceClassName = className,
+            Multiplier = multiplier
+        };
+
+        profile.HarvestResourceMultipliers.Add(entry);
+        await _settingsService.SaveAsync(_settings);
+
+        HarvestResourceClassBox.Text = string.Empty;
+        HarvestResourceMultiplierBox.Value = 1;
+
+        RefreshHarvestResourceMultipliersUi();
+        AppendConsole($"[HARVEST] Added {entry.ResourceClassName} = x{entry.Multiplier:0.###}.");
+    }
+
+    private async void RemoveHarvestResourceMultiplier_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null ||
+            sender is not Button button ||
+            button.DataContext is not HarvestResourceMultiplierEntry entry)
+        {
+            return;
+        }
+
+        profile.HarvestResourceMultipliers.Remove(entry);
+        await _settingsService.SaveAsync(_settings);
+        RefreshHarvestResourceMultipliersUi();
+        AppendConsole($"[HARVEST] Removed per-item rate for {entry.ResourceClassName}.");
     }
 
     private void RefreshModsUi()
