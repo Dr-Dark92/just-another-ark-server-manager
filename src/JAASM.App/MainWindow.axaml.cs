@@ -1041,25 +1041,43 @@ public partial class MainWindow : Window
         return true;
     }
 
-    private async void OpenEmbeddedModBrowser_Click(object? sender, RoutedEventArgs e)
+    private void OpenCurseForgeSearch_Click(object? sender, RoutedEventArgs e)
     {
-        if (ActiveProfile is null)
+        var search = Uri.EscapeDataString(ModBrowseSearchBox.Text?.Trim() ?? string.Empty);
+        var url = string.IsNullOrWhiteSpace(search)
+            ? "https://www.curseforge.com/ark-survival-ascended/search?class=mods"
+            : $"https://www.curseforge.com/ark-survival-ascended/search?class=mods&search={search}";
+
+        OpenExternalModRepository(url, "CurseForge");
+    }
+
+    private void OpenArkCodesSearch_Click(object? sender, RoutedEventArgs e)
+    {
+        var search = Uri.EscapeDataString(ModBrowseSearchBox.Text?.Trim() ?? string.Empty);
+        var url = string.IsNullOrWhiteSpace(search)
+            ? "https://arkcodes.com/search/"
+            : $"https://arkcodes.com/search/?s={search}";
+
+        OpenExternalModRepository(url, "ArkCodes");
+    }
+
+    private void OpenExternalModRepository(string url, string provider)
+    {
+        try
         {
-            AppendConsole("[MOD BROWSER] Select or create a server profile first.");
-            return;
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+
+            ModBrowseStatusText.Text = $"Opened {provider} in your default browser.";
+            AppendConsole($"[MOD BROWSER] Opened {provider}: {url}");
         }
-
-        var browser = new ModBrowserWindow();
-        await browser.ShowAsync(this, ModBrowseSearchBox.Text);
-
-        if (string.IsNullOrWhiteSpace(browser.SelectedModId))
-            return;
-
-        var added = await AddModByIdAsync(browser.SelectedModId);
-        if (added)
+        catch (Exception ex)
         {
-            ModBrowseStatusText.Text =
-                $"Added mod {browser.SelectedModId} from the embedded CurseForge browser.";
+            ModBrowseStatusText.Text = $"Could not open {provider}.";
+            AppendConsole($"[MOD BROWSER] Failed to open {provider}: {ex.Message}");
         }
     }
 
@@ -1230,50 +1248,6 @@ public partial class MainWindow : Window
         ModDetailDependenciesText.Text = string.Empty;
         ModDetailSummaryText.Text = string.Empty;
         ModMetadataStatusText.Text = "Metadata: not queried";
-    }
-
-    private async void SaveCurseForgeProvider_Click(object? sender, RoutedEventArgs e)
-    {
-        var key = CurseForgeApiKeyBox.Text?.Trim() ?? string.Empty;
-
-        _settings.ModProvider.CurseForgeApiKey = key;
-        await _settingsService.SaveAsync(_settings);
-
-        _curseForgeMods.ConfigureApiKey(key);
-
-        ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
-            ? "Mod catalogue connection saved. CurseForge API mode active."
-            : "Public mod catalogue fallback active.";
-
-        AppendConsole(_curseForgeMods.IsConfigured
-            ? "[MOD CATALOGUE] CurseForge provider configured."
-            : "[MOD CATALOGUE] CurseForge provider cleared.");
-
-        if (ActiveProfile is not null)
-            await ResolveMissingModMetadataAsync(ActiveProfile);
-    }
-
-    private void OpenCurseForgeWebsite_Click(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var search = Uri.EscapeDataString(ModBrowseSearchBox.Text?.Trim() ?? string.Empty);
-            var url = string.IsNullOrWhiteSpace(search)
-                ? "https://www.curseforge.com/ark-survival-ascended/search?class=mods"
-                : $"https://www.curseforge.com/ark-survival-ascended/search?class=mods&search={search}";
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = url,
-                UseShellExecute = true
-            });
-
-            AppendConsole("[MOD CATALOGUE] Opened CurseForge in the default browser.");
-        }
-        catch (Exception ex)
-        {
-            AppendConsole($"[MOD CATALOGUE] Could not open CurseForge website: {ex.Message}");
-        }
     }
 
     private async Task ResolveMissingModMetadataAsync(AsaServerProfile profile)
