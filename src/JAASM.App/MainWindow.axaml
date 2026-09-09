@@ -340,35 +340,28 @@
   <TabItem Header="Engrams">
     <Grid Margin="12" RowDefinitions="Auto,Auto,*" RowSpacing="10">
       <StackPanel Grid.Row="0" Spacing="5">
-        <TextBlock Text="Engram Overrides" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
-        <TextBlock Text="Override individual engrams in Game.ini. Use the exact EngramEntry class name, for example EngramEntry_StoneHatchet_C. You can hide an engram, change its level/cost, or remove its prerequisite requirement." TextWrapping="Wrap" Opacity="0.7"/>
+        <TextBlock Text="⚙  Engram Catalogue" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
+        <TextBlock Text="Search and tick an engram to override it. Selected entries are pinned to the top. Class identifiers are read-only and come from JAASM's validated catalogue." TextWrapping="Wrap" Opacity="0.7"/>
       </StackPanel>
-
-      <Border Grid.Row="1" BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="10">
-        <Grid ColumnDefinitions="2*,Auto,120,120,Auto,Auto" ColumnSpacing="8">
-          <TextBox x:Name="EngramClassNameBox" PlaceholderText="EngramEntry_..._C"/>
-          <ToggleSwitch x:Name="EngramHiddenToggle" Grid.Column="1" Content="Hidden"/>
-          <NumericUpDown x:Name="EngramPointsCostBox" Grid.Column="2" Minimum="0" Maximum="10000" Value="0" PlaceholderText="Points"/>
-          <NumericUpDown x:Name="EngramLevelRequirementBox" Grid.Column="3" Minimum="0" Maximum="10000" Value="0" PlaceholderText="Level"/>
-          <ToggleSwitch x:Name="EngramRemovePrereqToggle" Grid.Column="4" Content="No prerequisite"/>
-          <Button Grid.Column="5" Content="＋  Add Override" Classes="primary" Click="AddEngramOverride_Click"/>
-        </Grid>
-      </Border>
-
-      <ListBox x:Name="EngramOverridesList" Grid.Row="2">
+      <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <TextBox x:Name="EngramSearchBox" PlaceholderText="⌕ Search engrams..." TextChanged="EngramSearchBox_TextChanged"/>
+        <TextBlock Grid.Column="1" x:Name="EngramSelectionCountText" VerticalAlignment="Center" Foreground="#55D7FF"/>
+      </Grid>
+      <ListBox x:Name="EngramCatalogList" Grid.Row="2">
         <ListBox.ItemTemplate>
-          <DataTemplate x:DataType="models:EngramOverrideEntry">
-            <Border BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
-              <Grid ColumnDefinitions="2*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="14">
-                <StackPanel>
-                  <TextBlock Text="{Binding EngramClassName}" FontWeight="SemiBold"/>
-                  <TextBlock Text="Game.ini → OverrideNamedEngramEntries" FontSize="10" Opacity="0.55"/>
+          <DataTemplate x:DataType="models:EngramCatalogEntry">
+            <Border Classes="card" Margin="0,0,0,6">
+              <Grid ColumnDefinitions="Auto,2*,Auto,120,120,Auto" ColumnSpacing="12">
+                <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" Click="EngramCatalogCheck_Click"/>
+                <StackPanel Grid.Column="1">
+                  <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                  <TextBlock Text="{Binding ClassName}" FontSize="10" Opacity="0.55"/>
+                  <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#55D7FF"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1"><TextBlock Text="Hidden" FontSize="10" Opacity="0.5"/><TextBlock Text="{Binding Hidden}"/></StackPanel>
-                <StackPanel Grid.Column="2"><TextBlock Text="Points" FontSize="10" Opacity="0.5"/><TextBlock Text="{Binding PointsCost}"/></StackPanel>
-                <StackPanel Grid.Column="3"><TextBlock Text="Level" FontSize="10" Opacity="0.5"/><TextBlock Text="{Binding LevelRequirement}"/></StackPanel>
-                <StackPanel Grid.Column="4"><TextBlock Text="No prereq" FontSize="10" Opacity="0.5"/><TextBlock Text="{Binding RemovePrerequisite}"/></StackPanel>
-                <Button Grid.Column="5" Content="Remove" Click="RemoveEngramOverride_Click"/>
+                <ToggleSwitch Grid.Column="2" Content="Hidden" IsCheckedChanged="EngramCatalogOptionChanged"/>
+                <NumericUpDown Grid.Column="3" Minimum="0" Maximum="10000" Value="{Binding DefaultPointsCost}" ValueChanged="EngramCatalogOptionChanged"/>
+                <NumericUpDown Grid.Column="4" Minimum="0" Maximum="10000" Value="{Binding DefaultLevelRequirement}" ValueChanged="EngramCatalogOptionChanged"/>
+                <ToggleSwitch Grid.Column="5" Content="No prereq" IsCheckedChanged="EngramCatalogOptionChanged"/>
               </Grid>
             </Border>
           </DataTemplate>
@@ -380,34 +373,26 @@
   <TabItem Header="Harvest Items">
     <Grid Margin="12" RowDefinitions="Auto,Auto,*" RowSpacing="10">
       <StackPanel Grid.Row="0" Spacing="5">
-        <TextBlock Text="Per-Item Harvest Rates" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
-        <TextBlock Text="Multiply the amount of a specific harvested resource without changing every resource globally. Use the exact PrimalItem resource class, for example PrimalItemResource_Wood_C. These values are written to Game.ini." TextWrapping="Wrap" Opacity="0.7"/>
+        <TextBlock Text="⛏  Harvest Item Catalogue" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
+        <TextBlock Text="Search resources and tick the ones you want to customize. Selected resources are pinned to the top. JAASM writes only selected, validated class names to Game.ini." TextWrapping="Wrap" Opacity="0.7"/>
       </StackPanel>
-
-      <Border Grid.Row="1" BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="10">
-        <Grid ColumnDefinitions="*,150,Auto" ColumnSpacing="8">
-          <TextBox x:Name="HarvestResourceClassBox" PlaceholderText="PrimalItemResource_..._C"/>
-          <NumericUpDown x:Name="HarvestResourceMultiplierBox" Grid.Column="1"
-                         Minimum="0" Maximum="10000" Increment="0.25"
-                         Value="1" FormatString="0.00"/>
-          <Button Grid.Column="2" Content="＋  Add Resource Rate" Classes="primary" Click="AddHarvestResourceMultiplier_Click"/>
-        </Grid>
-      </Border>
-
-      <ListBox x:Name="HarvestResourceMultipliersList" Grid.Row="2">
+      <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <TextBox x:Name="HarvestSearchBox" PlaceholderText="⌕ Search resources..." TextChanged="HarvestSearchBox_TextChanged"/>
+        <TextBlock Grid.Column="1" x:Name="HarvestSelectionCountText" VerticalAlignment="Center" Foreground="#55D7FF"/>
+      </Grid>
+      <ListBox x:Name="HarvestCatalogList" Grid.Row="2">
         <ListBox.ItemTemplate>
-          <DataTemplate x:DataType="models:HarvestResourceMultiplierEntry">
-            <Border BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
-              <Grid ColumnDefinitions="*,160,Auto" ColumnSpacing="14">
-                <StackPanel>
-                  <TextBlock Text="{Binding ResourceClassName}" FontWeight="SemiBold"/>
-                  <TextBlock Text="Game.ini → HarvestResourceItemAmountClassMultipliers" FontSize="10" Opacity="0.55"/>
-                </StackPanel>
+          <DataTemplate x:DataType="models:HarvestResourceCatalogEntry">
+            <Border Classes="card" Margin="0,0,0,6">
+              <Grid ColumnDefinitions="Auto,*,160" ColumnSpacing="12">
+                <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" Click="HarvestCatalogCheck_Click"/>
                 <StackPanel Grid.Column="1">
-                  <TextBlock Text="Multiplier" FontSize="10" Opacity="0.5"/>
-                  <TextBlock Text="{Binding Multiplier}"/>
+                  <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                  <TextBlock Text="{Binding ClassName}" FontSize="10" Opacity="0.55"/>
                 </StackPanel>
-                <Button Grid.Column="2" Content="Remove" Click="RemoveHarvestResourceMultiplier_Click"/>
+                <NumericUpDown Grid.Column="2" Minimum="0" Maximum="10000" Increment="0.25"
+                               Value="{Binding Multiplier}" FormatString="0.00"
+                               ValueChanged="HarvestCatalogMultiplierChanged"/>
               </Grid>
             </Border>
           </DataTemplate>
