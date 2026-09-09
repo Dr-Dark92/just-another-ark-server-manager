@@ -33,7 +33,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _asaServer = new AsaServerService(_steamCmd);
         _browserModBridge = new BrowserModBridgeService(AddModFromBrowserExtensionAsync);
-        LoadHarvestCatalogIcons();
+        LoadCatalogIcons();
 
         PlatformText.Text =
             $"Platform: {Environment.OSVersion.Platform} / {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}";
@@ -992,9 +992,16 @@ public partial class MainWindow : Window
         EngramSelectionCountText.Text = $"{_engramCatalog.Count(x => x.Selected)} selected";
     }
 
-    private void LoadHarvestCatalogIcons()
+    private void LoadCatalogIcons()
     {
         var dataRoot = Path.Combine(AppContext.BaseDirectory, "Data");
+
+        static string ResolveIconPath(string dataRootPath, string iconFile) =>
+            Path.Combine(
+                dataRootPath,
+                iconFile
+                    .Replace('/', Path.DirectorySeparatorChar)
+                    .Replace('\\', Path.DirectorySeparatorChar));
 
         foreach (var item in _harvestCatalog)
         {
@@ -1003,20 +1010,28 @@ public partial class MainWindow : Window
 
             try
             {
-                var relative = item.IconFile
-                    .Replace('/', Path.DirectorySeparatorChar)
-                    .Replace('\\', Path.DirectorySeparatorChar);
-
-                var path = Path.Combine(dataRoot, relative);
-                if (!File.Exists(path))
-                    continue;
-
-                item.IconBitmap = new Bitmap(path);
+                var path = ResolveIconPath(dataRoot, item.IconFile);
+                item.IconBitmap = File.Exists(path) ? new Bitmap(path) : null;
             }
             catch
             {
-                // Missing/corrupt catalogue artwork must never stop JAASM.
                 item.IconBitmap = null;
+            }
+        }
+
+        foreach (var engram in _engramCatalog)
+        {
+            if (string.IsNullOrWhiteSpace(engram.IconFile))
+                continue;
+
+            try
+            {
+                var path = ResolveIconPath(dataRoot, engram.IconFile);
+                engram.IconBitmap = File.Exists(path) ? new Bitmap(path) : null;
+            }
+            catch
+            {
+                engram.IconBitmap = null;
             }
         }
     }
