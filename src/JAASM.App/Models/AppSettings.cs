@@ -39,7 +39,24 @@ public sealed class AsaServerProfile
     public List<string> SelectedExtraArguments { get; set; } = new();
     public AsaCustomizationSettings Customization { get; set; } = new();
     public PerLevelStatSettings PerLevelStats { get; set; } = new();
+    public List<EngramOverrideEntry> EngramOverrides { get; set; } = new();
+    public List<HarvestResourceMultiplierEntry> HarvestResourceMultipliers { get; set; } = new();
     public List<AsaModEntry> Mods { get; set; } = new();
+}
+
+public sealed class EngramOverrideEntry
+{
+    public string EngramClassName { get; set; } = string.Empty;
+    public bool Hidden { get; set; }
+    public int PointsCost { get; set; }
+    public int LevelRequirement { get; set; }
+    public bool RemovePrerequisite { get; set; }
+}
+
+public sealed class HarvestResourceMultiplierEntry
+{
+    public string ResourceClassName { get; set; } = string.Empty;
+    public float Multiplier { get; set; } = 1.0f;
 }
 
 public sealed class AsaModEntry
