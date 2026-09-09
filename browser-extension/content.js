@@ -1,17 +1,6 @@
 (() => {
-  const LINK_MARK = "data-jaasm-link";
   const CARD_MARK = "data-jaasm-card";
-  const PAGE_MARK = "data-jaasm-page-button";
-
-  function normalizeUrl(url) {
-    try {
-      const u = new URL(url, location.href);
-      u.hash = "";
-      return u.toString().replace(/\/$/, "");
-    } catch {
-      return String(url || "").replace(/\/$/, "");
-    }
-  }
+  const PAGE_MARK = "data-jaasm-detail-button";
 
   function extractProjectIdFromText(text) {
     const match = String(text || "").match(/Project\s*ID\s*:?\s*(\d{4,10})/i);
@@ -23,88 +12,52 @@
     return match ? match[1] : null;
   }
 
-  function extractNumericIdFromUrl(url) {
-    const arkCodes = String(url || "").match(/arkcodes\.com\/mods\/(\d{4,10})(?:\/|$)/i);
-    if (arkCodes) return arkCodes[1];
-
-    const queryId = String(url || "").match(/[?&](?:projectId|modId|id)=(\d{4,10})(?:&|$)/i);
-    return queryId ? queryId[1] : null;
+  function extractArkCodesIdFromUrl(url) {
+    const match = String(url || "").match(/arkcodes\.com\/mods\/(\d{4,10})(?:\/|$)/i);
+    return match ? match[1] : null;
   }
 
-  async function fetchOneLevel(url) {
+  function providerForUrl(url) {
     try {
-      const response = await fetch(url, {
-        credentials: "include",
-        cache: "no-store",
-        redirect: "follow"
-      });
-
-      if (!response.ok) return null;
-      return await response.text();
-    } catch {
-      return null;
-    }
-  }
-
-  async function resolveCurseForgeId(url, nearbyText = "") {
-    const nearby = extractProjectIdFromText(nearbyText);
-    if (nearby) return nearby;
-
-    if (normalizeUrl(url) === normalizeUrl(location.href)) {
-      const pageId = extractProjectIdFromText(document.body?.innerText);
-      if (pageId) return pageId;
-    }
-
-    // Crawl exactly one level into the mod detail page.
-    const html = await fetchOneLevel(url);
-    if (!html) return null;
-
-    const labelMatch = extractProjectIdFromText(html);
-    if (labelMatch) return labelMatch;
-
-    const jsonMatch =
-      html.match(/["']projectId["']\s*:\s*["']?(\d{4,10})["']?/i) ||
-      html.match(/["']id["']\s*:\s*["']?(\d{4,10})["']?/i);
-
-    return jsonMatch ? jsonMatch[1] : null;
-  }
-
-  async function resolveArkCodesId(url, nearbyText = "") {
-    const nearby = extractModIdFromText(nearbyText);
-    if (nearby) return nearby;
-
-    const numeric = extractNumericIdFromUrl(url);
-    if (numeric) return numeric;
-
-    if (normalizeUrl(url) === normalizeUrl(location.href)) {
-      const pageId = extractModIdFromText(document.body?.innerText);
-      if (pageId) return pageId;
-    }
-
-    // Crawl exactly one level into the ArkCodes mod page.
-    const html = await fetchOneLevel(url);
-    if (!html) return null;
-
-    const labelMatch = extractModIdFromText(html);
-    if (labelMatch) return labelMatch;
-
-    const urlMatch = extractNumericIdFromUrl(url);
-    return urlMatch || null;
-  }
-
-  async function resolveModId(link, host) {
-    const url = link?.href || location.href;
-    const nearbyText = host?.innerText || link?.parentElement?.innerText || "";
-
-    if (/curseforge\.com$/i.test(new URL(url, location.href).hostname)) {
-      return await resolveCurseForgeId(url, nearbyText);
-    }
-
-    if (/arkcodes\.com$/i.test(new URL(url, location.href).hostname)) {
-      return await resolveArkCodesId(url, nearbyText);
-    }
-
+      const u = new URL(url, location.href);
+      if (/curseforge\.com$/i.test(u.hostname)) return "curseforge";
+      if (/arkcodes\.com$/i.test(u.hostname)) return "arkcodes";
+    } catch {}
     return null;
+  }
+
+  async function resolveRenderedId(url, provider) {
+    return await new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: "JAASM_RESOLVE_RENDERED_ID", url, provider },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve(null);
+            return;
+          }
+
+          resolve(response?.ok ? response.modId : null);
+        }
+      );
+    });
+  }
+
+  async function resolveModId(url, nearbyText = "") {
+    const provider = providerForUrl(url);
+    if (!provider) return null;
+
+    if (provider === "arkcodes") {
+      return (
+        extractModIdFromText(nearbyText) ||
+        extractArkCodesIdFromUrl(url) ||
+        await resolveRenderedId(url, provider)
+      );
+    }
+
+    return (
+      extractProjectIdFromText(nearbyText) ||
+      await resolveRenderedId(url, provider)
+    );
   }
 
   function sendToJaasm(modId, button) {
@@ -139,7 +92,7 @@
     );
   }
 
-  function createButton(link, host) {
+  function makeButton(url, nearbyTextProvider) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "jaasm-add-mod-button";
@@ -154,13 +107,17 @@
       button.textContent = "Finding ID…";
       button.disabled = true;
 
-      const modId = await resolveModId(link, host);
+      const nearbyText = typeof nearbyTextProvider === "function"
+        ? nearbyTextProvider()
+        : String(nearbyTextProvider || "");
+
+      const modId = await resolveModId(url, nearbyText);
 
       if (!modId) {
         button.dataset.state = "error";
         button.textContent = "ID not found";
         button.title =
-          "JAASM crawled one level into this mod page but could not find Project ID / Mod ID.";
+          "JAASM crawled one rendered page deeper but could not find Project ID / Mod ID.";
         button.disabled = false;
         return;
       }
@@ -185,13 +142,13 @@
     try {
       const u = new URL(link.href, location.href);
       return /arkcodes\.com$/i.test(u.hostname) &&
-        /^\/mods\/(?:\d{4,10}|[a-z0-9-]+)\/?$/i.test(u.pathname);
+        /^\/mods\/\d{4,10}\/?$/i.test(u.pathname);
     } catch {
       return false;
     }
   }
 
-  function findLogicalCard(link) {
+  function findCard(link) {
     return (
       link.closest("article") ||
       link.closest("[class*='project-card']") ||
@@ -204,54 +161,85 @@
   }
 
   function attachCardButton(link) {
-    if (!link || link.hasAttribute(LINK_MARK)) return;
-    if (!isCurseForgeModLink(link) && !isArkCodesModLink(link)) return;
+    if (!link || (!isCurseForgeModLink(link) && !isArkCodesModLink(link))) return;
 
-    const host = findLogicalCard(link);
-    if (!host || host.hasAttribute(CARD_MARK)) return;
+    const card = findCard(link);
+    if (!card || card.hasAttribute(CARD_MARK)) return;
 
-    link.setAttribute(LINK_MARK, "1");
-    host.setAttribute(CARD_MARK, "1");
-    host.appendChild(createButton(link, host));
+    card.setAttribute(CARD_MARK, "1");
+    card.classList.add("jaasm-card-host");
+
+    const button = makeButton(link.href, () => card.innerText || "");
+    button.classList.add("jaasm-card-button");
+    card.appendChild(button);
   }
 
-  function attachDetailPageButton() {
+  function findElementContainingLabel(labelRegex) {
+    const nodes = document.querySelectorAll("div,span,p,li,dd,dt,strong");
+    for (const node of nodes) {
+      const text = node.textContent?.trim() || "";
+      if (labelRegex.test(text) && /\d{4,10}/.test(text)) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  function attachDetailButton() {
     if (document.documentElement.hasAttribute(PAGE_MARK)) return;
 
-    const current = normalizeUrl(location.href);
-    const curseForgeDetail =
-      /curseforge\.com\/ark-survival-ascended\/mods\/[a-z0-9-]+$/i.test(current);
-    const arkCodesDetail =
-      /arkcodes\.com\/mods\/(?:\d{4,10}|[a-z0-9-]+)$/i.test(current);
+    const current = location.href;
+    const provider = providerForUrl(current);
+    if (!provider) return;
 
-    if (!curseForgeDetail && !arkCodesDetail) return;
+    const isCurseForgeDetail =
+      provider === "curseforge" &&
+      /\/ark-survival-ascended\/mods\/[a-z0-9-]+\/?(?:[?#].*)?$/i.test(current);
+
+    const isArkCodesDetail =
+      provider === "arkcodes" &&
+      /\/mods\/\d{4,10}\/?(?:[?#].*)?$/i.test(current);
+
+    if (!isCurseForgeDetail && !isArkCodesDetail) return;
+
+    const target = provider === "curseforge"
+      ? findElementContainingLabel(/Project\s*ID/i)
+      : findElementContainingLabel(/Mod\s*ID/i);
+
+    if (!target) return;
 
     document.documentElement.setAttribute(PAGE_MARK, "1");
 
-    const syntheticLink = document.createElement("a");
-    syntheticLink.href = location.href;
-
-    const preferredHost =
-      document.querySelector("[class*='download']")?.parentElement ||
-      document.querySelector("main h1")?.parentElement ||
-      document.querySelector("h1")?.parentElement ||
-      document.body;
-
-    preferredHost.appendChild(createButton(syntheticLink, preferredHost));
+    const button = makeButton(current, () => target.parentElement?.innerText || target.innerText || "");
+    button.classList.add("jaasm-inline-button");
+    target.insertAdjacentElement("afterend", button);
   }
 
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (!message || message.type !== "JAASM_GET_PAGE_MOD_ID") return;
+
+    const provider = String(message.provider || "");
+    const text = document.body?.innerText || "";
+
+    const modId = provider === "curseforge"
+      ? extractProjectIdFromText(text)
+      : extractModIdFromText(text) || extractArkCodesIdFromUrl(location.href);
+
+    sendResponse({ modId: modId || null });
+  });
+
   function scan() {
-    attachDetailPageButton();
+    attachDetailButton();
 
     const links = document.querySelectorAll(
-      'a[href*="/ark-survival-ascended/mods/"], a[href*="/mods/"]'
+      'a[href*="/ark-survival-ascended/mods/"], a[href*="arkcodes.com/mods/"], a[href^="/mods/"]'
     );
 
     for (const link of links) {
       try {
         attachCardButton(link);
       } catch {
-        // One malformed result must never break the rest of the page.
+        // Ignore malformed result cards.
       }
     }
   }
