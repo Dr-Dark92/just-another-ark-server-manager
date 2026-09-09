@@ -1,5 +1,14 @@
 const BRIDGE = "http://127.0.0.1:8485";
 
+function canonicalModPath(url) {
+  try {
+    const u = new URL(url);
+    return u.pathname.replace(/\/$/, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
 async function resolveRenderedPageId(url, provider) {
   let tab = null;
 
@@ -33,6 +42,19 @@ async function resolveRenderedPageId(url, provider) {
       chrome.tabs.onUpdated.addListener(listener);
     });
 
+    const loadedTab = await chrome.tabs.get(tabId);
+    const requestedPath = canonicalModPath(url);
+    const loadedPath = canonicalModPath(loadedTab.url || "");
+
+    if (!requestedPath || !loadedPath || requestedPath !== loadedPath) {
+      return {
+        ok: false,
+        message: "Background crawl navigated to a different mod page.",
+        requestedUrl: url,
+        finalUrl: loadedTab.url || ""
+      };
+    }
+
     for (let attempt = 0; attempt < 10; attempt++) {
       try {
         const results = await chrome.scripting.executeScript({
@@ -56,7 +78,11 @@ async function resolveRenderedPageId(url, provider) {
 
         const modId = results?.[0]?.result;
         if (modId) {
-          return { ok: true, modId };
+          return {
+            ok: true,
+            modId,
+            finalUrl: loadedTab.url || url
+          };
         }
       } catch {
         // The page may still be switching/rendering. Retry briefly.
@@ -120,7 +146,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
       sendResponse({
         ok: response.ok,
+        alreadyExists: body.alreadyExists === true,
         status: response.status,
+        modId: body.modId || String(message.modId || ""),
         message: body.message || (response.ok ? "Added to JAASM." : "JAASM rejected the mod.")
       });
     })
