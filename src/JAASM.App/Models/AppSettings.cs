@@ -60,6 +60,12 @@ public sealed class AsaModEntry
 
     [JsonIgnore]
     public Bitmap? LogoBitmap { get; set; }
+
+    [JsonIgnore]
+    public bool IsInstalledInActiveProfile { get; set; }
+
+    [JsonIgnore]
+    public bool IsNotInstalledInActiveProfile { get; set; } = true;
     public string WebsiteUrl { get; set; } = string.Empty;
     public string PrimaryCategory { get; set; } = string.Empty;
     public DateTimeOffset? LastUpdated { get; set; }
