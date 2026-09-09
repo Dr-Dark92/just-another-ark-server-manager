@@ -160,6 +160,28 @@
     );
   }
 
+  function findArkCodesCard(link) {
+    let node = link;
+
+    for (let depth = 0; depth < 7 && node; depth++, node = node.parentElement) {
+      const rect = node.getBoundingClientRect();
+      const hasImage = !!node.querySelector?.("img");
+      const hasTitle = (node.innerText || "").trim().length > 8;
+
+      if (
+        rect.width >= 420 &&
+        rect.height >= 90 &&
+        rect.height <= 260 &&
+        hasImage &&
+        hasTitle
+      ) {
+        return node;
+      }
+    }
+
+    return findCard(link);
+  }
+
   function attachCardButton(link) {
     if (!link) return;
 
@@ -171,17 +193,16 @@
     if (arkCodes) {
       if (link.dataset.jaasmInjected === "1") return;
 
+      const card = findArkCodesCard(link);
+      if (!card || card.hasAttribute(CARD_MARK)) return;
+
       link.dataset.jaasmInjected = "1";
+      card.setAttribute(CARD_MARK, "1");
+      card.classList.add("jaasm-card-host");
 
-      const localHost = link.parentElement || link;
-      const button = makeButton(link.href, () =>
-        localHost.parentElement?.innerText ||
-        localHost.innerText ||
-        ""
-      );
-
-      button.classList.add("jaasm-inline-button");
-      link.insertAdjacentElement("afterend", button);
+      const button = makeButton(link.href, () => card.innerText || "");
+      button.classList.add("jaasm-card-button");
+      card.appendChild(button);
       return;
     }
 
