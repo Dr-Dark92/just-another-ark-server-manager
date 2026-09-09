@@ -268,7 +268,12 @@ public sealed class ModDownloadService
             string modId,
             CancellationToken ct)
     {
-        using var response = await _http.GetAsync(projectUrl, ct);
+        // CurseForge exposes the current ASA server package reliably on the Files page
+        // as a /files/<fileId> link. The project landing-page Download link is not a
+        // stable source for scraping and was the reason the first downloader failed.
+        var filesUrl = projectUrl.TrimEnd('/') + "/files/all?page=1&version=1.0";
+
+        using var response = await _http.GetAsync(filesUrl, ct);
         if (!response.IsSuccessStatusCode)
             return null;
 
@@ -283,41 +288,72 @@ public sealed class ModDownloadService
         if (!projectId.Success || projectId.Groups[1].Value != modId)
             return null;
 
-        // The project-level Download button points to the current main file.
-        // For ASA project pages the Main File is normally the Windows-server package.
-        var downloadMatches = Regex.Matches(
-            html,
-            "href=[\\\"\']([^ \\\"\']*/ark-survival-ascended/mods/[a-z0-9-]+/download/(\\d+))[\\\"\']",
-            RegexOptions.IgnoreCase);
+        // Find the first Windows-server ZIP row and its associated /files/<id> link.
+        // The files list is newest-first, so the first match is the latest server build.
+        var anchors = Regex.Matches(
+                html,
+                "<a[^>]+href=[\\\"']([^\\\"']*/files/(\\d+)[^\\\"']*)[\\\"'][^>]*>([\\s\\S]*?)</a>",
+                RegexOptions.IgnoreCase)
+            .Cast<Match>()
+            .ToList();
 
-        Match? chosen = downloadMatches.Cast<Match>().FirstOrDefault();
+        Match? chosen = null;
+        string? fileName = null;
+
+        foreach (var anchor in anchors)
+        {
+            var anchorText = HtmlToText(anchor.Groups[3].Value);
+            if (!anchorText.Contains("windowsserver", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!anchorText.Contains(".zip", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            chosen = anchor;
+            fileName = anchorText
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .FirstOrDefault(line =>
+                    line.Contains("windowsserver", StringComparison.OrdinalIgnoreCase) &&
+                    line.Contains(".zip", StringComparison.OrdinalIgnoreCase));
+            break;
+        }
+
+        // Some CurseForge layouts put the filename outside the anchor. Fall back to
+        // matching a small HTML window around each /files/<id> link.
         if (chosen is null)
         {
-            chosen = Regex.Matches(
-                    html,
-                    "href=[\\\"\']([^ \\\"\']*/download/(\\d+))[\\\"\']",
-                    RegexOptions.IgnoreCase)
-                .Cast<Match>()
-                .FirstOrDefault();
+            foreach (Match anchor in Regex.Matches(
+                         html,
+                         "href=[\\\"']([^\\\"']*/files/(\\d+)[^\\\"']*)[\\\"']",
+                         RegexOptions.IgnoreCase))
+            {
+                var index = anchor.Index;
+                var length = Math.Min(1200, html.Length - index);
+                var nearby = HtmlToText(html.Substring(index, length));
+
+                var serverName = Regex.Match(
+                    nearby,
+                    @"([^\r\n]*windowsserver[^\r\n]*\.zip)",
+                    RegexOptions.IgnoreCase);
+
+                if (!serverName.Success)
+                    continue;
+
+                chosen = anchor;
+                fileName = serverName.Groups[1].Value.Trim();
+                break;
+            }
         }
 
         if (chosen is null || !int.TryParse(chosen.Groups[2].Value, out var fileId))
             return null;
 
-        var downloadUrl = WebUtility.HtmlDecode(chosen.Groups[1].Value);
-        if (downloadUrl.StartsWith('/'))
-            downloadUrl = "https://www.curseforge.com" + downloadUrl;
-        else if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out _))
-            downloadUrl = projectUrl.TrimEnd('/') + "/" + downloadUrl.TrimStart('/');
+        fileName = string.IsNullOrWhiteSpace(fileName)
+            ? $"{modId}-{fileId}-windowsserver.zip"
+            : fileName;
 
-        var mainFile = Regex.Match(
-            text,
-            @"Main\s*File[\s\S]{0,500}?([^\r\n]+windowsserver[^\r\n]+\.zip)",
-            RegexOptions.IgnoreCase);
-
-        var fileName = mainFile.Success
-            ? mainFile.Groups[1].Value.Trim()
-            : $"{modId}-{fileId}-windowsserver.zip";
+        // CurseForge's public download route for a known file ID.
+        var downloadUrl = projectUrl.TrimEnd('/') + "/download/" + fileId;
 
         return (fileId, fileName, downloadUrl);
     }
