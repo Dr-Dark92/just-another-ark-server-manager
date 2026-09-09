@@ -478,13 +478,16 @@
                                   IsVisible="{Binding IsNotInstalledInActiveProfile}"
                                   Padding="12,5"
                                   Click="AddBrowseModCard_Click"/>
-                          <Button Content="✓ Added"
-                                  IsVisible="{Binding IsInstalledInActiveProfile}"
-                                  IsEnabled="False"
+                          <Border IsVisible="{Binding IsInstalledInActiveProfile}"
                                   Padding="12,5"
+                                  CornerRadius="4"
                                   Background="#15803D"
                                   BorderBrush="#22C55E"
-                                  Foreground="White"/>
+                                  BorderThickness="1">
+                            <TextBlock Text="✓ Added"
+                                       Foreground="White"
+                                       FontWeight="SemiBold"/>
+                          </Border>
                         </StackPanel>
                         <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="3">
                           <TextBlock Grid.Row="0" Text="Downloads" FontSize="10" Opacity="0.5"/>
