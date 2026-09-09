@@ -1,16 +1,29 @@
 <Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="using:JAASM.App.Models"
  x:Class="JAASM.App.MainWindow" Title="Just Another ARK Server Manager" Width="1080" Height="900" MinWidth="860" MinHeight="720">
-<Grid RowDefinitions="Auto,*" Margin="28">
-<StackPanel Grid.Row="0" Margin="0,0,0,18"><TextBlock Text="JAASM" FontSize="34" FontWeight="Bold"/><TextBlock Text="Just Another ARK Server Manager" Opacity="0.65"/></StackPanel>
+<Grid RowDefinitions="Auto,*" Margin="24">
+<Border Grid.Row="0" Classes="card" Margin="0,0,0,16" Padding="16,12">
+  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+    <Border Width="42" Height="42" CornerRadius="8" Background="#126C8A" BorderBrush="#55D7FF" BorderThickness="1">
+      <TextBlock Text="A" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+    </Border>
+    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+      <TextBlock Text="JAASM" FontSize="28" FontWeight="Bold" Foreground="#8BE5FF"/>
+      <TextBlock Text="Just Another ARK Server Manager" Opacity="0.68"/>
+    </StackPanel>
+    <Border Grid.Column="2" Background="#162531" BorderBrush="#2E6477" BorderThickness="1" CornerRadius="12" Padding="10,5" VerticalAlignment="Center">
+      <TextBlock Text="ASA CONTROL CENTER" FontSize="10" FontWeight="SemiBold" Foreground="#55D7FF"/>
+    </Border>
+  </Grid>
+</Border>
 <TabControl Grid.Row="1">
 <TabItem Header="Server Setup"><ScrollViewer><StackPanel Margin="18" Spacing="14">
-<TextBlock Text="SteamCMD Bootstrap" FontSize="22" FontWeight="SemiBold"/><TextBlock x:Name="PlatformText"/>
+<TextBlock Text="SteamCMD Bootstrap" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/><TextBlock x:Name="PlatformText"/>
 <TextBlock Text="Use Existing SteamCMD" FontSize="18" FontWeight="SemiBold"/><TextBox x:Name="SteamCmdPathBox" IsReadOnly="True" PlaceholderText="SteamCMD is not configured"/>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Select Existing Directory" Click="SelectSteamCmd_Click"/><Button Content="Validate" Click="ValidateSteamCmd_Click"/><Button Content="Update SteamCMD" Click="UpdateSteamCmd_Click"/></StackPanel>
 <Separator/><TextBlock Text="Install New SteamCMD" FontSize="18" FontWeight="SemiBold"/><Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><TextBox x:Name="SteamCmdInstallDirectoryBox" IsReadOnly="True" PlaceholderText="Select an installation directory"/><Button Grid.Column="1" Content="Browse" Click="BrowseSteamCmdInstallDirectory_Click"/></Grid>
 <Button Content="Download &amp; Install SteamCMD" HorizontalAlignment="Left" Click="InstallSteamCmd_Click"/><ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="100" Height="8"/><TextBlock x:Name="StatusText" Text="Ready." TextWrapping="Wrap"/>
-<Separator/><TextBlock Text="ARK: Survival Ascended Server Bootstrap" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="ASA Dedicated Server App ID: 2430930" Opacity="0.65"/>
+<Separator/><TextBlock Text="ARK: Survival Ascended Server Bootstrap" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/><TextBlock Text="ASA Dedicated Server App ID: 2430930" Opacity="0.65"/>
 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><TextBox x:Name="AsaInstallDirectoryBox" IsReadOnly="True" PlaceholderText="Select ASA server installation directory"/><Button Grid.Column="1" Content="Browse" Click="BrowseAsaInstallDirectory_Click"/></Grid>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Install / Update ASA" Click="InstallOrUpdateAsa_Click"/><Button Content="Validate ASA" Click="ValidateAsa_Click"/></StackPanel><TextBlock x:Name="AsaStatusText" Text="ASA server is not configured." TextWrapping="Wrap"/>
 <Separator/><TextBlock Text="Optional Web GUI" FontSize="18" FontWeight="SemiBold"/><ToggleSwitch x:Name="WebGuiToggle" Content="Enable Web GUI" IsCheckedChanged="WebGuiToggle_Changed"/><TextBlock Text="Default bind: 127.0.0.1:8484" Opacity="0.65"/>
@@ -20,12 +33,12 @@
 <ScrollViewer>
 <StackPanel Margin="18" Spacing="12">
 
-<TextBlock Text="ARK Server Profiles" FontSize="22" FontWeight="SemiBold"/>
+<TextBlock Text="ARK Server Profiles" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
 <TextBlock Text="Each tab is an independent ASA server profile. Use Add New Server + to create another server." Opacity="0.65" TextWrapping="Wrap"/>
 
 <Border BorderBrush="#444" BorderThickness="0,0,0,1" Padding="0,0,0,4">
   <WrapPanel x:Name="ProfileTabStrip" Orientation="Horizontal">
-    <Button Content="Add New Server +"
+    <Button Content="＋  Add New Server" Classes="primary"
             Margin="4,0,0,0"
             Padding="14,8"
             Click="CreateProfile_Click"/>
@@ -67,7 +80,7 @@
         Padding="24"
         Margin="0,8,0,0">
   <StackPanel Spacing="8">
-    <TextBlock Text="No ARK server profiles" FontSize="20" FontWeight="SemiBold"/>
+    <TextBlock Text="No ARK server profiles" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
     <TextBlock Text="Click Add New Server + above to create your first server profile." Opacity="0.65"/>
   </StackPanel>
 </Border>
@@ -104,7 +117,7 @@
 </StackPanel>
 </Grid>
 <Separator/>
-<TextBlock Text="Server Customization" FontSize="22" FontWeight="SemiBold"/>
+<TextBlock Text="Server Customization" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
 <TextBlock Text="JAASM generates GameUserSettings.ini from these controls. Each option shows what it changes and the underlying ARK configuration key." Opacity="0.7" TextWrapping="Wrap"/>
 
 <TabControl>
@@ -264,7 +277,7 @@
 
   <TabItem Header="Per-Level Stats">
     <StackPanel Margin="12" Spacing="10">
-      <TextBlock Text="Per-Level Stat Multipliers" FontSize="20" FontWeight="SemiBold"/>
+      <TextBlock Text="Per-Level Stat Multipliers" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
       <TextBlock Text="These values are stored per server profile and written directly to Game.ini. Dino tabs intentionally exclude player-only Fortitude and Crafting Skill." TextWrapping="Wrap" Opacity="0.7"/>
       <TextBlock x:Name="PerLevelStatsSummaryText" Text="All multipliers at default 1.0" Opacity="0.65"/>
       <TabControl><TabItem Header="Player"><ScrollViewer><StackPanel Margin="12" Spacing="10"><TextBlock Text="Player per-level multipliers. Default: 1.0." Opacity="0.65"/><Grid ColumnDefinitions="280,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="8"><TextBlock Grid.Row="0" Text="Health [0]" VerticalAlignment="Center"/><NumericUpDown x:Name="PlayerStat0Box" Grid.Row="0" Grid.Column="1" Minimum="0.001" Maximum="1000" Increment="0.1" FormatString="0.000"/>
@@ -327,7 +340,7 @@
   <TabItem Header="Engrams">
     <Grid Margin="12" RowDefinitions="Auto,Auto,*" RowSpacing="10">
       <StackPanel Grid.Row="0" Spacing="5">
-        <TextBlock Text="Engram Overrides" FontSize="20" FontWeight="SemiBold"/>
+        <TextBlock Text="Engram Overrides" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
         <TextBlock Text="Override individual engrams in Game.ini. Use the exact EngramEntry class name, for example EngramEntry_StoneHatchet_C. You can hide an engram, change its level/cost, or remove its prerequisite requirement." TextWrapping="Wrap" Opacity="0.7"/>
       </StackPanel>
 
@@ -338,7 +351,7 @@
           <NumericUpDown x:Name="EngramPointsCostBox" Grid.Column="2" Minimum="0" Maximum="10000" Value="0" PlaceholderText="Points"/>
           <NumericUpDown x:Name="EngramLevelRequirementBox" Grid.Column="3" Minimum="0" Maximum="10000" Value="0" PlaceholderText="Level"/>
           <ToggleSwitch x:Name="EngramRemovePrereqToggle" Grid.Column="4" Content="No prerequisite"/>
-          <Button Grid.Column="5" Content="+ Add Override" Click="AddEngramOverride_Click"/>
+          <Button Grid.Column="5" Content="＋  Add Override" Classes="primary" Click="AddEngramOverride_Click"/>
         </Grid>
       </Border>
 
@@ -367,7 +380,7 @@
   <TabItem Header="Harvest Items">
     <Grid Margin="12" RowDefinitions="Auto,Auto,*" RowSpacing="10">
       <StackPanel Grid.Row="0" Spacing="5">
-        <TextBlock Text="Per-Item Harvest Rates" FontSize="20" FontWeight="SemiBold"/>
+        <TextBlock Text="Per-Item Harvest Rates" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
         <TextBlock Text="Multiply the amount of a specific harvested resource without changing every resource globally. Use the exact PrimalItem resource class, for example PrimalItemResource_Wood_C. These values are written to Game.ini." TextWrapping="Wrap" Opacity="0.7"/>
       </StackPanel>
 
@@ -377,7 +390,7 @@
           <NumericUpDown x:Name="HarvestResourceMultiplierBox" Grid.Column="1"
                          Minimum="0" Maximum="10000" Increment="0.25"
                          Value="1" FormatString="0.00"/>
-          <Button Grid.Column="2" Content="+ Add Resource Rate" Click="AddHarvestResourceMultiplier_Click"/>
+          <Button Grid.Column="2" Content="＋  Add Resource Rate" Classes="primary" Click="AddHarvestResourceMultiplier_Click"/>
         </Grid>
       </Border>
 
@@ -406,7 +419,7 @@
 
   <TabItem Header="Mods">
     <StackPanel Margin="12" Spacing="10">
-      <TextBlock Text="ASA Mod Manager" FontSize="20" FontWeight="SemiBold"/>
+      <TextBlock Text="ASA Mod Manager" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle"/>
       <TextBlock Text="Manage the selected server's load order, discover CurseForge mods, and review update metadata without making the server dependent on the metadata provider." TextWrapping="Wrap" Opacity="0.7"/>
 
       <TabControl>
@@ -415,8 +428,8 @@
             <Grid Grid.Row="0" ColumnDefinitions="Auto,180,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
               <TextBlock Text="Mod ID" VerticalAlignment="Center"/>
               <TextBox x:Name="NewModIdBox" Grid.Column="1" PlaceholderText="e.g. 933029"/>
-              <Button Grid.Column="2" Content="Add by ID" Click="AddMod_Click"/>
-              <Button Grid.Column="3" Content="Remove" Click="RemoveMod_Click"/>
+              <Button Grid.Column="2" Content="＋  Add by ID" Classes="primary" Click="AddMod_Click"/>
+              <Button Grid.Column="3" Content="🗑  Remove" Classes="danger" Click="RemoveMod_Click"/>
               <Button Grid.Column="4" Content="Move Up" Click="MoveModUp_Click"/>
               <Button Grid.Column="5" Content="Move Down" Click="MoveModDown_Click"/>
               <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="8">
@@ -498,10 +511,10 @@
                 <ComboBoxItem Content="50 results" Tag="50"/>
               </ComboBox>
               <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8">
-                <Button Content="Search Native Catalogue" Padding="18,6" Click="BrowseModsSearch_Click"/>
-                <Button Content="Search CurseForge" Padding="16,6" Click="OpenCurseForgeSearch_Click"/>
-                <Button Content="Search ArkCodes" Padding="16,6" Click="OpenArkCodesSearch_Click"/>
-                <Button Content="Install Extension Manually" Padding="16,6" Click="InstallBrowserExtension_Click"
+                <Button Content="⌕  Search Native Catalogue" Classes="primary" Padding="18,6" Click="BrowseModsSearch_Click"/>
+                <Button Content="↗  Search CurseForge" Padding="16,6" Click="OpenCurseForgeSearch_Click"/>
+                <Button Content="↗  Search ArkCodes" Padding="16,6" Click="OpenArkCodesSearch_Click"/>
+                <Button Content="⬇  Install Extension Manually" Padding="16,6" Click="InstallBrowserExtension_Click"
                         ToolTip.Tip="Prepare the extension folder and open Chrome's extension page for a normal-profile install."/>
               </StackPanel>
             </Grid>
@@ -621,12 +634,12 @@
   </TabControl>
 
 <StackPanel Orientation="Horizontal" Spacing="10">
-  <Button Content="Save Profile &amp; Generate Config" Click="SaveProfile_Click"/>
-  <Button Content="Delete Profile" Click="DeleteProfile_Click"/>
+  <Button Content="💾  Save Profile &amp; Generate Config" Classes="primary" Click="SaveProfile_Click"/>
+  <Button Content="🗑  Delete Profile" Classes="danger" Click="DeleteProfile_Click"/>
 </StackPanel>
-<Separator/><TextBlock Text="Server Controls" FontSize="22" FontWeight="SemiBold"/>
+<Separator/><TextBlock Text="Server Controls" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
 <TextBlock Text="Start launches only the selected profile. Stop requests shutdown and currently falls back to process termination until RCON graceful shutdown is implemented. Restart stops then starts this profile. Force Stop immediately terminates its process tree." Opacity="0.7" TextWrapping="Wrap"/>
-<StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Start" Click="StartAsa_Click"/><Button Content="Stop" Click="StopAsa_Click"/><Button Content="Restart" Click="RestartAsa_Click"/><Button Content="Force Stop" Click="ForceStopAsa_Click"/></StackPanel>
+<StackPanel Orientation="Horizontal" Spacing="10"><Button Content="▶  Start" Classes="success" Click="StartAsa_Click"/><Button Content="■  Stop" Click="StopAsa_Click"/><Button Content="↻  Restart" Classes="primary" Click="RestartAsa_Click"/><Button Content="⚠  Force Stop" Classes="danger" Click="ForceStopAsa_Click"/></StackPanel>
 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8"><TextBlock Text="Status:"/><TextBlock x:Name="ProcessStatusText" Grid.Column="1" Text="Stopped" FontWeight="SemiBold"/><TextBlock Grid.Column="2" Text="PID:"/><TextBlock x:Name="PidText" Grid.Column="3" Text="-"/><TextBlock Grid.Column="4" Text="Uptime:"/><TextBlock x:Name="UptimeText" Grid.Column="5" Text="-"/></Grid>
 <TextBlock Text="Generated launch command" FontWeight="SemiBold" Margin="0,8,0,0"/>
 <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
@@ -637,5 +650,5 @@
 </ScrollViewer>
 </TabItem>
 
-<TabItem Header="Console"><Grid Margin="18" RowDefinitions="Auto,*,Auto"><TextBlock Text="JAASM / SteamCMD / ASA Console" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,12"/><TextBox x:Name="ConsoleBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas, monospace" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"/><Button Grid.Row="2" Content="Clear Console" HorizontalAlignment="Right" Margin="0,10,0,0" Click="ClearConsole_Click"/></Grid></TabItem>
+<TabItem Header="Console"><Grid Margin="18" RowDefinitions="Auto,*,Auto"><TextBlock Text="JAASM / SteamCMD / ASA Console" FontSize="20" FontWeight="SemiBold" Classes="sectionTitle" Margin="0,0,0,12"/><TextBox x:Name="ConsoleBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas, monospace" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"/><Button Grid.Row="2" Content="Clear Console" HorizontalAlignment="Right" Margin="0,10,0,0" Click="ClearConsole_Click"/></Grid></TabItem>
 </TabControl></Grid></Window>
