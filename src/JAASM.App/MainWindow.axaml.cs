@@ -33,6 +33,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _asaServer = new AsaServerService(_steamCmd);
         _browserModBridge = new BrowserModBridgeService(AddModFromBrowserExtensionAsync);
+        LoadHarvestCatalogIcons();
 
         PlatformText.Text =
             $"Platform: {Environment.OSVersion.Platform} / {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}";
@@ -991,13 +992,46 @@ public partial class MainWindow : Window
         EngramSelectionCountText.Text = $"{_engramCatalog.Count(x => x.Selected)} selected";
     }
 
+    private void LoadHarvestCatalogIcons()
+    {
+        var dataRoot = Path.Combine(AppContext.BaseDirectory, "Data");
+
+        foreach (var item in _harvestCatalog)
+        {
+            if (string.IsNullOrWhiteSpace(item.IconFile))
+                continue;
+
+            try
+            {
+                var relative = item.IconFile
+                    .Replace('/', Path.DirectorySeparatorChar)
+                    .Replace('\\', Path.DirectorySeparatorChar);
+
+                var path = Path.Combine(dataRoot, relative);
+                if (!File.Exists(path))
+                    continue;
+
+                item.IconBitmap = new Bitmap(path);
+            }
+            catch
+            {
+                // Missing/corrupt catalogue artwork must never stop JAASM.
+                item.IconBitmap = null;
+            }
+        }
+    }
+
     private void RefreshHarvestCatalogUi()
     {
         var query = HarvestSearchBox?.Text?.Trim() ?? string.Empty;
         var items = _harvestCatalog
             .Where(x => string.IsNullOrWhiteSpace(query) ||
                         x.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                        x.ClassName.Contains(query, StringComparison.OrdinalIgnoreCase))
+                        x.ClassName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                        x.Category.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                        x.SubCategory.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                        x.Aliases.Any(alias =>
+                            alias.Contains(query, StringComparison.OrdinalIgnoreCase)))
             .OrderByDescending(x => x.Selected)
             .ThenBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ToList();
