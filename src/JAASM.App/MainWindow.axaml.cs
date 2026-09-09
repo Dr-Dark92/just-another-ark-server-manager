@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using System.Diagnostics;
@@ -17,6 +18,7 @@ public partial class MainWindow : Window
     private readonly AsaConfigService _asaConfig = new();
     private readonly CurseForgeModService _curseForgeMods = new();
     private readonly BrowserModBridgeService _browserModBridge;
+    private readonly HttpClient _thumbnailHttp = new();
     private List<AsaModEntry> _browseMods = new();
     private AppSettings _settings = new();
     private bool _loading;
@@ -1466,6 +1468,7 @@ public partial class MainWindow : Window
         if (!result.Success)
             AppendConsole($"[MOD CATALOGUE] {result.Message}");
         _browseMods = result.Mods.ToList();
+        await LoadBrowseThumbnailsAsync(_browseMods);
 
         ModBrowseResultsList.ItemsSource = null;
         ModBrowseResultsList.ItemsSource = _browseMods;
@@ -1492,10 +1495,19 @@ public partial class MainWindow : Window
             (string.IsNullOrWhiteSpace(mod.Platform) ? string.Empty : $" • {mod.Platform}");
     }
 
-    private async void AddBrowseModToServer_Click(object? sender, RoutedEventArgs e)
+    private async void AddBrowseModCard_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.DataContext is not AsaModEntry mod)
+            return;
+
+        ModBrowseResultsList.SelectedItem = mod;
+        await AddBrowseModEntryAsync(mod);
+    }
+
+    private async Task AddBrowseModEntryAsync(AsaModEntry source)
     {
         var profile = ActiveProfile;
-        if (profile is null || ModBrowseResultsList.SelectedItem is not AsaModEntry source)
+        if (profile is null)
             return;
 
         if (profile.Mods.Any(m => m.ModId == source.ModId))
@@ -1538,6 +1550,50 @@ public partial class MainWindow : Window
         LaunchPreviewText.Text = BuildLaunchArguments();
         ModBrowseSelectionText.Text = $"Added {mod.DisplayName} to {profile.ServerName}.";
         AppendConsole($"[MODS] Added browsed mod {mod.ModId} ({mod.DisplayName}).");
+    }
+
+    private async Task LoadBrowseThumbnailsAsync(IEnumerable<AsaModEntry> mods)
+    {
+        var gate = new SemaphoreSlim(6);
+
+        var tasks = mods.Select(async mod =>
+        {
+            if (string.IsNullOrWhiteSpace(mod.LogoUrl))
+                return;
+
+            await gate.WaitAsync();
+            try
+            {
+                using var response = await _thumbnailHttp.GetAsync(mod.LogoUrl);
+                if (!response.IsSuccessStatusCode)
+                    return;
+
+                await using var stream = await response.Content.ReadAsStreamAsync();
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                ms.Position = 0;
+
+                mod.LogoBitmap = new Bitmap(ms);
+            }
+            catch
+            {
+                // A missing/broken thumbnail must never break mod browsing.
+            }
+            finally
+            {
+                gate.Release();
+            }
+        });
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async void AddBrowseModToServer_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ModBrowseResultsList.SelectedItem is not AsaModEntry source)
+            return;
+
+        await AddBrowseModEntryAsync(source);
     }
 
     private async void RefreshInstalledModMetadata_Click(object? sender, RoutedEventArgs e)
