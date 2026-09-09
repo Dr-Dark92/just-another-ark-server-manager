@@ -351,14 +351,18 @@
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="models:EngramCatalogEntry">
             <Border Classes="card" Margin="0,0,0,6">
-              <Grid ColumnDefinitions="Auto,2*,Auto,120,120,Auto" ColumnSpacing="12">
+              <Grid ColumnDefinitions="Auto,54,2*,Auto,120,120,Auto" ColumnSpacing="12">
                 <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" Click="EngramCatalogCheck_Click"/>
-                <StackPanel Grid.Column="1">
+                <Border Grid.Column="1" Width="48" Height="48" CornerRadius="6"
+                        Background="#0E1720" BorderBrush="#2A3A4A" BorderThickness="1">
+                  <Image Source="{Binding IconBitmap}" Stretch="Uniform" Margin="3"/>
+                </Border>
+                <StackPanel Grid.Column="2">
                   <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
                   <TextBlock Text="{Binding ClassName}" FontSize="10" Opacity="0.55"/>
                   <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#55D7FF"/>
                 </StackPanel>
-                <StackPanel Grid.Column="2" Spacing="3">
+                <StackPanel Grid.Column="6" Spacing="3">
                   <TextBlock Text="Hidden" FontSize="10" Opacity="0.55"/>
                   <ToggleSwitch/>
                 </StackPanel>
