@@ -3,7 +3,7 @@
   "name": "JAASM Mod Bridge",
   "version": "0.1.0",
   "description": "Adds ARK: Survival Ascended mods from CurseForge or ArkCodes directly to the active JAASM server profile.",
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "scripting"],
   "host_permissions": [
     "http://127.0.0.1:8485/*",
     "https://www.curseforge.com/*",
