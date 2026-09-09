@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly AsaProcessService _asaProcess = new();
     private readonly AsaConfigService _asaConfig = new();
     private readonly CurseForgeModService _curseForgeMods = new();
+    private readonly ModDownloadService _modDownloads = new();
     private readonly BrowserModBridgeService _browserModBridge;
     private readonly HttpClient _thumbnailHttp = new();
     private List<AsaModEntry> _browseMods = new();
@@ -1637,6 +1638,155 @@ public partial class MainWindow : Window
 
         await AddBrowseModEntryAsync(source);
     }
+
+    private async void DownloadSelectedMod_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ModsListBox.SelectedItem is not AsaModEntry mod)
+        {
+            ModDownloadStatusText.Text = "Select a mod first.";
+            return;
+        }
+
+        await DownloadModPackageAsync(mod);
+    }
+
+    private async void DownloadEnabledMods_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+        {
+            ModDownloadStatusText.Text = "No active server profile.";
+            return;
+        }
+
+        var enabled = profile.Mods
+            .Where(m => m.Enabled)
+            .OrderBy(m => m.LoadOrder)
+            .ToList();
+
+        if (enabled.Count == 0)
+        {
+            ModDownloadStatusText.Text = "No enabled mods to download.";
+            return;
+        }
+
+        var completed = 0;
+
+        foreach (var mod in enabled)
+        {
+            ModDownloadStatusText.Text =
+                $"Downloading {completed + 1}/{enabled.Count}: {mod.DisplayName}";
+
+            var result = await DownloadModPackageAsync(mod, resetProgress: true);
+            if (!result)
+            {
+                ModDownloadStatusText.Text =
+                    $"Stopped at {mod.DisplayName}. Check Console for the error.";
+                return;
+            }
+
+            completed++;
+        }
+
+        ModDownloadProgressBar.IsIndeterminate = false;
+        ModDownloadProgressBar.Value = 100;
+        ModDownloadStatusText.Text =
+            $"Downloaded {completed}/{enabled.Count} enabled mod package(s).";
+    }
+
+    private async Task<bool> DownloadModPackageAsync(
+        AsaModEntry mod,
+        bool resetProgress = true)
+    {
+        if (resetProgress)
+        {
+            ModDownloadProgressBar.IsIndeterminate = true;
+            ModDownloadProgressBar.Value = 0;
+        }
+
+        var cacheRoot = GetModDownloadCacheDirectory();
+        Directory.CreateDirectory(cacheRoot);
+
+        var progress = new Progress<ModDownloadProgress>(p =>
+        {
+            if (p.Percent is { } percent)
+            {
+                ModDownloadProgressBar.IsIndeterminate = false;
+                ModDownloadProgressBar.Value = percent;
+            }
+            else
+            {
+                ModDownloadProgressBar.IsIndeterminate = true;
+            }
+
+            ModDownloadStatusText.Text = p.Status;
+        });
+
+        AppendConsole(
+            $"[MOD DOWNLOAD] Resolving package for {mod.DisplayName} ({mod.ModId})...");
+
+        var result = await _modDownloads.DownloadLatestWindowsServerPackageAsync(
+            mod,
+            cacheRoot,
+            progress);
+
+        ModDownloadProgressBar.IsIndeterminate = false;
+
+        if (!result.Success)
+        {
+            ModDownloadProgressBar.Value = 0;
+            ModDownloadStatusText.Text = result.Message;
+            AppendConsole($"[MOD DOWNLOAD] FAILED {mod.ModId}: {result.Message}");
+            return false;
+        }
+
+        ModDownloadProgressBar.Value = 100;
+        ModDownloadStatusText.Text =
+            $"Downloaded to {result.FilePath}";
+
+        if (result.FileId is not null)
+            mod.MainFileId = result.FileId;
+
+        if (!string.IsNullOrWhiteSpace(result.FilePath))
+            mod.MainFileName = Path.GetFileName(result.FilePath);
+
+        mod.MetadataStatus = "Package downloaded to JAASM cache";
+        await _settingsService.SaveAsync(_settings);
+
+        RefreshModsUi();
+        ModsListBox.SelectedItem = mod;
+
+        AppendConsole(
+            $"[MOD DOWNLOAD] COMPLETE {mod.ModId}: {result.FilePath}");
+
+        return true;
+    }
+
+    private void OpenModDownloadCache_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var path = GetModDownloadCacheDirectory();
+            Directory.CreateDirectory(path);
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            ModDownloadStatusText.Text =
+                $"Could not open download cache: {ex.Message}";
+        }
+    }
+
+    private static string GetModDownloadCacheDirectory() =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "JAASM",
+            "mod-downloads");
 
     private async void RefreshInstalledModMetadata_Click(object? sender, RoutedEventArgs e)
     {
