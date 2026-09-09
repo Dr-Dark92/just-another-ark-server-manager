@@ -1,7 +1,81 @@
 const BRIDGE = "http://127.0.0.1:8485";
 
+async function resolveRenderedPageId(url, provider) {
+  let tab = null;
+
+  try {
+    tab = await chrome.tabs.create({
+      url,
+      active: false
+    });
+
+    const tabId = tab.id;
+    if (!tabId) {
+      return { ok: false, message: "Could not create background tab." };
+    }
+
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        chrome.tabs.onUpdated.removeListener(listener);
+        reject(new Error("Timed out waiting for mod page to load."));
+      }, 15000);
+
+      const listener = (updatedTabId, changeInfo) => {
+        if (updatedTabId !== tabId || changeInfo.status !== "complete") {
+          return;
+        }
+
+        clearTimeout(timeout);
+        chrome.tabs.onUpdated.removeListener(listener);
+        setTimeout(resolve, 700);
+      };
+
+      chrome.tabs.onUpdated.addListener(listener);
+    });
+
+    const response = await chrome.tabs.sendMessage(tabId, {
+      type: "JAASM_GET_PAGE_MOD_ID",
+      provider
+    });
+
+    if (!response?.modId) {
+      return {
+        ok: false,
+        message: provider === "curseforge"
+          ? "Rendered page did not expose a Project ID."
+          : "Rendered page did not expose a Mod ID."
+      };
+    }
+
+    return { ok: true, modId: response.modId };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error?.message || "Could not crawl the mod page."
+    };
+  } finally {
+    if (tab?.id) {
+      try {
+        await chrome.tabs.remove(tab.id);
+      } catch {
+        // Ignore tab cleanup race.
+      }
+    }
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (!message || message.type !== "JAASM_ADD_MOD") {
+  if (!message) {
+    return;
+  }
+
+  if (message.type === "JAASM_RESOLVE_RENDERED_ID") {
+    resolveRenderedPageId(String(message.url || ""), String(message.provider || ""))
+      .then(sendResponse);
+    return true;
+  }
+
+  if (message.type !== "JAASM_ADD_MOD") {
     return;
   }
 
@@ -27,7 +101,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         message: body.message || (response.ok ? "Added to JAASM." : "JAASM rejected the mod.")
       });
     })
-    .catch((error) => {
+    .catch(() => {
       sendResponse({
         ok: false,
         status: 0,
