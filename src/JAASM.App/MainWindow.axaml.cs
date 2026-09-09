@@ -1098,6 +1098,93 @@ public partial class MainWindow : Window
         return true;
     }
 
+    private void InstallBrowserExtension_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var source = Path.Combine(AppContext.BaseDirectory, "browser-extension");
+            if (!Directory.Exists(source))
+            {
+                ModBrowseStatusText.Text =
+                    "Browser extension files are missing from this JAASM build.";
+                AppendConsole($"[MOD EXTENSION] Missing bundled extension directory: {source}");
+                return;
+            }
+
+            var destination = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "JAASM",
+                "browser-extension");
+
+            CopyDirectory(source, destination);
+
+            var chrome = FindChromeExecutable();
+            if (chrome is not null)
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = chrome,
+                    Arguments = "chrome://extensions/",
+                    UseShellExecute = true
+                });
+            }
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = destination,
+                UseShellExecute = true
+            });
+
+            ModBrowseStatusText.Text =
+                "Browser extension prepared. In Chrome, enable Developer mode, click Load unpacked, then select the opened browser-extension folder.";
+
+            AppendConsole($"[MOD EXTENSION] Prepared Chrome extension at: {destination}");
+        }
+        catch (Exception ex)
+        {
+            ModBrowseStatusText.Text = "Could not prepare browser extension.";
+            AppendConsole($"[MOD EXTENSION] Installation preparation failed: {ex.Message}");
+        }
+    }
+
+    private static void CopyDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+
+        foreach (var file in Directory.GetFiles(source))
+        {
+            var target = Path.Combine(destination, Path.GetFileName(file));
+            File.Copy(file, target, true);
+        }
+
+        foreach (var directory in Directory.GetDirectories(source))
+        {
+            var target = Path.Combine(destination, Path.GetFileName(directory));
+            CopyDirectory(directory, target);
+        }
+    }
+
+    private static string? FindChromeExecutable()
+    {
+        if (!OperatingSystem.IsWindows())
+            return null;
+
+        var candidates = new[]
+        {
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                "Google", "Chrome", "Application", "chrome.exe"),
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                "Google", "Chrome", "Application", "chrome.exe"),
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Google", "Chrome", "Application", "chrome.exe")
+        };
+
+        return candidates.FirstOrDefault(File.Exists);
+    }
+
     private void OpenCurseForgeSearch_Click(object? sender, RoutedEventArgs e)
     {
         var search = Uri.EscapeDataString(ModBrowseSearchBox.Text?.Trim() ?? string.Empty);
