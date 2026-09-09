@@ -1,14 +1,16 @@
 (() => {
-  const MARK = "data-jaasm-button";
+  const LINK_MARK = "data-jaasm-link";
+  const CARD_MARK = "data-jaasm-card";
+  const PAGE_MARK = "data-jaasm-page-button";
 
-  function extractNumericIdFromUrl(url) {
-    const arkCodes = url.match(/arkcodes\.com\/mods\/(\d{4,10})(?:\/|$)/i);
-    if (arkCodes) return arkCodes[1];
-
-    const queryId = url.match(/[?&](?:projectId|modId|id)=(\d{4,10})(?:&|$)/i);
-    if (queryId) return queryId[1];
-
-    return null;
+  function normalizeUrl(url) {
+    try {
+      const u = new URL(url, location.href);
+      u.hash = "";
+      return u.toString().replace(/\/$/, "");
+    } catch {
+      return String(url || "").replace(/\/$/, "");
+    }
   }
 
   function extractProjectIdFromText(text) {
@@ -16,43 +18,90 @@
     return match ? match[1] : null;
   }
 
-  async function resolveCurseForgeId(link) {
-    const nearby =
-      extractProjectIdFromText(link.closest("article")?.innerText) ||
-      extractProjectIdFromText(link.parentElement?.innerText);
+  function extractModIdFromText(text) {
+    const match = String(text || "").match(/Mod\s*ID\s*:?\s*(\d{4,10})/i);
+    return match ? match[1] : null;
+  }
 
-    if (nearby) return nearby;
+  function extractNumericIdFromUrl(url) {
+    const arkCodes = String(url || "").match(/arkcodes\.com\/mods\/(\d{4,10})(?:\/|$)/i);
+    if (arkCodes) return arkCodes[1];
 
-    if (location.href === link.href || location.href.replace(/\/$/, "") === link.href.replace(/\/$/, "")) {
-      return extractProjectIdFromText(document.body?.innerText);
-    }
+    const queryId = String(url || "").match(/[?&](?:projectId|modId|id)=(\d{4,10})(?:&|$)/i);
+    return queryId ? queryId[1] : null;
+  }
 
+  async function fetchOneLevel(url) {
     try {
-      const response = await fetch(link.href, {
+      const response = await fetch(url, {
         credentials: "include",
-        cache: "no-store"
+        cache: "no-store",
+        redirect: "follow"
       });
 
       if (!response.ok) return null;
-      const html = await response.text();
-
-      const textMatch = extractProjectIdFromText(html);
-      if (textMatch) return textMatch;
-
-      const jsonish = html.match(/["'](?:projectId|id)["']\s*:\s*(\d{4,10})/i);
-      return jsonish ? jsonish[1] : null;
+      return await response.text();
     } catch {
       return null;
     }
   }
 
-  async function resolveModId(link) {
-    const numeric = extractNumericIdFromUrl(link.href);
+  async function resolveCurseForgeId(url, nearbyText = "") {
+    const nearby = extractProjectIdFromText(nearbyText);
+    if (nearby) return nearby;
+
+    if (normalizeUrl(url) === normalizeUrl(location.href)) {
+      const pageId = extractProjectIdFromText(document.body?.innerText);
+      if (pageId) return pageId;
+    }
+
+    // Crawl exactly one level into the mod detail page.
+    const html = await fetchOneLevel(url);
+    if (!html) return null;
+
+    const labelMatch = extractProjectIdFromText(html);
+    if (labelMatch) return labelMatch;
+
+    const jsonMatch =
+      html.match(/["']projectId["']\s*:\s*["']?(\d{4,10})["']?/i) ||
+      html.match(/["']id["']\s*:\s*["']?(\d{4,10})["']?/i);
+
+    return jsonMatch ? jsonMatch[1] : null;
+  }
+
+  async function resolveArkCodesId(url, nearbyText = "") {
+    const nearby = extractModIdFromText(nearbyText);
+    if (nearby) return nearby;
+
+    const numeric = extractNumericIdFromUrl(url);
     if (numeric) return numeric;
 
-    if (/curseforge\.com$/i.test(link.hostname) &&
-        /\/ark-survival-ascended\/mods\//i.test(link.pathname)) {
-      return await resolveCurseForgeId(link);
+    if (normalizeUrl(url) === normalizeUrl(location.href)) {
+      const pageId = extractModIdFromText(document.body?.innerText);
+      if (pageId) return pageId;
+    }
+
+    // Crawl exactly one level into the ArkCodes mod page.
+    const html = await fetchOneLevel(url);
+    if (!html) return null;
+
+    const labelMatch = extractModIdFromText(html);
+    if (labelMatch) return labelMatch;
+
+    const urlMatch = extractNumericIdFromUrl(url);
+    return urlMatch || null;
+  }
+
+  async function resolveModId(link, host) {
+    const url = link?.href || location.href;
+    const nearbyText = host?.innerText || link?.parentElement?.innerText || "";
+
+    if (/curseforge\.com$/i.test(new URL(url, location.href).hostname)) {
+      return await resolveCurseForgeId(url, nearbyText);
+    }
+
+    if (/arkcodes\.com$/i.test(new URL(url, location.href).hostname)) {
+      return await resolveArkCodesId(url, nearbyText);
     }
 
     return null;
@@ -82,28 +131,15 @@
         }
 
         button.dataset.state = "error";
-        button.textContent = response?.status === 409 ? "Already added" : "Add failed";
+        button.textContent =
+          response?.status === 409 ? "Already added" : "Add failed";
         button.title = response?.message || "JAASM could not add this mod.";
         button.disabled = false;
       }
     );
   }
 
-  function attachButton(link) {
-    if (!link || link.hasAttribute(MARK)) return;
-
-    const isCurseForge =
-      /curseforge\.com$/i.test(link.hostname) &&
-      /\/ark-survival-ascended\/mods\/[a-z0-9-]+/i.test(link.pathname);
-
-    const isArkCodes =
-      /arkcodes\.com$/i.test(link.hostname) &&
-      /\/mods\/\d{4,10}\//i.test(link.pathname);
-
-    if (!isCurseForge && !isArkCodes) return;
-
-    link.setAttribute(MARK, "1");
-
+  function createButton(link, host) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "jaasm-add-mod-button";
@@ -118,11 +154,13 @@
       button.textContent = "Finding ID…";
       button.disabled = true;
 
-      const modId = await resolveModId(link);
+      const modId = await resolveModId(link, host);
+
       if (!modId) {
         button.dataset.state = "error";
         button.textContent = "ID not found";
-        button.title = "Open the mod page and try again.";
+        button.title =
+          "JAASM crawled one level into this mod page but could not find Project ID / Mod ID.";
         button.disabled = false;
         return;
       }
@@ -130,30 +168,90 @@
       sendToJaasm(modId, button);
     });
 
-    const host =
-      link.closest("article") ||
-      link.closest("[class*='project-card']") ||
-      link.closest("[class*='card']") ||
-      link.parentElement;
+    return button;
+  }
 
-    if (!host) return;
-
-    const existing = host.querySelector(".jaasm-add-mod-button");
-    if (!existing) {
-      host.appendChild(button);
+  function isCurseForgeModLink(link) {
+    try {
+      const u = new URL(link.href, location.href);
+      return /curseforge\.com$/i.test(u.hostname) &&
+        /^\/ark-survival-ascended\/mods\/[a-z0-9-]+\/?$/i.test(u.pathname);
+    } catch {
+      return false;
     }
   }
 
+  function isArkCodesModLink(link) {
+    try {
+      const u = new URL(link.href, location.href);
+      return /arkcodes\.com$/i.test(u.hostname) &&
+        /^\/mods\/(?:\d{4,10}|[a-z0-9-]+)\/?$/i.test(u.pathname);
+    } catch {
+      return false;
+    }
+  }
+
+  function findLogicalCard(link) {
+    return (
+      link.closest("article") ||
+      link.closest("[class*='project-card']") ||
+      link.closest("[class*='mod-card']") ||
+      link.closest("[class*='search-result']") ||
+      link.closest("[class*='card']") ||
+      link.closest("li") ||
+      link.parentElement
+    );
+  }
+
+  function attachCardButton(link) {
+    if (!link || link.hasAttribute(LINK_MARK)) return;
+    if (!isCurseForgeModLink(link) && !isArkCodesModLink(link)) return;
+
+    const host = findLogicalCard(link);
+    if (!host || host.hasAttribute(CARD_MARK)) return;
+
+    link.setAttribute(LINK_MARK, "1");
+    host.setAttribute(CARD_MARK, "1");
+    host.appendChild(createButton(link, host));
+  }
+
+  function attachDetailPageButton() {
+    if (document.documentElement.hasAttribute(PAGE_MARK)) return;
+
+    const current = normalizeUrl(location.href);
+    const curseForgeDetail =
+      /curseforge\.com\/ark-survival-ascended\/mods\/[a-z0-9-]+$/i.test(current);
+    const arkCodesDetail =
+      /arkcodes\.com\/mods\/(?:\d{4,10}|[a-z0-9-]+)$/i.test(current);
+
+    if (!curseForgeDetail && !arkCodesDetail) return;
+
+    document.documentElement.setAttribute(PAGE_MARK, "1");
+
+    const syntheticLink = document.createElement("a");
+    syntheticLink.href = location.href;
+
+    const preferredHost =
+      document.querySelector("[class*='download']")?.parentElement ||
+      document.querySelector("main h1")?.parentElement ||
+      document.querySelector("h1")?.parentElement ||
+      document.body;
+
+    preferredHost.appendChild(createButton(syntheticLink, preferredHost));
+  }
+
   function scan() {
+    attachDetailPageButton();
+
     const links = document.querySelectorAll(
       'a[href*="/ark-survival-ascended/mods/"], a[href*="/mods/"]'
     );
 
     for (const link of links) {
       try {
-        attachButton(link);
+        attachCardButton(link);
       } catch {
-        // One malformed card must never break injection on the rest of the page.
+        // One malformed result must never break the rest of the page.
       }
     }
   }
@@ -161,7 +259,7 @@
   let timer = null;
   const observer = new MutationObserver(() => {
     clearTimeout(timer);
-    timer = setTimeout(scan, 120);
+    timer = setTimeout(scan, 150);
   });
 
   observer.observe(document.documentElement, {
