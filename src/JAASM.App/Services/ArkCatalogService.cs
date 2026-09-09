@@ -24,7 +24,9 @@ public static class ArkCatalogService
                     });
 
                 if (root?.Items is { Count: > 0 })
-                    return root.Items;
+                    return root.Items
+                        .Where(item => item.HarvestEligible)
+                        .ToList();
             }
         }
         catch
