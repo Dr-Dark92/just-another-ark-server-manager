@@ -161,7 +161,29 @@
   }
 
   function attachCardButton(link) {
-    if (!link || (!isCurseForgeModLink(link) && !isArkCodesModLink(link))) return;
+    if (!link) return;
+
+    const curseForge = isCurseForgeModLink(link);
+    const arkCodes = isArkCodesModLink(link);
+
+    if (!curseForge && !arkCodes) return;
+
+    if (arkCodes) {
+      if (link.dataset.jaasmInjected === "1") return;
+
+      link.dataset.jaasmInjected = "1";
+
+      const localHost = link.parentElement || link;
+      const button = makeButton(link.href, () =>
+        localHost.parentElement?.innerText ||
+        localHost.innerText ||
+        ""
+      );
+
+      button.classList.add("jaasm-inline-button");
+      link.insertAdjacentElement("afterend", button);
+      return;
+    }
 
     const card = findCard(link);
     if (!card || card.hasAttribute(CARD_MARK)) return;
