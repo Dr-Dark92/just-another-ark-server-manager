@@ -33,21 +33,31 @@ async function resolveRenderedPageId(url, provider) {
       chrome.tabs.onUpdated.addListener(listener);
     });
 
-    const response = await chrome.tabs.sendMessage(tabId, {
-      type: "JAASM_GET_PAGE_MOD_ID",
-      provider
-    });
+    let response = null;
 
-    if (!response?.modId) {
-      return {
-        ok: false,
-        message: provider === "curseforge"
-          ? "Rendered page did not expose a Project ID."
-          : "Rendered page did not expose a Mod ID."
-      };
+    for (let attempt = 0; attempt < 8; attempt++) {
+      try {
+        response = await chrome.tabs.sendMessage(tabId, {
+          type: "JAASM_GET_PAGE_MOD_ID",
+          provider
+        });
+      } catch {
+        response = null;
+      }
+
+      if (response?.modId) {
+        return { ok: true, modId: response.modId };
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    return { ok: true, modId: response.modId };
+    return {
+      ok: false,
+      message: provider === "curseforge"
+        ? "Rendered page did not expose a Project ID after retries."
+        : "Rendered page did not expose a Mod ID after retries."
+    };
   } catch (error) {
     return {
       ok: false,
