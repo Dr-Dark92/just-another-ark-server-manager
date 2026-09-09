@@ -33,30 +33,43 @@ async function resolveRenderedPageId(url, provider) {
       chrome.tabs.onUpdated.addListener(listener);
     });
 
-    let response = null;
-
-    for (let attempt = 0; attempt < 8; attempt++) {
+    for (let attempt = 0; attempt < 10; attempt++) {
       try {
-        response = await chrome.tabs.sendMessage(tabId, {
-          type: "JAASM_GET_PAGE_MOD_ID",
-          provider
+        const results = await chrome.scripting.executeScript({
+          target: { tabId },
+          func: (providerName) => {
+            const text = document.body?.innerText || "";
+
+            if (providerName === "curseforge") {
+              const match = text.match(/Project\s*ID\s*:?\s*(\d{4,10})/i);
+              return match ? match[1] : null;
+            }
+
+            const match = text.match(/Mod\s*ID\s*:?\s*(\d{4,10})/i);
+            if (match) return match[1];
+
+            const urlMatch = location.href.match(/arkcodes\.com\/mods\/(\d{4,10})(?:\/|$)/i);
+            return urlMatch ? urlMatch[1] : null;
+          },
+          args: [provider]
         });
+
+        const modId = results?.[0]?.result;
+        if (modId) {
+          return { ok: true, modId };
+        }
       } catch {
-        response = null;
+        // The page may still be switching/rendering. Retry briefly.
       }
 
-      if (response?.modId) {
-        return { ok: true, modId: response.modId };
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 450));
     }
 
     return {
       ok: false,
       message: provider === "curseforge"
-        ? "Rendered page did not expose a Project ID after retries."
-        : "Rendered page did not expose a Mod ID after retries."
+        ? "Rendered page did not expose a Project ID after direct DOM retries."
+        : "Rendered page did not expose a Mod ID after direct DOM retries."
     };
   } catch (error) {
     return {
