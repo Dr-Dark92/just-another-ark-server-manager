@@ -55,45 +55,39 @@ public static class ArkCatalogService
         };
     }
 
-    public static List<EngramCatalogEntry> CreateEngrams() =>
-        new()
+    public static List<EngramCatalogEntry> CreateEngrams()
+    {
+        var catalogPath = Path.Combine(AppContext.BaseDirectory, "Data", "ark-engrams.json");
+
+        try
+        {
+            if (File.Exists(catalogPath))
+            {
+                var json = File.ReadAllText(catalogPath);
+                var root = JsonSerializer.Deserialize<EngramCatalogDocument>(
+                    json,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                if (root?.Engrams is { Count: > 0 })
+                    return root.Engrams;
+            }
+        }
+        catch
+        {
+            // The runtime remains offline. If the snapshot is corrupt/missing,
+            // fail soft to a tiny emergency fallback rather than querying the web.
+        }
+
+        return new()
         {
             E("Campfire", "EngramEntry_Campfire_C", 3, 2),
             E("Bow", "EngramEntry_Bow_C", 11, 10),
-            E("Canteen", "EngramEntry_Canteen_C", 24, 54),
-            E("C4 Charge", "EngramEntry_C4Ammo_C", 12, 65),
-            E("C4 Remote Detonator", "EngramEntry_WeaponC4_C", 24, 65),
-            E("Cannon", "EngramEntry_Cannon_C", 25, 34),
-            E("Cannon Ball", "EngramEntry_CannonBall_C", 5, 34),
-            E("Camera", "EngramEntry_Camera_C", 30, 50),
-            E("Bunk Bed", "EngramEntry_ModernBed_C", 28, 54),
-            E("Bug Repellant", "EngramEntry_BugRepel_C", 12, 16),
-            E("Bronto Saddle", "EngramEntry_Saddle_Sauro_C", 21, 63),
-            E("Bronto Platform Saddle", "EngramEntry_Saddle_Sauro_Platform_C", 35, 82),
-            E("Acro Saddle", "EngramEntry_SaddleAcro_C", 77, 43, "ASA"),
-            E("Archelon Saddle", "EngramEntry_Saddle_Archelon_ASA_C", 44, 45, "ASA"),
-            E("Ceratosaurus Saddle", "EngramEntry_CeratosaurusSaddle_ASA_C", 40, 60, "ASA"),
-            E("Decor Box", "EngramEntry_DecorBox_C", 2, 4, "ASA"),
-            E("Deinosuchus Saddle", "EngramEntry_Saddle_Deinosuchus_ASA_C", 40, 74, "ASA"),
-            E("Deinotherium Saddle", "EngramEntry_SaddleDeinotherium_ASA_C", 50, 85, "ASA"),
-            E("Display Case", "EngramEntry_DisplayCase_C", 0, 35, "ASA"),
-            E("Dreadnoughtus Platform Saddle", "EngramEntry_DreadSaddle_C", 100, 100, "ASA"),
-            E("Fasolasuchus Saddle", "EngramEntry_Saddle_Fasola_C", 40, 70, "ASA"),
-            E("Gigantoraptor Saddle", "EngramEntry_Saddle_Gigantoraptor_C", 40, 69, "ASA"),
-            E("Hemogoblin Cocktail", "EngramEntry_HemogoblinCocktail_ASA_C", 25, 60, "ASA"),
-            E("Medium Tek Teleporter", "EngramEntry_TekTeleporterSmall_C", 0, 0, "ASA"),
-            E("Solwyn Saddle", "EngramEntry_LostColony_Saddle_AngelFox_C", 40, 58, "ASA"),
-            E("Warbench", "EngramEntry_LostColony_Warbench_C", 21, 64, "ASA"),
-            E("Aquarium", "EngramEntry_Fishtank_ToF_C", 5, 26, "Tides of Fortune"),
-            E("Bounty Board", "EngramEntry_TOF_BountyBoard_C", 22, 34, "Tides of Fortune"),
-            E("Hand Cannon", "EngramEntry_HandCannon_ToF_C", 15, 34, "Tides of Fortune"),
-            E("Shipyard", "EngramEntry_TOF_Shipyard_Large_C", 24, 42, "Tides of Fortune"),
-            E("Shovel", "EngramEntry_Frontier_Shovel_C", 6, 20, "Tides of Fortune"),
-            E("Sloop", "EngramEntry_TOF_Sloop_C", 12, 42, "Tides of Fortune"),
-            E("Drake Claw", "EngramEntry_DrakeClaw_C", 25, 56, "Dragontopia"),
-            E("Lumina Saddle", "EngramEntry_Saddle_Lumina_C", 18, 65, "Dragontopia"),
-            E("Umbra Saddle", "EngramEntry_Dragontopia_Saddle_Umbra_C", 18, 65, "Dragontopia")
+            E("Acro Saddle", "EngramEntry_SaddleAcro_C", 77, 43, "ASA")
         };
+    }
 
     private static HarvestResourceCatalogEntry R(
         string name,
@@ -109,6 +103,14 @@ public static class ArkCatalogService
             SubCategory = subCategory,
             Aliases = aliases.ToList()
         };
+
+    private sealed class EngramCatalogDocument
+    {
+        public string Source { get; set; } = string.Empty;
+        public string SnapshotDate { get; set; } = string.Empty;
+        public bool RuntimeNetworkRequired { get; set; }
+        public List<EngramCatalogEntry> Engrams { get; set; } = new();
+    }
 
     private sealed class ItemCatalogDocument
     {
