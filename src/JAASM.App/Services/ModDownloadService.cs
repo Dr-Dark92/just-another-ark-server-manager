@@ -134,7 +134,7 @@ public sealed class ModDownloadService
                 var now = DateTimeOffset.UtcNow;
                 if (now - lastReport >= TimeSpan.FromMilliseconds(120))
                 {
-                    var percent = total is > 0
+                    double? percent = total is > 0
                         ? Math.Clamp(received * 100d / total.Value, 0d, 100d)
                         : null;
 
