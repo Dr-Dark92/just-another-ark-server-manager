@@ -47,7 +47,6 @@ public partial class MainWindow : Window
             : Environment.GetEnvironmentVariable("JAASM_CURSEFORGE_API_KEY") ?? string.Empty;
 
         _curseForgeMods.ConfigureApiKey(providerKey);
-        CurseForgeApiKeyBox.Text = _settings.ModProvider.CurseForgeApiKey;
 
         ModBrowseStatusText.Text = _curseForgeMods.IsConfigured
             ? "Mod catalogue connected through CurseForge API."
