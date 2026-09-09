@@ -13,7 +13,7 @@
         "berries",
         "amar"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Amarberry.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -28,7 +28,7 @@
         "berries",
         "azul"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Azulberry.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -43,7 +43,7 @@
         "berries",
         "tinto"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Tintoberry.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -58,7 +58,7 @@
         "berries",
         "mejo"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Mejoberry.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -73,7 +73,7 @@
         "berries",
         "narco"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Narcoberry.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -88,7 +88,7 @@
         "berries",
         "stim"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Stimberry.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -102,7 +102,7 @@
         "meat",
         "raw meat"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Raw Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -116,7 +116,7 @@
         "meat",
         "cooked meat"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Cooked Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -131,7 +131,7 @@
         "prime",
         "raw prime"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Raw Prime Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -146,7 +146,7 @@
         "prime",
         "cooked prime"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Cooked Prime Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -161,7 +161,7 @@
         "fish",
         "raw fish"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Raw Fish Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -176,7 +176,7 @@
         "fish",
         "cooked fish"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Cooked Fish Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -191,7 +191,7 @@
         "fish",
         "prime fish"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Raw Prime Fish Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -206,7 +206,7 @@
         "fish",
         "prime fish"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Cooked Prime Fish Meat.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -221,7 +221,7 @@
         "mutton",
         "sheep"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Raw Mutton.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -236,7 +236,7 @@
         "mutton",
         "lamb"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Cooked Lamb Chop.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -251,7 +251,7 @@
         "jellyfish",
         "cnidaria"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Bio Toxin.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -265,7 +265,7 @@
         "honey",
         "bee"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Giant Bee Honey.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -279,7 +279,7 @@
         "cactus",
         "sap"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Cactus Sap.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -292,7 +292,7 @@
       "aliases": [
         "wood"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Wood.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -305,7 +305,7 @@
       "aliases": [
         "thatch"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Thatch.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -318,7 +318,7 @@
       "aliases": [
         "stone"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Stone.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -331,7 +331,7 @@
       "aliases": [
         "flint"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Flint.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -345,7 +345,7 @@
         "metal",
         "ore"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Metal.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -359,7 +359,7 @@
         "fiber",
         "fibers"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Fiber.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -372,7 +372,7 @@
       "aliases": [
         "hide"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Hide.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -385,7 +385,7 @@
       "aliases": [
         "chitin"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Chitin.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -398,7 +398,7 @@
       "aliases": [
         "keratin"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Keratin.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -412,7 +412,7 @@
         "pelt",
         "fur"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Pelt.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -426,7 +426,7 @@
         "wool",
         "sheep"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Wool.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -441,7 +441,7 @@
         "snail",
         "paste"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Achatina Paste.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -455,7 +455,7 @@
         "ammonite",
         "bile"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Ammonite Bile.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -469,7 +469,7 @@
         "angler",
         "gel"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/AnglerGel.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -483,7 +483,7 @@
         "leech",
         "blood"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Leech Blood.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -497,7 +497,7 @@
         "polymer",
         "organic poly"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Organic Polymer.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -510,7 +510,7 @@
       "aliases": [
         "crystal"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Crystal.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -523,7 +523,7 @@
       "aliases": [
         "obsidian"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Obsidian.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -536,7 +536,7 @@
       "aliases": [
         "oil"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Oil.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -551,7 +551,7 @@
         "silica",
         "pearl"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Silica Pearls.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -565,7 +565,7 @@
         "pearl",
         "black pearls"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Black Pearl.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -578,7 +578,7 @@
       "aliases": [
         "sand"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Sand.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -592,7 +592,7 @@
         "sulfur",
         "sulphur"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Sulfur.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -606,7 +606,7 @@
         "salt",
         "raw salt"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Raw Salt.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -619,7 +619,7 @@
       "aliases": [
         "clay"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Clay.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -633,7 +633,7 @@
         "paste",
         "cementing"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Cementing Paste.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -646,7 +646,7 @@
       "aliases": [
         "polymer"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Polymer.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -660,7 +660,7 @@
         "metal",
         "ingot"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Metal Ingot.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -674,7 +674,7 @@
         "scrap",
         "metal"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Scrap Metal.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -688,7 +688,7 @@
         "scrap",
         "ingot"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Scrap Metal Ingot.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -702,7 +702,7 @@
         "flower",
         "rare flower"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Rare Flower.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -716,7 +716,7 @@
         "mushroom",
         "rare mushroom"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Rare Mushroom.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -730,7 +730,7 @@
         "sap",
         "tree sap"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Sap.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -744,7 +744,7 @@
         "silk",
         "moth"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Silk.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -758,7 +758,7 @@
         "fungal",
         "wood"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Fungal Wood.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -772,7 +772,7 @@
         "green gem",
         "gem"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Green Gem.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -786,7 +786,7 @@
         "blue gem",
         "gem"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Blue Gem.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -800,7 +800,7 @@
         "red gem",
         "gem"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Red Gem.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -814,7 +814,7 @@
         "gas",
         "gas ball"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Congealed Gas Ball.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -827,7 +827,7 @@
       "aliases": [
         "element"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Element.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -841,7 +841,7 @@
         "element",
         "shard"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Element Shard.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -855,7 +855,7 @@
         "element",
         "dust"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Element Dust.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -869,7 +869,7 @@
         "element",
         "ore"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Element Ore.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -882,7 +882,7 @@
       "aliases": [
         "ambergris"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Ambergris.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": true
     },
@@ -896,7 +896,7 @@
         "absorbent",
         "substrate"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Absorbent Substrate.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -909,7 +909,7 @@
       "aliases": [
         "charcoal"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Charcoal.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -922,7 +922,7 @@
       "aliases": [
         "gunpowder"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Gunpowder.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -935,7 +935,7 @@
       "aliases": [
         "sparkpowder"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Sparkpowder.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     },
@@ -949,7 +949,7 @@
         "salt",
         "preserving"
       ],
-      "iconFile": "",
+      "iconFile": "Icons/items/Preserving Salt.png",
       "sourceUrl": "https://ark.wiki.gg/wiki/Item_IDs",
       "harvestEligible": false
     }
