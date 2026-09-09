@@ -1,3 +1,5 @@
+using Avalonia.Media.Imaging;
+using System.Text.Json.Serialization;
 namespace JAASM.App.Models;
 
 public sealed class AppSettings
@@ -55,6 +57,9 @@ public sealed class AsaModEntry
     public double? Rating { get; set; }
     public int ThumbsUpCount { get; set; }
     public string LogoUrl { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public Bitmap? LogoBitmap { get; set; }
     public string WebsiteUrl { get; set; } = string.Empty;
     public string PrimaryCategory { get; set; } = string.Empty;
     public DateTimeOffset? LastUpdated { get; set; }
