@@ -358,10 +358,10 @@
                   <TextBlock Text="{Binding ClassName}" FontSize="10" Opacity="0.55"/>
                   <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#55D7FF"/>
                 </StackPanel>
-                <ToggleSwitch Grid.Column="2" Content="Hidden" IsCheckedChanged="EngramCatalogOptionChanged"/>
-                <NumericUpDown Grid.Column="3" Minimum="0" Maximum="10000" Value="{Binding DefaultPointsCost}" ValueChanged="EngramCatalogOptionChanged"/>
-                <NumericUpDown Grid.Column="4" Minimum="0" Maximum="10000" Value="{Binding DefaultLevelRequirement}" ValueChanged="EngramCatalogOptionChanged"/>
-                <ToggleSwitch Grid.Column="5" Content="No prereq" IsCheckedChanged="EngramCatalogOptionChanged"/>
+                <ToggleSwitch Grid.Column="2" Content="Hidden" Click="EngramCatalogOptionChanged"/>
+                <NumericUpDown Grid.Column="3" Minimum="0" Maximum="10000" Value="{Binding DefaultPointsCost}" LostFocus="EngramCatalogOptionChanged"/>
+                <NumericUpDown Grid.Column="4" Minimum="0" Maximum="10000" Value="{Binding DefaultLevelRequirement}" LostFocus="EngramCatalogOptionChanged"/>
+                <ToggleSwitch Grid.Column="5" Content="No prereq" Click="EngramCatalogOptionChanged"/>
               </Grid>
             </Border>
           </DataTemplate>
@@ -392,7 +392,7 @@
                 </StackPanel>
                 <NumericUpDown Grid.Column="2" Minimum="0" Maximum="10000" Increment="0.25"
                                Value="{Binding Multiplier}" FormatString="0.00"
-                               ValueChanged="HarvestCatalogMultiplierChanged"/>
+                               LostFocus="HarvestCatalogMultiplierChanged"/>
               </Grid>
             </Border>
           </DataTemplate>
