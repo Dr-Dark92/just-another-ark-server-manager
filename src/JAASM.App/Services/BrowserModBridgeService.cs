@@ -61,12 +61,13 @@ public sealed class BrowserModBridgeService : IAsyncDisposable
 
     private async Task HandleClientAsync(TcpClient client, CancellationToken ct)
     {
-        await using var _ = client.ConfigureAwait(false);
-        client.NoDelay = true;
-
-        try
+        using (client)
         {
-            using var stream = client.GetStream();
+            client.NoDelay = true;
+
+            try
+            {
+                using var stream = client.GetStream();
             var request = await ReadRequestAsync(stream, ct);
 
             if (request is null)
@@ -159,10 +160,11 @@ public sealed class BrowserModBridgeService : IAsyncDisposable
                 new { ok = result.Success, message = result.Message, modId },
                 origin,
                 ct);
-        }
-        catch
-        {
-            // Browser bridge must never be able to crash JAASM.
+            }
+            catch
+            {
+                // Browser bridge must never be able to crash JAASM.
+            }
         }
     }
 
