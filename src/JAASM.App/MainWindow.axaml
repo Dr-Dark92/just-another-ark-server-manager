@@ -420,7 +420,10 @@
                 <Button Content="Search Native Catalogue" Padding="18,6" Click="BrowseModsSearch_Click"/>
                 <Button Content="Search CurseForge" Padding="16,6" Click="OpenCurseForgeSearch_Click"/>
                 <Button Content="Search ArkCodes" Padding="16,6" Click="OpenArkCodesSearch_Click"/>
-                <Button Content="Install Browser Extension" Padding="16,6" Click="InstallBrowserExtension_Click"/>
+                <Button Content="Launch JAASM Chrome" Padding="16,6" Click="LaunchJaasmChrome_Click"
+                        ToolTip.Tip="Launch an isolated Chrome profile with the JAASM extension loaded automatically."/>
+                <Button Content="Install Extension Manually" Padding="16,6" Click="InstallBrowserExtension_Click"
+                        ToolTip.Tip="Prepare the extension folder and open Chrome's extension page for a normal-profile install."/>
               </StackPanel>
             </Grid>
 
