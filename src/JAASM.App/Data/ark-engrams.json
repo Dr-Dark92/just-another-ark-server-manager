@@ -8,294 +8,378 @@
       "className": "EngramEntry_Campfire_C",
       "category": "Base Game",
       "defaultPointsCost": 3,
-      "defaultLevelRequirement": 2
+      "defaultLevelRequirement": 2,
+      "iconFile": "Icons/engrams/Campfire.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Bow",
       "className": "EngramEntry_Bow_C",
       "category": "Base Game",
       "defaultPointsCost": 11,
-      "defaultLevelRequirement": 10
+      "defaultLevelRequirement": 10,
+      "iconFile": "Icons/engrams/Bow.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Canteen",
       "className": "EngramEntry_Canteen_C",
       "category": "Base Game",
       "defaultPointsCost": 24,
-      "defaultLevelRequirement": 54
+      "defaultLevelRequirement": 54,
+      "iconFile": "Icons/engrams/Canteen.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "C4 Charge",
       "className": "EngramEntry_C4Ammo_C",
       "category": "Base Game",
       "defaultPointsCost": 12,
-      "defaultLevelRequirement": 65
+      "defaultLevelRequirement": 65,
+      "iconFile": "Icons/engrams/C4 Charge.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "C4 Remote Detonator",
       "className": "EngramEntry_WeaponC4_C",
       "category": "Base Game",
       "defaultPointsCost": 24,
-      "defaultLevelRequirement": 65
+      "defaultLevelRequirement": 65,
+      "iconFile": "Icons/engrams/C4 Remote Detonator.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Cannon",
       "className": "EngramEntry_Cannon_C",
       "category": "Base Game",
       "defaultPointsCost": 25,
-      "defaultLevelRequirement": 34
+      "defaultLevelRequirement": 34,
+      "iconFile": "Icons/engrams/Cannon.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Cannon Ball",
       "className": "EngramEntry_CannonBall_C",
       "category": "Base Game",
       "defaultPointsCost": 5,
-      "defaultLevelRequirement": 34
+      "defaultLevelRequirement": 34,
+      "iconFile": "Icons/engrams/Cannon Ball.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Camera",
       "className": "EngramEntry_Camera_C",
       "category": "Base Game",
       "defaultPointsCost": 30,
-      "defaultLevelRequirement": 50
+      "defaultLevelRequirement": 50,
+      "iconFile": "Icons/engrams/Camera.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Bunk Bed",
       "className": "EngramEntry_ModernBed_C",
       "category": "Base Game",
       "defaultPointsCost": 28,
-      "defaultLevelRequirement": 54
+      "defaultLevelRequirement": 54,
+      "iconFile": "Icons/engrams/Bunk Bed.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Bug Repellant",
       "className": "EngramEntry_BugRepel_C",
       "category": "Base Game",
       "defaultPointsCost": 12,
-      "defaultLevelRequirement": 16
+      "defaultLevelRequirement": 16,
+      "iconFile": "Icons/engrams/Bug Repellant.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Bronto Saddle",
       "className": "EngramEntry_Saddle_Sauro_C",
       "category": "Base Game",
       "defaultPointsCost": 21,
-      "defaultLevelRequirement": 63
+      "defaultLevelRequirement": 63,
+      "iconFile": "Icons/engrams/Bronto Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Bronto Platform Saddle",
       "className": "EngramEntry_Saddle_Sauro_Platform_C",
       "category": "Base Game",
       "defaultPointsCost": 35,
-      "defaultLevelRequirement": 82
+      "defaultLevelRequirement": 82,
+      "iconFile": "Icons/engrams/Bronto Platform Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Absorbent Substrate",
       "className": "EngramEntry_SubstrateAbsorbent_C",
       "category": "Base Game",
       "defaultPointsCost": 60,
-      "defaultLevelRequirement": 84
+      "defaultLevelRequirement": 84,
+      "iconFile": "Icons/engrams/Absorbent Substrate.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Adobe Ceiling",
       "className": "EngramEntry_AdobeCeiling_C",
       "category": "Scorched Earth",
       "defaultPointsCost": 5,
-      "defaultLevelRequirement": 15
+      "defaultLevelRequirement": 15,
+      "iconFile": "Icons/engrams/Adobe Ceiling.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Adobe Dinosaur Gate",
       "className": "EngramEntry_AdobeGateway_C",
       "category": "Scorched Earth",
       "defaultPointsCost": 8,
-      "defaultLevelRequirement": 30
+      "defaultLevelRequirement": 30,
+      "iconFile": "Icons/engrams/Adobe Dinosaur Gate.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Adobe Dinosaur Gateway",
       "className": "EngramEntry_AdobeGate_C",
       "category": "Scorched Earth",
       "defaultPointsCost": 12,
-      "defaultLevelRequirement": 30
+      "defaultLevelRequirement": 30,
+      "iconFile": "Icons/engrams/Adobe Dinosaur Gateway.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Adobe Door",
       "className": "EngramEntry_AdobeDoor_C",
       "category": "Scorched Earth",
       "defaultPointsCost": 4,
-      "defaultLevelRequirement": 15
+      "defaultLevelRequirement": 15,
+      "iconFile": "Icons/engrams/Adobe Door.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Adobe Doorframe",
       "className": "EngramEntry_AdobeWallWithDoor_C",
       "category": "Scorched Earth",
       "defaultPointsCost": 6,
-      "defaultLevelRequirement": 15
+      "defaultLevelRequirement": 15,
+      "iconFile": "Icons/engrams/Adobe Doorframe.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Adobe Double Door",
       "className": "EngramEntry_DoubleDoor_Adobe_C",
       "category": "Scorched Earth",
       "defaultPointsCost": 4,
-      "defaultLevelRequirement": 22
+      "defaultLevelRequirement": 22,
+      "iconFile": "Icons/engrams/Adobe Double Door.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Acro Saddle",
       "className": "EngramEntry_SaddleAcro_C",
       "category": "ASA",
       "defaultPointsCost": 77,
-      "defaultLevelRequirement": 43
+      "defaultLevelRequirement": 43,
+      "iconFile": "Icons/engrams/Acro Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Archelon Saddle",
       "className": "EngramEntry_Saddle_Archelon_ASA_C",
       "category": "ASA",
       "defaultPointsCost": 44,
-      "defaultLevelRequirement": 45
+      "defaultLevelRequirement": 45,
+      "iconFile": "Icons/engrams/Archelon Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Ceratosaurus Saddle",
       "className": "EngramEntry_CeratosaurusSaddle_ASA_C",
       "category": "ASA",
       "defaultPointsCost": 40,
-      "defaultLevelRequirement": 60
+      "defaultLevelRequirement": 60,
+      "iconFile": "Icons/engrams/Ceratosaurus Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Decor Box",
       "className": "EngramEntry_DecorBox_C",
       "category": "ASA",
       "defaultPointsCost": 2,
-      "defaultLevelRequirement": 4
+      "defaultLevelRequirement": 4,
+      "iconFile": "Icons/engrams/Decor Box.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Deinosuchus Saddle",
       "className": "EngramEntry_Saddle_Deinosuchus_ASA_C",
       "category": "ASA",
       "defaultPointsCost": 40,
-      "defaultLevelRequirement": 74
+      "defaultLevelRequirement": 74,
+      "iconFile": "Icons/engrams/Deinosuchus Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Deinotherium Saddle",
       "className": "EngramEntry_SaddleDeinotherium_ASA_C",
       "category": "ASA",
       "defaultPointsCost": 50,
-      "defaultLevelRequirement": 85
+      "defaultLevelRequirement": 85,
+      "iconFile": "Icons/engrams/Deinotherium Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Display Case",
       "className": "EngramEntry_DisplayCase_C",
       "category": "ASA",
       "defaultPointsCost": 0,
-      "defaultLevelRequirement": 35
+      "defaultLevelRequirement": 35,
+      "iconFile": "Icons/engrams/Display Case.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Dreadnoughtus Platform Saddle",
       "className": "EngramEntry_DreadSaddle_C",
       "category": "ASA",
       "defaultPointsCost": 100,
-      "defaultLevelRequirement": 100
+      "defaultLevelRequirement": 100,
+      "iconFile": "Icons/engrams/Dreadnoughtus Platform Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Fasolasuchus Saddle",
       "className": "EngramEntry_Saddle_Fasola_C",
       "category": "ASA",
       "defaultPointsCost": 40,
-      "defaultLevelRequirement": 70
+      "defaultLevelRequirement": 70,
+      "iconFile": "Icons/engrams/Fasolasuchus Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Gigantoraptor Saddle",
       "className": "EngramEntry_Saddle_Gigantoraptor_C",
       "category": "ASA",
       "defaultPointsCost": 40,
-      "defaultLevelRequirement": 69
+      "defaultLevelRequirement": 69,
+      "iconFile": "Icons/engrams/Gigantoraptor Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Hemogoblin Cocktail",
       "className": "EngramEntry_HemogoblinCocktail_ASA_C",
       "category": "ASA",
       "defaultPointsCost": 25,
-      "defaultLevelRequirement": 60
+      "defaultLevelRequirement": 60,
+      "iconFile": "Icons/engrams/Hemogoblin Cocktail.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Medium Tek Teleporter",
       "className": "EngramEntry_TekTeleporterSmall_C",
       "category": "ASA",
       "defaultPointsCost": 0,
-      "defaultLevelRequirement": 0
+      "defaultLevelRequirement": 0,
+      "iconFile": "Icons/engrams/Medium Tek Teleporter.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Solwyn Saddle",
       "className": "EngramEntry_LostColony_Saddle_AngelFox_C",
       "category": "Lost Colony",
       "defaultPointsCost": 40,
-      "defaultLevelRequirement": 58
+      "defaultLevelRequirement": 58,
+      "iconFile": "Icons/engrams/Solwyn Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Warbench",
       "className": "EngramEntry_LostColony_Warbench_C",
       "category": "Lost Colony",
       "defaultPointsCost": 21,
-      "defaultLevelRequirement": 64
+      "defaultLevelRequirement": 64,
+      "iconFile": "Icons/engrams/Warbench.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Aquarium",
       "className": "EngramEntry_Fishtank_ToF_C",
       "category": "Tides of Fortune",
       "defaultPointsCost": 5,
-      "defaultLevelRequirement": 26
+      "defaultLevelRequirement": 26,
+      "iconFile": "Icons/engrams/Aquarium.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Bounty Board",
       "className": "EngramEntry_TOF_BountyBoard_C",
       "category": "Tides of Fortune",
       "defaultPointsCost": 22,
-      "defaultLevelRequirement": 34
+      "defaultLevelRequirement": 34,
+      "iconFile": "Icons/engrams/Bounty Board.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Hand Cannon",
       "className": "EngramEntry_HandCannon_ToF_C",
       "category": "Tides of Fortune",
       "defaultPointsCost": 15,
-      "defaultLevelRequirement": 34
+      "defaultLevelRequirement": 34,
+      "iconFile": "Icons/engrams/Hand Cannon.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Shipyard",
       "className": "EngramEntry_TOF_Shipyard_Large_C",
       "category": "Tides of Fortune",
       "defaultPointsCost": 24,
-      "defaultLevelRequirement": 42
+      "defaultLevelRequirement": 42,
+      "iconFile": "Icons/engrams/Shipyard.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Shovel",
       "className": "EngramEntry_Frontier_Shovel_C",
       "category": "Tides of Fortune",
       "defaultPointsCost": 6,
-      "defaultLevelRequirement": 20
+      "defaultLevelRequirement": 20,
+      "iconFile": "Icons/engrams/Shovel.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Sloop",
       "className": "EngramEntry_TOF_Sloop_C",
       "category": "Tides of Fortune",
       "defaultPointsCost": 12,
-      "defaultLevelRequirement": 42
+      "defaultLevelRequirement": 42,
+      "iconFile": "Icons/engrams/Sloop.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Drake Claw",
       "className": "EngramEntry_DrakeClaw_C",
       "category": "Dragontopia",
       "defaultPointsCost": 25,
-      "defaultLevelRequirement": 56
+      "defaultLevelRequirement": 56,
+      "iconFile": "Icons/engrams/Drake Claw.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Lumina Saddle",
       "className": "EngramEntry_Saddle_Lumina_C",
       "category": "Dragontopia",
       "defaultPointsCost": 18,
-      "defaultLevelRequirement": 65
+      "defaultLevelRequirement": 65,
+      "iconFile": "Icons/engrams/Lumina Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     },
     {
       "displayName": "Umbra Saddle",
       "className": "EngramEntry_Dragontopia_Saddle_Umbra_C",
       "category": "Dragontopia",
       "defaultPointsCost": 18,
-      "defaultLevelRequirement": 65
+      "defaultLevelRequirement": 65,
+      "iconFile": "Icons/engrams/Umbra Saddle.png",
+      "sourceUrl": "https://ark.wiki.gg/wiki/Engram_class_names"
     }
   ]
 }
