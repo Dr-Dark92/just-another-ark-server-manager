@@ -2,11 +2,11 @@
 """
 Build JAASM's local ARK item catalogue from the ARK Fandom Item IDs page.
 
-Primary source:
-  https://ark.fandom.com/wiki/Item_IDs
+Primary source snapshot:
+  a locally saved copy of https://ark.fandom.com/wiki/Item_IDs
 
-The script first tries the Fandom MediaWiki API, then can fall back to a locally
-saved HTML page with --html. It writes:
+This builder is intentionally OFFLINE-ONLY. It never calls Fandom, MediaWiki,
+or any remote API. Save/export the source HTML first, then run the parser. It writes:
   src/JAASM.App/Data/ark-items.json
   src/JAASM.App/Data/Icons/items/*
 
@@ -89,31 +89,14 @@ class TableParser(HTMLParser):
             self._cell_text.append(data)
 
 
-def fetch_text(url: str) -> str:
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "JAASM-CatalogBuilder/1.0 (+https://github.com/Dr-Dark92/just-another-ark-server-manager)",
-            "Accept": "application/json,text/html,*/*",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=45) as response:
-        return response.read().decode("utf-8", errors="replace")
-
-
 def load_source_html(local_html: str | None) -> str:
-    if local_html:
-        return Path(local_html).read_text(encoding="utf-8", errors="replace")
-
-    try:
-        payload = json.loads(fetch_text(API_URL))
-        return payload["parse"]["text"]
-    except Exception as exc:
+    if not local_html:
         raise RuntimeError(
-            "Could not fetch Fandom's MediaWiki API. "
-            "Save the Item_IDs page locally and rerun with --html <file>. "
-            f"Underlying error: {exc}"
-        ) from exc
+            "Offline catalogue build requires --html <saved Item_IDs page>. "
+            "JAASM intentionally does not fetch wiki/API data automatically."
+        )
+
+    return Path(local_html).read_text(encoding="utf-8", errors="replace")
 
 
 def normalize_url(value: str) -> str:
@@ -305,7 +288,7 @@ def build(html_text: str, icon_dir: Path, download_icons: bool) -> list[dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--html", help="Use a locally saved Fandom Item_IDs HTML file")
+    parser.add_argument("--html", required=True, help="Locally saved Fandom Item_IDs HTML file")
     parser.add_argument(
         "--output",
         default="src/JAASM.App/Data/ark-items.json",
@@ -335,6 +318,8 @@ def main() -> int:
 
     payload = {
         "source": SOURCE_PAGE,
+        "sourceMode": "offline-snapshot",
+        "runtimeNetworkRequired": False,
         "generatedBy": "tools/build_ark_item_catalog.py",
         "itemCount": len(items),
         "items": items,
