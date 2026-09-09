@@ -5,7 +5,10 @@ using System.Text.Json;
 
 namespace JAASM.App.Services;
 
-public sealed record BrowserModBridgeResult(bool Success, string Message);
+public sealed record BrowserModBridgeResult(
+    bool Success,
+    string Message,
+    bool AlreadyExists = false);
 
 public sealed class BrowserModBridgeService : IAsyncDisposable
 {
@@ -154,10 +157,22 @@ public sealed class BrowserModBridgeService : IAsyncDisposable
 
             var result = await _addMod(modId);
 
+            var statusCode = result.Success
+                ? 200
+                : result.AlreadyExists
+                    ? 409
+                    : 422;
+
             await WriteJsonAsync(
                 stream,
-                result.Success ? 200 : 409,
-                new { ok = result.Success, message = result.Message, modId },
+                statusCode,
+                new
+                {
+                    ok = result.Success,
+                    alreadyExists = result.AlreadyExists,
+                    message = result.Message,
+                    modId
+                },
                 origin,
                 ct);
             }
@@ -289,6 +304,7 @@ public sealed class BrowserModBridgeService : IAsyncDisposable
             403 => "Forbidden",
             404 => "Not Found",
             409 => "Conflict",
+            422 => "Unprocessable Entity",
             _ => "Error"
         };
 
