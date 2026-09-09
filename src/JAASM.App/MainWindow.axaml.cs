@@ -1093,6 +1093,17 @@ public partial class MainWindow : Window
 
         await _settingsService.SaveAsync(_settings);
 
+        var browseMatch = _browseMods.FirstOrDefault(m =>
+            string.Equals(m.ModId, id, StringComparison.OrdinalIgnoreCase));
+
+        if (browseMatch is not null)
+        {
+            browseMatch.IsInstalledInActiveProfile = true;
+            browseMatch.IsNotInstalledInActiveProfile = false;
+            ModBrowseResultsList.ItemsSource = null;
+            ModBrowseResultsList.ItemsSource = _browseMods;
+        }
+
         RefreshModsUi();
         ModsListBox.SelectedItem = mod;
         LaunchPreviewText.Text = BuildLaunchArguments();
@@ -1468,6 +1479,7 @@ public partial class MainWindow : Window
         if (!result.Success)
             AppendConsole($"[MOD CATALOGUE] {result.Message}");
         _browseMods = result.Mods.ToList();
+        UpdateBrowseInstalledState();
         await LoadBrowseThumbnailsAsync(_browseMods);
 
         ModBrowseResultsList.ItemsSource = null;
@@ -1475,6 +1487,21 @@ public partial class MainWindow : Window
         ModBrowseSelectionText.Text = _browseMods.Count == 0
             ? "No browse results."
             : $"{_browseMods.Count} result(s). Select a mod to add it to this server.";
+    }
+
+    private void UpdateBrowseInstalledState()
+    {
+        var installed = ActiveProfile?.Mods
+            .Select(m => m.ModId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase)
+            ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var mod in _browseMods)
+        {
+            var isInstalled = installed.Contains(mod.ModId);
+            mod.IsInstalledInActiveProfile = isInstalled;
+            mod.IsNotInstalledInActiveProfile = !isInstalled;
+        }
     }
 
     private void ModBrowseResultsList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -1545,6 +1572,11 @@ public partial class MainWindow : Window
         profile.Mods.Add(mod);
         NormalizeModOrder(profile);
         await _settingsService.SaveAsync(_settings);
+
+        source.IsInstalledInActiveProfile = true;
+        source.IsNotInstalledInActiveProfile = false;
+        ModBrowseResultsList.ItemsSource = null;
+        ModBrowseResultsList.ItemsSource = _browseMods;
 
         RefreshModsUi();
         LaunchPreviewText.Text = BuildLaunchArguments();
