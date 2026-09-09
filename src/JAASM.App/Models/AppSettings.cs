@@ -44,6 +44,25 @@ public sealed class AsaServerProfile
     public List<AsaModEntry> Mods { get; set; } = new();
 }
 
+public sealed class EngramCatalogEntry
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public string ClassName { get; set; } = string.Empty;
+    public string Category { get; set; } = "Base Game";
+    public int DefaultPointsCost { get; set; }
+    public int DefaultLevelRequirement { get; set; }
+    public bool Selected { get; set; }
+}
+
+public sealed class HarvestResourceCatalogEntry
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public string ClassName { get; set; } = string.Empty;
+    public string Category { get; set; } = "Resources";
+    public bool Selected { get; set; }
+    public float Multiplier { get; set; } = 1.0f;
+}
+
 public sealed class EngramOverrideEntry
 {
     public string EngramClassName { get; set; } = string.Empty;
