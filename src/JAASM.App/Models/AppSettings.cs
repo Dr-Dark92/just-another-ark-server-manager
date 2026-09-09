@@ -59,8 +59,16 @@ public sealed class HarvestResourceCatalogEntry
     public string DisplayName { get; set; } = string.Empty;
     public string ClassName { get; set; } = string.Empty;
     public string Category { get; set; } = "Resources";
+    public string SubCategory { get; set; } = string.Empty;
+    public string ItemId { get; set; } = string.Empty;
+    public List<string> Aliases { get; set; } = new();
+    public string IconFile { get; set; } = string.Empty;
+    public string SourceUrl { get; set; } = string.Empty;
     public bool Selected { get; set; }
     public float Multiplier { get; set; } = 1.0f;
+
+    [JsonIgnore]
+    public Bitmap? IconBitmap { get; set; }
 }
 
 public sealed class EngramOverrideEntry
