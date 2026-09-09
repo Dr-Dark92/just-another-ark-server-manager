@@ -1,0 +1,391 @@
+{
+  "source": "https://ark.fandom.com/wiki/Item_IDs",
+  "generatedBy": "JAASM seed catalogue; refresh with tools/build_ark_item_catalog.py",
+  "items": [
+    {
+      "displayName": "Amarberry",
+      "className": "PrimalItemConsumable_Berry_Amarberry_C",
+      "category": "Consumables",
+      "subCategory": "Berries",
+      "aliases": [
+        "berry",
+        "berries",
+        "amar"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Azulberry",
+      "className": "PrimalItemConsumable_Berry_Azulberry_C",
+      "category": "Consumables",
+      "subCategory": "Berries",
+      "aliases": [
+        "berry",
+        "berries",
+        "azul"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Tintoberry",
+      "className": "PrimalItemConsumable_Berry_Tintoberry_C",
+      "category": "Consumables",
+      "subCategory": "Berries",
+      "aliases": [
+        "berry",
+        "berries",
+        "tinto"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Mejoberry",
+      "className": "PrimalItemConsumable_Berry_Mejoberry_C",
+      "category": "Consumables",
+      "subCategory": "Berries",
+      "aliases": [
+        "berry",
+        "berries",
+        "mejo"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Narcoberry",
+      "className": "PrimalItemConsumable_Berry_Narcoberry_C",
+      "category": "Consumables",
+      "subCategory": "Berries",
+      "aliases": [
+        "berry",
+        "berries",
+        "narco"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Stimberry",
+      "className": "PrimalItemConsumable_Berry_Stimberry_C",
+      "category": "Consumables",
+      "subCategory": "Berries",
+      "aliases": [
+        "berry",
+        "berries",
+        "stim"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Raw Meat",
+      "className": "PrimalItemConsumable_RawMeat_C",
+      "category": "Consumables",
+      "subCategory": "Meat",
+      "aliases": [
+        "meat",
+        "raw meat"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Cooked Meat",
+      "className": "PrimalItemConsumable_CookedMeat_C",
+      "category": "Consumables",
+      "subCategory": "Meat",
+      "aliases": [
+        "meat",
+        "cooked meat"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Raw Prime Meat",
+      "className": "PrimalItemConsumable_RawPrimeMeat_C",
+      "category": "Consumables",
+      "subCategory": "Meat",
+      "aliases": [
+        "meat",
+        "prime",
+        "raw prime"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Cooked Prime Meat",
+      "className": "PrimalItemConsumable_CookedPrimeMeat_C",
+      "category": "Consumables",
+      "subCategory": "Meat",
+      "aliases": [
+        "meat",
+        "prime",
+        "cooked prime"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Raw Fish Meat",
+      "className": "PrimalItemConsumable_RawMeat_Fish_C",
+      "category": "Consumables",
+      "subCategory": "Fish",
+      "aliases": [
+        "meat",
+        "fish",
+        "raw fish"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Cooked Fish Meat",
+      "className": "PrimalItemConsumable_CookedMeat_Fish_C",
+      "category": "Consumables",
+      "subCategory": "Fish",
+      "aliases": [
+        "meat",
+        "fish",
+        "cooked fish"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Raw Prime Fish Meat",
+      "className": "PrimalItemConsumable_RawPrimeMeat_Fish_C",
+      "category": "Consumables",
+      "subCategory": "Fish",
+      "aliases": [
+        "meat",
+        "fish",
+        "prime fish"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Cooked Prime Fish Meat",
+      "className": "PrimalItemConsumable_CookedPrimeMeat_Fish_C",
+      "category": "Consumables",
+      "subCategory": "Fish",
+      "aliases": [
+        "meat",
+        "fish",
+        "prime fish"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Raw Mutton",
+      "className": "PrimalItemConsumable_RawMutton_C",
+      "category": "Consumables",
+      "subCategory": "Meat",
+      "aliases": [
+        "meat",
+        "mutton"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Cooked Lamb Chop",
+      "className": "PrimalItemConsumable_CookedLambChop_C",
+      "category": "Consumables",
+      "subCategory": "Meat",
+      "aliases": [
+        "meat",
+        "mutton",
+        "lamb"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Wood",
+      "className": "PrimalItemResource_Wood_C",
+      "category": "Resources",
+      "subCategory": "Basic",
+      "aliases": [
+        "wood"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Thatch",
+      "className": "PrimalItemResource_Thatch_C",
+      "category": "Resources",
+      "subCategory": "Basic",
+      "aliases": [
+        "thatch"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Stone",
+      "className": "PrimalItemResource_Stone_C",
+      "category": "Resources",
+      "subCategory": "Basic",
+      "aliases": [
+        "stone"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Flint",
+      "className": "PrimalItemResource_Flint_C",
+      "category": "Resources",
+      "subCategory": "Basic",
+      "aliases": [
+        "flint"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Metal",
+      "className": "PrimalItemResource_Metal_C",
+      "category": "Resources",
+      "subCategory": "Basic",
+      "aliases": [
+        "metal",
+        "ore"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Fiber",
+      "className": "PrimalItemResource_Fibers_C",
+      "category": "Resources",
+      "subCategory": "Basic",
+      "aliases": [
+        "fiber"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Hide",
+      "className": "PrimalItemResource_Hide_C",
+      "category": "Resources",
+      "subCategory": "Creature",
+      "aliases": [
+        "hide"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Chitin",
+      "className": "PrimalItemResource_Chitin_C",
+      "category": "Resources",
+      "subCategory": "Creature",
+      "aliases": [
+        "chitin"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Keratin",
+      "className": "PrimalItemResource_Keratin_C",
+      "category": "Resources",
+      "subCategory": "Creature",
+      "aliases": [
+        "keratin"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Crystal",
+      "className": "PrimalItemResource_Crystal_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "aliases": [
+        "crystal"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Obsidian",
+      "className": "PrimalItemResource_Obsidian_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "aliases": [
+        "obsidian"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Oil",
+      "className": "PrimalItemResource_Oil_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "aliases": [
+        "oil"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Silica Pearls",
+      "className": "PrimalItemResource_Silicon_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "aliases": [
+        "pearls",
+        "silica"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Black Pearl",
+      "className": "PrimalItemResource_BlackPearl_C",
+      "category": "Resources",
+      "subCategory": "Mineral",
+      "aliases": [
+        "pearl",
+        "black pearls"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Organic Polymer",
+      "className": "PrimalItemResource_Polymer_Organic_C",
+      "category": "Resources",
+      "subCategory": "Creature",
+      "aliases": [
+        "polymer",
+        "organic poly"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    },
+    {
+      "displayName": "Polymer",
+      "className": "PrimalItemResource_Polymer_C",
+      "category": "Resources",
+      "subCategory": "Crafted",
+      "aliases": [
+        "polymer"
+      ],
+      "iconFile": "",
+      "sourceUrl": ""
+    }
+  ]
+}
