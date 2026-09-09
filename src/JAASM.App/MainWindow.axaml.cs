@@ -20,6 +20,9 @@ public partial class MainWindow : Window
     private readonly BrowserModBridgeService _browserModBridge;
     private readonly HttpClient _thumbnailHttp = new();
     private List<AsaModEntry> _browseMods = new();
+    private readonly List<EngramCatalogEntry> _engramCatalog = ArkCatalogService.CreateEngrams();
+    private readonly List<HarvestResourceCatalogEntry> _harvestCatalog = ArkCatalogService.CreateHarvestResources();
+
     private AppSettings _settings = new();
     private bool _loading;
     private AsaServerProfile? ActiveProfile =>
@@ -556,8 +559,9 @@ public partial class MainWindow : Window
         LoadCustomizationControls(p.Customization);
         LoadPerLevelStatsControls(p.PerLevelStats);
         RefreshPerLevelStatsSummary();
-        RefreshEngramOverridesUi();
-        RefreshHarvestResourceMultipliersUi();
+        SyncCatalogSelectionsFromProfile();
+        RefreshEngramCatalogUi();
+        RefreshHarvestCatalogUi();
         RefreshModsUi();
         LaunchPreviewText.Text = BuildLaunchArguments();
     }
@@ -943,138 +947,177 @@ public partial class MainWindow : Window
         AppendConsole($"[PER-LEVEL STATS] Reset to defaults for {profile.ServerName}.");
     }
 
-    private void RefreshEngramOverridesUi()
+    private void SyncCatalogSelectionsFromProfile()
     {
         var profile = ActiveProfile;
-        EngramOverridesList.ItemsSource = null;
-        EngramOverridesList.ItemsSource = profile?.EngramOverrides
-            .OrderBy(x => x.EngramClassName, StringComparer.OrdinalIgnoreCase)
-            .ToList()
-            ?? new List<EngramOverrideEntry>();
+
+        foreach (var item in _engramCatalog)
+        {
+            var configured = profile?.EngramOverrides.FirstOrDefault(x =>
+                string.Equals(x.EngramClassName, item.ClassName, StringComparison.OrdinalIgnoreCase));
+
+            item.Selected = configured is not null;
+            if (configured is not null)
+            {
+                item.DefaultPointsCost = configured.PointsCost;
+                item.DefaultLevelRequirement = configured.LevelRequirement;
+            }
+        }
+
+        foreach (var item in _harvestCatalog)
+        {
+            var configured = profile?.HarvestResourceMultipliers.FirstOrDefault(x =>
+                string.Equals(x.ResourceClassName, item.ClassName, StringComparison.OrdinalIgnoreCase));
+
+            item.Selected = configured is not null;
+            item.Multiplier = configured?.Multiplier ?? 1.0f;
+        }
     }
 
-    private async void AddEngramOverride_Click(object? sender, RoutedEventArgs e)
+    private void RefreshEngramCatalogUi()
     {
-        var profile = ActiveProfile;
-        if (profile is null)
+        var query = EngramSearchBox?.Text?.Trim() ?? string.Empty;
+        var items = _engramCatalog
+            .Where(x => string.IsNullOrWhiteSpace(query) ||
+                        x.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                        x.ClassName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                        x.Category.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(x => x.Selected)
+            .ThenBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        EngramCatalogList.ItemsSource = null;
+        EngramCatalogList.ItemsSource = items;
+        EngramSelectionCountText.Text = $"{_engramCatalog.Count(x => x.Selected)} selected";
+    }
+
+    private void RefreshHarvestCatalogUi()
+    {
+        var query = HarvestSearchBox?.Text?.Trim() ?? string.Empty;
+        var items = _harvestCatalog
+            .Where(x => string.IsNullOrWhiteSpace(query) ||
+                        x.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                        x.ClassName.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(x => x.Selected)
+            .ThenBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        HarvestCatalogList.ItemsSource = null;
+        HarvestCatalogList.ItemsSource = items;
+        HarvestSelectionCountText.Text = $"{_harvestCatalog.Count(x => x.Selected)} selected";
+    }
+
+    private void EngramSearchBox_TextChanged(object? sender, TextChangedEventArgs e) =>
+        RefreshEngramCatalogUi();
+
+    private void HarvestSearchBox_TextChanged(object? sender, TextChangedEventArgs e) =>
+        RefreshHarvestCatalogUi();
+
+    private async void EngramCatalogCheck_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox check ||
+            check.DataContext is not EngramCatalogEntry item ||
+            ActiveProfile is not { } profile)
             return;
 
-        var className = EngramClassNameBox.Text?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(className))
+        item.Selected = check.IsChecked == true;
+        var existing = profile.EngramOverrides.FirstOrDefault(x =>
+            string.Equals(x.EngramClassName, item.ClassName, StringComparison.OrdinalIgnoreCase));
+
+        if (item.Selected && existing is null)
         {
-            AppendConsole("[ENGRAM] Engram class name is required.");
-            return;
+            profile.EngramOverrides.Add(new EngramOverrideEntry
+            {
+                EngramClassName = item.ClassName,
+                PointsCost = item.DefaultPointsCost,
+                LevelRequirement = item.DefaultLevelRequirement
+            });
+        }
+        else if (!item.Selected && existing is not null)
+        {
+            profile.EngramOverrides.Remove(existing);
         }
 
-        if (profile.EngramOverrides.Any(x =>
-                string.Equals(x.EngramClassName, className, StringComparison.OrdinalIgnoreCase)))
-        {
-            AppendConsole($"[ENGRAM] Override already exists for {className}.");
-            return;
-        }
-
-        var entry = new EngramOverrideEntry
-        {
-            EngramClassName = className,
-            Hidden = EngramHiddenToggle.IsChecked == true,
-            PointsCost = (int)(EngramPointsCostBox.Value ?? 0),
-            LevelRequirement = (int)(EngramLevelRequirementBox.Value ?? 0),
-            RemovePrerequisite = EngramRemovePrereqToggle.IsChecked == true
-        };
-
-        profile.EngramOverrides.Add(entry);
         await _settingsService.SaveAsync(_settings);
-
-        EngramClassNameBox.Text = string.Empty;
-        EngramHiddenToggle.IsChecked = false;
-        EngramPointsCostBox.Value = 0;
-        EngramLevelRequirementBox.Value = 0;
-        EngramRemovePrereqToggle.IsChecked = false;
-
-        RefreshEngramOverridesUi();
-        AppendConsole($"[ENGRAM] Added override for {entry.EngramClassName}.");
+        RefreshEngramCatalogUi();
     }
 
-    private async void RemoveEngramOverride_Click(object? sender, RoutedEventArgs e)
+    private async void HarvestCatalogCheck_Click(object? sender, RoutedEventArgs e)
     {
-        var profile = ActiveProfile;
-        if (profile is null ||
-            sender is not Button button ||
-            button.DataContext is not EngramOverrideEntry entry)
-        {
+        if (sender is not CheckBox check ||
+            check.DataContext is not HarvestResourceCatalogEntry item ||
+            ActiveProfile is not { } profile)
             return;
+
+        item.Selected = check.IsChecked == true;
+        var existing = profile.HarvestResourceMultipliers.FirstOrDefault(x =>
+            string.Equals(x.ResourceClassName, item.ClassName, StringComparison.OrdinalIgnoreCase));
+
+        if (item.Selected && existing is null)
+        {
+            profile.HarvestResourceMultipliers.Add(new HarvestResourceMultiplierEntry
+            {
+                ResourceClassName = item.ClassName,
+                Multiplier = item.Multiplier
+            });
+        }
+        else if (!item.Selected && existing is not null)
+        {
+            profile.HarvestResourceMultipliers.Remove(existing);
         }
 
-        profile.EngramOverrides.Remove(entry);
         await _settingsService.SaveAsync(_settings);
-        RefreshEngramOverridesUi();
-        AppendConsole($"[ENGRAM] Removed override for {entry.EngramClassName}.");
+        RefreshHarvestCatalogUi();
     }
 
-    private void RefreshHarvestResourceMultipliersUi()
+    private async void HarvestCatalogMultiplierChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        var profile = ActiveProfile;
-        HarvestResourceMultipliersList.ItemsSource = null;
-        HarvestResourceMultipliersList.ItemsSource = profile?.HarvestResourceMultipliers
-            .OrderBy(x => x.ResourceClassName, StringComparer.OrdinalIgnoreCase)
-            .ToList()
-            ?? new List<HarvestResourceMultiplierEntry>();
+        if (sender is not NumericUpDown control ||
+            control.DataContext is not HarvestResourceCatalogEntry item ||
+            !item.Selected ||
+            ActiveProfile is not { } profile)
+            return;
+
+        item.Multiplier = (float)(control.Value ?? 1m);
+        var existing = profile.HarvestResourceMultipliers.FirstOrDefault(x =>
+            string.Equals(x.ResourceClassName, item.ClassName, StringComparison.OrdinalIgnoreCase));
+
+        if (existing is not null)
+        {
+            existing.Multiplier = item.Multiplier;
+            await _settingsService.SaveAsync(_settings);
+        }
     }
 
-    private async void AddHarvestResourceMultiplier_Click(object? sender, RoutedEventArgs e)
+    private async void EngramCatalogOptionChanged(object? sender, EventArgs e)
     {
-        var profile = ActiveProfile;
-        if (profile is null)
+        if (sender is not Control control ||
+            control.DataContext is not EngramCatalogEntry item ||
+            !item.Selected ||
+            ActiveProfile is not { } profile)
             return;
 
-        var className = HarvestResourceClassBox.Text?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(className))
-        {
-            AppendConsole("[HARVEST] Resource class name is required.");
+        var existing = profile.EngramOverrides.FirstOrDefault(x =>
+            string.Equals(x.EngramClassName, item.ClassName, StringComparison.OrdinalIgnoreCase));
+
+        if (existing is null)
             return;
+
+        // Read the live row controls so only a catalogue-selected class can be persisted.
+        if (control.Parent is Grid row)
+        {
+            var toggles = row.Children.OfType<ToggleSwitch>().ToList();
+            var numbers = row.Children.OfType<NumericUpDown>().ToList();
+
+            existing.Hidden = toggles.ElementAtOrDefault(0)?.IsChecked == true;
+            existing.RemovePrerequisite = toggles.ElementAtOrDefault(1)?.IsChecked == true;
+            existing.PointsCost = (int)(numbers.ElementAtOrDefault(0)?.Value ?? item.DefaultPointsCost);
+            existing.LevelRequirement = (int)(numbers.ElementAtOrDefault(1)?.Value ?? item.DefaultLevelRequirement);
+
+            item.DefaultPointsCost = existing.PointsCost;
+            item.DefaultLevelRequirement = existing.LevelRequirement;
+            await _settingsService.SaveAsync(_settings);
         }
-
-        if (profile.HarvestResourceMultipliers.Any(x =>
-                string.Equals(x.ResourceClassName, className, StringComparison.OrdinalIgnoreCase)))
-        {
-            AppendConsole($"[HARVEST] Per-item rate already exists for {className}.");
-            return;
-        }
-
-        var multiplier = (float)(HarvestResourceMultiplierBox.Value ?? 1m);
-        if (multiplier < 0)
-            multiplier = 0;
-
-        var entry = new HarvestResourceMultiplierEntry
-        {
-            ResourceClassName = className,
-            Multiplier = multiplier
-        };
-
-        profile.HarvestResourceMultipliers.Add(entry);
-        await _settingsService.SaveAsync(_settings);
-
-        HarvestResourceClassBox.Text = string.Empty;
-        HarvestResourceMultiplierBox.Value = 1;
-
-        RefreshHarvestResourceMultipliersUi();
-        AppendConsole($"[HARVEST] Added {entry.ResourceClassName} = x{entry.Multiplier:0.###}.");
-    }
-
-    private async void RemoveHarvestResourceMultiplier_Click(object? sender, RoutedEventArgs e)
-    {
-        var profile = ActiveProfile;
-        if (profile is null ||
-            sender is not Button button ||
-            button.DataContext is not HarvestResourceMultiplierEntry entry)
-        {
-            return;
-        }
-
-        profile.HarvestResourceMultipliers.Remove(entry);
-        await _settingsService.SaveAsync(_settings);
-        RefreshHarvestResourceMultipliersUi();
-        AppendConsole($"[HARVEST] Removed per-item rate for {entry.ResourceClassName}.");
     }
 
     private void RefreshModsUi()
