@@ -1049,8 +1049,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        var browser = new ModBrowserWindow(ModBrowseSearchBox.Text);
-        await browser.ShowDialog(this);
+        var browser = new ModBrowserWindow();
+        await browser.ShowAsync(this, ModBrowseSearchBox.Text);
 
         if (string.IsNullOrWhiteSpace(browser.SelectedModId))
             return;
