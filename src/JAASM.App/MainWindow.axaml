@@ -453,7 +453,7 @@
                                      FontSize="11"
                                      FontWeight="SemiBold"
                                      Opacity="0.28"/>
-                          <Image Source="{Binding LogoUrl}"
+                          <Image Source="{Binding LogoBitmap}"
                                  Stretch="UniformToFill"
                                  Width="104"
                                  Height="104"/>
@@ -470,16 +470,22 @@
                         <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" MaxHeight="44" FontSize="11" Opacity="0.65"/>
                       </StackPanel>
 
-                      <Grid Grid.Column="2" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="3">
-                        <TextBlock Grid.Row="0" Text="Downloads" FontSize="10" Opacity="0.5"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Downloads}"/>
-                        <TextBlock Grid.Row="1" Text="Rating" FontSize="10" Opacity="0.5"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Rating}"/>
-                        <TextBlock Grid.Row="2" Text="Updated" FontSize="10" Opacity="0.5"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LastUpdated}"/>
-                        <TextBlock Grid.Row="3" Text="File bytes" FontSize="10" Opacity="0.5"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MainFileSizeBytes}"/>
-                      </Grid>
+                      <StackPanel Grid.Column="2" Spacing="8">
+                        <Button Content="+ Add"
+                                HorizontalAlignment="Right"
+                                Padding="12,5"
+                                Click="AddBrowseModCard_Click"/>
+                        <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="3">
+                          <TextBlock Grid.Row="0" Text="Downloads" FontSize="10" Opacity="0.5"/>
+                          <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Downloads}"/>
+                          <TextBlock Grid.Row="1" Text="Rating" FontSize="10" Opacity="0.5"/>
+                          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Rating}"/>
+                          <TextBlock Grid.Row="2" Text="Updated" FontSize="10" Opacity="0.5"/>
+                          <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LastUpdated}"/>
+                          <TextBlock Grid.Row="3" Text="File bytes" FontSize="10" Opacity="0.5"/>
+                          <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MainFileSizeBytes}"/>
+                        </Grid>
+                      </StackPanel>
                     </Grid>
                   </Border>
                 </DataTemplate>
