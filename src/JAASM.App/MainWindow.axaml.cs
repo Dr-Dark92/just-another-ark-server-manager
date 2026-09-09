@@ -1070,7 +1070,7 @@ public partial class MainWindow : Window
         RefreshHarvestCatalogUi();
     }
 
-    private async void HarvestCatalogMultiplierChanged(object? sender, NumericUpDownValueChangedEventArgs e)
+    private async void HarvestCatalogMultiplierChanged(object? sender, RoutedEventArgs e)
     {
         if (sender is not NumericUpDown control ||
             control.DataContext is not HarvestResourceCatalogEntry item ||
