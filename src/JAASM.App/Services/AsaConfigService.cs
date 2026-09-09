@@ -148,8 +148,37 @@ public sealed class AsaConfigService
         AddPerLevel(sb, "PerLevelStatsMultiplier_DinoTamed_Add", profile.PerLevelStats.DinoTamedAdd);
         AddPerLevel(sb, "PerLevelStatsMultiplier_DinoTamed_Affinity", profile.PerLevelStats.DinoTamedAffinity);
 
+        foreach (var engram in profile.EngramOverrides
+                     .Where(x => !string.IsNullOrWhiteSpace(x.EngramClassName)))
+        {
+            var className = EscapeIniTupleValue(engram.EngramClassName.Trim());
+            sb.AppendLine(
+                "OverrideNamedEngramEntries=(" +
+                $"EngramClassName=\"{className}\"," +
+                $"EngramHidden={engram.Hidden.ToString().ToLowerInvariant()}," +
+                $"EngramPointsCost={Math.Max(0, engram.PointsCost)}," +
+                $"EngramLevelRequirement={Math.Max(0, engram.LevelRequirement)}," +
+                $"RemoveEngramPreReq={engram.RemovePrerequisite.ToString().ToLowerInvariant()})");
+        }
+
+        foreach (var harvest in profile.HarvestResourceMultipliers
+                     .Where(x => !string.IsNullOrWhiteSpace(x.ResourceClassName)))
+        {
+            var className = EscapeIniTupleValue(harvest.ResourceClassName.Trim());
+            var multiplier = Math.Max(0f, harvest.Multiplier)
+                .ToString("0.###", CultureInfo.InvariantCulture);
+
+            sb.AppendLine(
+                "HarvestResourceItemAmountClassMultipliers=(" +
+                $"ClassName=\"{className}\"," +
+                $"Multiplier={multiplier})");
+        }
+
         return sb.ToString();
     }
+
+    private static string EscapeIniTupleValue(string value) =>
+        value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static void AddPerLevel(
         StringBuilder sb,
