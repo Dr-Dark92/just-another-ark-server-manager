@@ -26,8 +26,6 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Restore
         run: dotnet restore JAASM.slnx
-      - name: Fetch ARK Fandom icons for offline bundle
-        run: python tools/fetch_ark_fandom_icons.py
       - name: Build
         run: dotnet build JAASM.slnx -c Release --no-restore
       - name: Publish
