@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>JAASM ARK Icon Downloader</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;width:360px;margin:0;padding:16px;background:#111827;color:#e5e7eb}
+    h1{font-size:18px;margin:0 0 12px}
+    p{font-size:12px;line-height:1.4;color:#9ca3af}
+    select,button{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid #374151;background:#1f2937;color:#e5e7eb}
+    button{cursor:pointer;background:#0891b2;border-color:#0891b2;font-weight:600}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    #status{margin-top:12px;white-space:pre-wrap;font-family:Consolas,monospace;font-size:11px;background:#0b1220;padding:10px;border-radius:8px;max-height:220px;overflow:auto}
+  </style>
+</head>
+<body>
+  <h1>JAASM ARK Icon Downloader</h1>
+  <p>Uses your browser's own download stack. This is intended for cases where Python/CI requests are blocked by the wiki.</p>
+  <label for="source">Source</label>
+  <select id="source">
+    <option value="fandom" selected>ARK Fandom</option>
+    <option value="official">ARK Official Community Wiki</option>
+  </select>
+  <button id="start">Download catalogue icons</button>
+  <div id="status">Ready.</div>
+  <script src="popup.js"></script>
+</body>
+</html>

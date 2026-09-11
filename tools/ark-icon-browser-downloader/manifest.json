@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "JAASM ARK Icon Downloader",
+  "version": "1.0.0",
+  "description": "Browser-assisted bulk downloader for ARK item and engram icons used by JAASM.",
+  "permissions": ["downloads"],
+  "host_permissions": [
+    "https://ark.fandom.com/*",
+    "https://ark.wiki.gg/*",
+    "https://raw.githubusercontent.com/*"
+  ],
+  "action": {
+    "default_title": "JAASM ARK Icon Downloader",
+    "default_popup": "popup.html"
+  }
+}
