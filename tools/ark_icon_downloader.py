@@ -5,6 +5,15 @@ Standalone local ARK icon downloader for JAASM.
 This tool is intentionally NOT part of CI and NOT used by JAASM at runtime.
 Run it manually on a normal desktop connection, then review/upload the results.
 
+The resolver now prefers the exact MediaWiki file pattern first. Example:
+  Item page:  https://ark.fandom.com/wiki/Organic_Polymer
+  Media view: https://ark.fandom.com/wiki/Organic_Polymer#/media/File:Organic_Polymer.png
+  File name:  Organic_Polymer.png
+
+Because URL fragments (#/media/...) are browser-side only, the downloader resolves
+that file through MediaWiki's Special:Redirect/file endpoint, then falls back to
+page HTML image discovery for exceptions where the icon filename differs.
+
 Outputs by default:
   ark-icon-downloads/items/*
   ark-icon-downloads/engrams/*
@@ -26,7 +35,6 @@ import html
 import json
 import re
 import ssl
-import sys
 import time
 import urllib.error
 import urllib.parse
@@ -64,8 +72,12 @@ def safe_name(value: str) -> str:
     return re.sub(r'[\\/:*?"<>|]', "_", value)
 
 
+def wiki_name(name: str) -> str:
+    return name.strip().replace(" ", "_")
+
+
 def page_slug(name: str) -> str:
-    return urllib.parse.quote(name.replace(" ", "_"), safe="_-'()")
+    return urllib.parse.quote(wiki_name(name), safe="_-'()")
 
 
 def request_bytes(url: str, accept: str, timeout: int = 35) -> tuple[bytes, str, str]:
@@ -74,6 +86,8 @@ def request_bytes(url: str, accept: str, timeout: int = 35) -> tuple[bytes, str,
         headers={
             "User-Agent": USER_AGENT,
             "Accept": accept,
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
             "Referer": urllib.parse.urljoin(url, "/"),
         },
     )
@@ -90,6 +104,40 @@ def absolute_url(base: str, value: str) -> str:
     if value.startswith("//"):
         return "https:" + value
     return urllib.parse.urljoin(base, value)
+
+
+def exact_media_candidates(base: str, display_name: str) -> list[tuple[str, str]]:
+    """Return direct MediaWiki file resolver candidates for the expected icon name."""
+    stem = wiki_name(display_name)
+    filenames = [f"{stem}.png"]
+
+    # Some wiki assets retain spaces in their file titles. MediaWiki accepts both,
+    # so test the literal display name too when it differs from the underscore form.
+    literal = f"{display_name.strip()}.png"
+    if literal not in filenames:
+        filenames.append(literal)
+
+    candidates: list[tuple[str, str]] = []
+    for filename in filenames:
+        encoded = urllib.parse.quote(filename, safe="_-'().")
+        candidates.append((filename, base + "Special:Redirect/file/" + encoded))
+    return candidates
+
+
+def try_exact_media(base: str, display_name: str) -> tuple[bytes, str, str, str] | None:
+    page_url = base + page_slug(display_name)
+    for _filename, file_url in exact_media_candidates(base, display_name):
+        try:
+            data, final_url, ctype = request_bytes(
+                file_url,
+                "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            )
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError):
+            continue
+
+        if data and is_image(data, ctype):
+            return data, final_url, ctype, page_url
+    return None
 
 
 class WikiImageParser(HTMLParser):
@@ -225,17 +273,72 @@ def download_entry(entry: dict, kind: str, out_dir: Path, selected_source: str, 
     for source_name in source_order(selected_source):
         base = SOURCES[source_name]
         page_url = base + page_slug(name)
+
+        # 1) Preferred path: derive File:<Page_Name>.png directly.
+        for filename, direct_url in exact_media_candidates(base, name):
+            try:
+                data, final_image, image_type = request_bytes(
+                    direct_url,
+                    "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+                )
+            except urllib.error.HTTPError as ex:
+                attempts.append({
+                    "source": source_name,
+                    "method": "exact-media",
+                    "fileName": filename,
+                    "url": direct_url,
+                    "error": f"HTTP {ex.code}",
+                })
+                continue
+            except (urllib.error.URLError, TimeoutError, ValueError) as ex:
+                attempts.append({
+                    "source": source_name,
+                    "method": "exact-media",
+                    "fileName": filename,
+                    "url": direct_url,
+                    "error": str(ex),
+                })
+                continue
+
+            if data and is_image(data, image_type):
+                target.write_bytes(data)
+                return {
+                    "kind": kind,
+                    "name": name,
+                    "className": class_name,
+                    "status": "downloaded",
+                    "source": source_name,
+                    "method": "exact-media",
+                    "expectedMediaFile": filename,
+                    "pageUrl": page_url,
+                    "mediaViewUrl": page_url + "#/media/File:" + urllib.parse.quote(filename, safe="_-'()."),
+                    "imageUrl": final_image,
+                    "contentType": image_type,
+                    "bytes": len(data),
+                    "file": str(target.relative_to(out_dir)).replace("\\", "/"),
+                    "attempts": attempts,
+                }
+
+            attempts.append({
+                "source": source_name,
+                "method": "exact-media",
+                "fileName": filename,
+                "url": direct_url,
+                "error": "response was not an image",
+            })
+
+        # 2) Fallback: inspect the item's real wiki page for a differently named icon.
         try:
             resolved = discover_icon(page_url, name)
         except urllib.error.HTTPError as ex:
-            attempts.append({"source": source_name, "page": page_url, "error": f"HTTP {ex.code}"})
+            attempts.append({"source": source_name, "method": "page-discovery", "page": page_url, "error": f"HTTP {ex.code}"})
             continue
         except (urllib.error.URLError, TimeoutError, ValueError) as ex:
-            attempts.append({"source": source_name, "page": page_url, "error": str(ex)})
+            attempts.append({"source": source_name, "method": "page-discovery", "page": page_url, "error": str(ex)})
             continue
 
         if not resolved:
-            attempts.append({"source": source_name, "page": page_url, "error": "no usable image found"})
+            attempts.append({"source": source_name, "method": "page-discovery", "page": page_url, "error": "no usable image found"})
             continue
 
         data, final_image, image_type, final_page = resolved
@@ -246,6 +349,7 @@ def download_entry(entry: dict, kind: str, out_dir: Path, selected_source: str, 
             "className": class_name,
             "status": "downloaded",
             "source": source_name,
+            "method": "page-discovery",
             "pageUrl": final_page,
             "imageUrl": final_image,
             "contentType": image_type,
@@ -281,24 +385,31 @@ def main() -> int:
 
     print(f"[ARK ICON DOWNLOADER] Output: {out_dir}")
     print(f"[ARK ICON DOWNLOADER] Source mode: {args.source}")
+    print("[ARK ICON DOWNLOADER] Resolver: exact MediaWiki filename first, page discovery fallback")
     print(f"[ARK ICON DOWNLOADER] Entries: {len(jobs)}")
 
     for index, (kind, entry) in enumerate(jobs, 1):
         result = download_entry(entry, kind, out_dir, args.source, args.force)
         results.append(result)
-        print(f"[{index:03}/{len(jobs):03}] {result['status']:<10} {kind:<7} {result['name']}")
+        method = result.get("method", "-")
+        print(f"[{index:03}/{len(jobs):03}] {result['status']:<10} {kind:<7} {result['name']} [{method}]")
         time.sleep(max(0.0, args.delay))
 
     downloaded = sum(r["status"] == "downloaded" for r in results)
     cached = sum(r["status"] == "cached" for r in results)
     missing = sum(r["status"] == "missing" for r in results)
+    exact = sum(r.get("method") == "exact-media" for r in results)
+    discovered = sum(r.get("method") == "page-discovery" for r in results)
 
     manifest = {
         "sourceMode": args.source,
+        "resolver": "exact-media-filename-first-v2",
         "runtimeNetworkRequired": False,
         "downloaded": downloaded,
         "cached": cached,
         "missing": missing,
+        "exactMediaResolved": exact,
+        "pageDiscoveryResolved": discovered,
         "total": len(results),
         "results": results,
     }
@@ -312,6 +423,7 @@ def main() -> int:
 
     print()
     print(f"[ARK ICON DOWNLOADER] complete downloaded={downloaded} cached={cached} missing={missing}")
+    print(f"[ARK ICON DOWNLOADER] exact-media={exact} page-discovery={discovered}")
     print(f"[ARK ICON DOWNLOADER] manifest: {out_dir / 'download-manifest.json'}")
     print(f"[ARK ICON DOWNLOADER] names:    {out_dir / 'filenames.txt'}")
 
