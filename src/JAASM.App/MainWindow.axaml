@@ -118,6 +118,19 @@
 <TextBlock x:Name="ExtraArgumentsSummaryText" Text="None selected" VerticalAlignment="Center" Opacity="0.7"/>
 </StackPanel>
 </Grid>
+<Border BorderBrush="#2E6477" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,4,0,0">
+  <Grid ColumnDefinitions="170,*" ColumnSpacing="12">
+    <StackPanel>
+      <TextBlock Text="Platform Access"/>
+      <TextBlock Text="Choose which ASA clients may join this profile. All three enables full PC / Xbox / PS5 crossplay." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/>
+    </StackPanel>
+    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="18">
+      <CheckBox x:Name="AllowPcBox" Content="PC"/>
+      <CheckBox x:Name="AllowXboxBox" Content="Xbox"/>
+      <CheckBox x:Name="AllowPs5Box" Content="PlayStation 5"/>
+    </StackPanel>
+  </Grid>
+</Border>
 <Separator/>
 <TextBlock Text="Server Customization" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
 <TextBlock Text="JAASM generates GameUserSettings.ini from these controls. Each option shows what it changes and the underlying ARK configuration key." Opacity="0.7" TextWrapping="Wrap"/>
