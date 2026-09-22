@@ -35,10 +35,25 @@ public sealed class AsaProcessService : IDisposable
         if (!File.Exists(executablePath))
             return new(false, null, null, $"ASA executable not found: {executablePath}");
 
+        var launcher = executablePath;
+        var arguments = launchArguments;
+
+        if (OperatingSystem.IsLinux())
+        {
+            var wine = ResolveWineExecutable();
+            if (wine is null)
+                return new(false, null, null,
+                    "Wine was not found. Install Wine and ensure 'wine' or 'wine64' is available in PATH.");
+
+            launcher = wine;
+            arguments = $"\\\"{executablePath}\\\" {launchArguments}";
+            console?.Report($"[{profileId}] [WINE] Runtime: {wine}");
+        }
+
         var psi = new ProcessStartInfo
         {
-            FileName = executablePath,
-            Arguments = launchArguments,
+            FileName = launcher,
+            Arguments = arguments,
             WorkingDirectory = Path.GetDirectoryName(executablePath)!,
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -46,7 +61,7 @@ public sealed class AsaProcessService : IDisposable
             RedirectStandardError = true
         };
 
-        console?.Report($"[{profileId}] [ASA START] {Path.GetFileName(executablePath)} {launchArguments}");
+        console?.Report($"[{profileId}] [ASA START] {Path.GetFileName(launcher)} {arguments}");
 
         var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
@@ -130,6 +145,42 @@ public sealed class AsaProcessService : IDisposable
     {
         await StopAsync(profileId, console, ct);
         return await StartAsync(profileId, executablePath, launchArguments, console, ct);
+    }
+
+    private static string? ResolveWineExecutable()
+    {
+        if (!OperatingSystem.IsLinux())
+            return null;
+
+        foreach (var candidate in new[] { "wine64", "wine" })
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = candidate,
+                    Arguments = "--version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+                if (process is null)
+                    continue;
+
+                process.WaitForExit(3000);
+                if (process.HasExited && process.ExitCode == 0)
+                    return candidate;
+            }
+            catch
+            {
+                // Try the next Wine executable.
+            }
+        }
+
+        return null;
     }
 
     private static async Task PumpAsync(StreamReader reader, string prefix,
