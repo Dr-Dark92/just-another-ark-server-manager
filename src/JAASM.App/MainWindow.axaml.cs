@@ -559,6 +559,9 @@ public partial class MainWindow : Window
         GamePortBox.Value = p.GamePort;
         QueryPortBox.Value = p.QueryPort;
         RconPortBox.Value = p.RconPort;
+        AllowPcBox.IsChecked = p.AllowPc;
+        AllowXboxBox.IsChecked = p.AllowXbox;
+        AllowPs5Box.IsChecked = p.AllowPs5;
         ServerPasswordBox.Text = p.ServerPassword;
         AdminPasswordBox.Text = p.AdminPassword;
         ExtraArgumentsSummaryText.Text = p.SelectedExtraArguments.Count == 0
@@ -591,6 +594,9 @@ public partial class MainWindow : Window
         p.GamePort = (int)(GamePortBox.Value ?? 7777);
         p.QueryPort = (int)(QueryPortBox.Value ?? 27015);
         p.RconPort = (int)(RconPortBox.Value ?? 27020);
+        p.AllowPc = AllowPcBox.IsChecked == true;
+        p.AllowXbox = AllowXboxBox.IsChecked == true;
+        p.AllowPs5 = AllowPs5Box.IsChecked == true;
         p.ServerPassword = ServerPasswordBox.Text ?? string.Empty;
         p.AdminPassword = AdminPasswordBox.Text ?? string.Empty;
         p.ExtraArguments = string.Join(" ", p.SelectedExtraArguments);
@@ -614,6 +620,7 @@ public partial class MainWindow : Window
             args += $"?ServerAdminPassword={QuoteUrl(p.AdminPassword)}";
 
         args += $" -server -log -AltLogDirectoryName=\"{saveName}/Logs\"";
+        args += " -ServerPlatform=" + BuildServerPlatformArgument(p);
         var enabledMods = p.Mods
             .Where(m => m.Enabled)
             .OrderBy(m => m.LoadOrder)
@@ -628,6 +635,24 @@ public partial class MainWindow : Window
             args += " " + p.ExtraArguments;
 
         return args;
+    }
+
+    private static string BuildServerPlatformArgument(AsaServerProfile profile)
+    {
+        if (profile.AllowPc && profile.AllowXbox && profile.AllowPs5)
+            return "All";
+
+        var platforms = new List<string>();
+        if (profile.AllowPc)
+            platforms.Add("PC");
+        if (profile.AllowXbox)
+            platforms.Add("XSX");
+        if (profile.AllowPs5)
+            platforms.Add("PS5");
+
+        // Never emit an empty platform list. A profile with every box cleared
+        // falls back to PC so the server remains reachable for correction.
+        return platforms.Count == 0 ? "PC" : string.Join("+", platforms);
     }
 
     private static string QuoteUrl(string value) => Uri.EscapeDataString(value);
