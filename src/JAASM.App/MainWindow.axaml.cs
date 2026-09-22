@@ -339,6 +339,8 @@ public partial class MainWindow : Window
         }
 
         SetBusy(true);
+        AsaDownloadProgress.IsVisible = true;
+        AsaDownloadProgress.IsIndeterminate = true;
         AsaStatusText.Text = "Installing/updating ASA Dedicated Server through SteamCMD...";
 
         try
@@ -362,6 +364,8 @@ public partial class MainWindow : Window
         }
         finally
         {
+            AsaDownloadProgress.IsIndeterminate = false;
+            AsaDownloadProgress.IsVisible = false;
             SetBusy(false);
         }
     }
