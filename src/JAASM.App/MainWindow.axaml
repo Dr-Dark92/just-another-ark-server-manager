@@ -25,7 +25,9 @@
 <Button Content="Download &amp; Install SteamCMD" HorizontalAlignment="Left" Click="InstallSteamCmd_Click"/><ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="100" Height="8"/><TextBlock x:Name="StatusText" Text="Ready." TextWrapping="Wrap"/>
 <Separator/><TextBlock Text="ARK: Survival Ascended Server Bootstrap" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/><TextBlock Text="ASA Dedicated Server App ID: 2430930" Opacity="0.65"/>
 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><TextBox x:Name="AsaInstallDirectoryBox" IsReadOnly="True" PlaceholderText="Select ASA server installation directory"/><Button Grid.Column="1" Content="Browse" Click="BrowseAsaInstallDirectory_Click"/></Grid>
-<StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Install / Update ASA" Click="InstallOrUpdateAsa_Click"/><Button Content="Validate ASA" Click="ValidateAsa_Click"/></StackPanel><TextBlock x:Name="AsaStatusText" Text="ASA server is not configured." TextWrapping="Wrap"/>
+<StackPanel Orientation="Horizontal" Spacing="10"><Button Content="Install / Update ASA" Click="InstallOrUpdateAsa_Click"/><Button Content="Validate ASA" Click="ValidateAsa_Click"/></StackPanel>
+<ProgressBar x:Name="AsaDownloadProgress" Minimum="0" Maximum="100" Height="8" IsVisible="False"/>
+<TextBlock x:Name="AsaStatusText" Text="ASA server is not configured." TextWrapping="Wrap"/>
 <Separator/><TextBlock Text="Optional Web GUI" FontSize="18" FontWeight="SemiBold"/><ToggleSwitch x:Name="WebGuiToggle" Content="Enable Web GUI" IsCheckedChanged="WebGuiToggle_Changed"/><TextBlock Text="Default bind: 127.0.0.1:8484" Opacity="0.65"/>
 </StackPanel></ScrollViewer></TabItem>
 
