@@ -36,7 +36,14 @@ public sealed class AsaProcessService : IDisposable
             return new(false, null, null, $"ASA executable not found: {executablePath}");
 
         var launcher = executablePath;
-        var arguments = launchArguments;
+        var psi = new ProcessStartInfo
+        {
+            WorkingDirectory = Path.GetDirectoryName(executablePath)!,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
 
         if (OperatingSystem.IsLinux())
         {
@@ -46,22 +53,21 @@ public sealed class AsaProcessService : IDisposable
                     "Wine was not found. Install Wine and ensure 'wine' or 'wine64' is available in PATH.");
 
             launcher = wine;
-            arguments = $"\\\"{executablePath}\\\" {launchArguments}";
+            psi.FileName = wine;
+            // ArgumentList preserves paths containing spaces without shell-style escaping.
+            psi.ArgumentList.Add(executablePath);
+            foreach (var argument in SplitLaunchArguments(launchArguments))
+                psi.ArgumentList.Add(argument);
+
             console?.Report($"[{profileId}] [WINE] Runtime: {wine}");
+            console?.Report($"[{profileId}] [ASA START] {wine} \"{executablePath}\" {launchArguments}");
         }
-
-        var psi = new ProcessStartInfo
+        else
         {
-            FileName = launcher,
-            Arguments = arguments,
-            WorkingDirectory = Path.GetDirectoryName(executablePath)!,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
-
-        console?.Report($"[{profileId}] [ASA START] {Path.GetFileName(launcher)} {arguments}");
+            psi.FileName = executablePath;
+            psi.Arguments = launchArguments;
+            console?.Report($"[{profileId}] [ASA START] {Path.GetFileName(executablePath)} {launchArguments}");
+        }
 
         var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
@@ -145,6 +151,36 @@ public sealed class AsaProcessService : IDisposable
     {
         await StopAsync(profileId, console, ct);
         return await StartAsync(profileId, executablePath, launchArguments, console, ct);
+    }
+
+    private static IEnumerable<string> SplitLaunchArguments(string commandLine)
+    {
+        var current = new System.Text.StringBuilder();
+        var quoted = false;
+
+        foreach (var ch in commandLine)
+        {
+            if (ch == '"')
+            {
+                quoted = !quoted;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(ch) && !quoted)
+            {
+                if (current.Length > 0)
+                {
+                    yield return current.ToString();
+                    current.Clear();
+                }
+                continue;
+            }
+
+            current.Append(ch);
+        }
+
+        if (current.Length > 0)
+            yield return current.ToString();
     }
 
     private static string? ResolveWineExecutable()
