@@ -564,6 +564,7 @@ public partial class MainWindow : Window
         AllowPs5Box.IsChecked = p.AllowPs5;
         ServerPasswordBox.Text = p.ServerPassword;
         AdminPasswordBox.Text = p.AdminPassword;
+        ManualArgumentsBox.Text = p.ExtraArguments;
         ExtraArgumentsSummaryText.Text = p.SelectedExtraArguments.Count == 0
             ? "None selected"
             : $"{p.SelectedExtraArguments.Count} selected";
@@ -599,7 +600,7 @@ public partial class MainWindow : Window
         p.AllowPs5 = AllowPs5Box.IsChecked == true;
         p.ServerPassword = ServerPasswordBox.Text ?? string.Empty;
         p.AdminPassword = AdminPasswordBox.Text ?? string.Empty;
-        p.ExtraArguments = string.Join(" ", p.SelectedExtraArguments);
+        p.ExtraArguments = ManualArgumentsBox.Text?.Trim() ?? string.Empty;
         ReadCustomizationControls(p.Customization);
         ReadPerLevelStatsControls(p.PerLevelStats);
     }
@@ -609,7 +610,7 @@ public partial class MainWindow : Window
         var p = ActiveProfile;
         if (p is null)
             return string.Empty;
-        var args = $"{p.Map}?SessionName={QuoteUrl(p.ServerName)}?Port={p.GamePort}?QueryPort={p.QueryPort}?RCONPort={p.RconPort}?MaxPlayers={p.MaxPlayers}";
+        var args = $"{p.Map}?listen?SessionName={QuoteUrl(p.ServerName)}";
 
         if (!string.IsNullOrWhiteSpace(p.ServerPassword))
             args += $"?ServerPassword={QuoteUrl(p.ServerPassword)}";
@@ -619,8 +620,9 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(p.AdminPassword))
             args += $"?ServerAdminPassword={QuoteUrl(p.AdminPassword)}";
 
-        args += $" -server -log -AltLogDirectoryName=\"{saveName}/Logs\"";
+        args += $" -port={p.GamePort} -WinLiveMaxPlayers={p.MaxPlayers}";
         args += " -ServerPlatform=" + BuildServerPlatformArgument(p);
+        args += $" -log -AltLogDirectoryName=\"{saveName}/Logs\"";
         var enabledMods = p.Mods
             .Where(m => m.Enabled)
             .OrderBy(m => m.LoadOrder)
@@ -640,7 +642,7 @@ public partial class MainWindow : Window
     private static string BuildServerPlatformArgument(AsaServerProfile profile)
     {
         if (profile.AllowPc && profile.AllowXbox && profile.AllowPs5)
-            return "All";
+            return "ALL";
 
         var platforms = new List<string>();
         if (profile.AllowPc)
@@ -671,6 +673,7 @@ public partial class MainWindow : Window
 
         profile.SelectedExtraArguments = dialog.Selection.ToList();
         profile.ExtraArguments = string.Join(" ", dialog.Selection);
+        ManualArgumentsBox.Text = profile.ExtraArguments;
         ExtraArgumentsSummaryText.Text = dialog.Selection.Count == 0
             ? "None selected"
             : $"{dialog.Selection.Count} selected";
