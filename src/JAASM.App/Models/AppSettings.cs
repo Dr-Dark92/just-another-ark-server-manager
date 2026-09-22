@@ -33,6 +33,9 @@ public sealed class AsaServerProfile
     public int GamePort { get; set; } = 7777;
     public int QueryPort { get; set; } = 27015;
     public int RconPort { get; set; } = 27020;
+    public bool AllowPc { get; set; } = true;
+    public bool AllowXbox { get; set; } = true;
+    public bool AllowPs5 { get; set; } = true;
     public string ServerPassword { get; set; } = string.Empty;
     public string AdminPassword { get; set; } = string.Empty;
     public string ExtraArguments { get; set; } = string.Empty;
