@@ -13,7 +13,7 @@ public sealed class AsaServerService
     public AsaServerService(SteamCmdService steamCmd) => _steamCmd = steamCmd;
 
     public string GetExpectedExecutablePath(string installDirectory) =>
-        Path.Combine(installDirectory, WindowsExecutableRelativePath);
+        Path.Combine(installDirectory, WindowsExecutableRelativePath.Replace('\\', Path.DirectorySeparatorChar));
 
     public AsaValidationResult ValidateInstallation(string installDirectory)
     {
@@ -24,16 +24,12 @@ public sealed class AsaServerService
         if (!Directory.Exists(directory))
             return new(false, $"ASA installation directory does not exist: {directory}", null);
 
-        if (!OperatingSystem.IsWindows())
-            return new(false,
-                "Native ASA Dedicated Server runtime is currently Windows-targeted. Linux compatibility/runtime support will be handled separately.",
-                null);
-
         var executable = GetExpectedExecutablePath(directory);
         if (!File.Exists(executable))
             return new(false, $"ArkAscendedServer.exe was not found at {executable}", executable);
 
-        return new(true, $"ASA Dedicated Server installation validated: {executable}", executable);
+        var runtime = OperatingSystem.IsLinux() ? "Wine" : "native Windows";
+        return new(true, $"ASA Dedicated Server installation validated for {runtime} runtime: {executable}", executable);
     }
 
     public async Task<AsaValidationResult> InstallOrUpdateAsync(
