@@ -168,10 +168,20 @@ public partial class MainWindow : Window
             return;
         }
 
-        SteamCmdInstallDirectoryBox.Text = path;
-        _settings.SteamCmdInstallDirectory = path;
+        // The selected folder is the JAASM server root. Keep SteamCMD and the
+        // game server together underneath it instead of creating sibling folders.
+        var steamDirectory = Path.Combine(path, "Steam");
+        var gameServerDirectory = Path.Combine(path, "Games Server");
+
+        SteamCmdInstallDirectoryBox.Text = steamDirectory;
+        AsaInstallDirectoryBox.Text = gameServerDirectory;
+
+        _settings.SteamCmdInstallDirectory = steamDirectory;
+        _settings.AsaServerInstallDirectory = gameServerDirectory;
         await _settingsService.SaveAsync(_settings);
-        StatusText.Text = $"SteamCMD installation directory selected: {path}";
+
+        StatusText.Text = $"Server root selected: {path}";
+        AsaStatusText.Text = $"Default game server directory: {gameServerDirectory}";
     }
 
     private async void InstallSteamCmd_Click(object? sender, RoutedEventArgs e)
