@@ -334,9 +334,8 @@ public partial class MainWindow : Window
 
         if (!OperatingSystem.IsWindows())
         {
-            AsaStatusText.Text =
-                "Native ASA Dedicated Server is Windows-targeted. Linux runtime support will be handled separately.";
-            return;
+            AppendConsole("[ASA] Linux host detected. JAASM will download/update the Windows ASA dedicated-server files through SteamCMD.");
+            AppendConsole("[ASA] Runtime launch remains disabled until Linux compatibility/runtime support is implemented.");
         }
 
         SetBusy(true);
