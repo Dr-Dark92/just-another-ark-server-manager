@@ -94,7 +94,6 @@ public sealed class ExtraArgumentsWindow : Window
         new("-EnableIdlePlayerKick", "Idle Player Kick", "Enables idle-player kicking behavior."),
         new("-ForceRespawnDinos", "Respawn Wild Dinos", "Forces wild dinosaur respawning during server startup."),
         new("-nosteamclient", "No Steam Client", "Runs without initializing the normal Steam client component; commonly used on dedicated servers."),
-        new("-structurememopts", "Structure Memory Optimizations", "Enables server-side structure memory optimizations."),
-        new("-ServerPlatform=ALL", "All Supported Platforms", "Advertises/permits the server for all supported platforms when cross-platform configuration permits it.")
+        new("-structurememopts", "Structure Memory Optimizations", "Enables server-side structure memory optimizations.")
     };
 }
