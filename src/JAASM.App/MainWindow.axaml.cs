@@ -2133,6 +2133,9 @@ public partial class MainWindow : Window
         _pendingRestoreArchive = path; _pendingRestoreVerified = false;
         RestoreFileBox.Text = path; VerifyRestoreButton.IsEnabled = true; RestoreSelectedButton.IsEnabled = false;
         RestoreReviewPanel.IsVisible = false; RestoreConfirmationCheck.IsChecked = false;
+        RestoreExistingProfileRadio.IsChecked = false; RestoreNewProfileRadio.IsChecked = false;
+        RestoreExistingProfileCombo.Items.Clear(); RestoreExistingProfileCombo.SelectedIndex = -1;
+        RestoreNewProfileNameBox.Text = string.Empty;
         RestoreStatusText.Text = "Backup opened. Verify it before restore.";
     }
 
@@ -2147,6 +2150,14 @@ public partial class MainWindow : Window
             if (!review.Success) { RestoreReviewPanel.IsVisible = false; return; }
             RestoreReviewSummaryText.Text =
                 $"Server: {review.ServerName}\nMap: {review.Map}\nCreated: {review.CreatedUtc?.ToString("u") ?? "Unknown"}\nFiles: {review.FileCount}\nData size: {review.TotalBytes / 1024d / 1024d:F2} MiB";
+            RestoreExistingProfileCombo.Items.Clear();
+            foreach (var existingProfile in _settings.AsaProfiles)
+                RestoreExistingProfileCombo.Items.Add(new ComboBoxItem { Content = existingProfile.ServerName, Tag = existingProfile.Id });
+            RestoreExistingProfileCombo.SelectedIndex = _settings.AsaProfiles.Count > 0 ? 0 : -1;
+            RestoreExistingProfileRadio.IsEnabled = _settings.AsaProfiles.Count > 0;
+            RestoreExistingProfileRadio.IsChecked = false;
+            RestoreNewProfileRadio.IsChecked = true;
+            RestoreNewProfileNameBox.Text = review.ServerName;
             RestoreConfigFilesPanel.Children.Clear();
             foreach (var file in await _backupService.ReadConfigurationFilesAsync(_pendingRestoreArchive)) {
                 var content = new TextBox { Text = file.Content, IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap, MinHeight = 120, MaxHeight = 360 };
@@ -2168,21 +2179,80 @@ public partial class MainWindow : Window
 
     private async void ConfirmRestore_Click(object? sender, RoutedEventArgs e)
     {
-        var profile = ActiveProfile;
-        if (profile is null) { RestoreStatusText.Text = "Select the target server profile first."; return; }
         if (!_pendingRestoreVerified || string.IsNullOrWhiteSpace(_pendingRestoreArchive)) { RestoreStatusText.Text = "Open and verify a backup first."; return; }
         if (RestoreConfirmationCheck.IsChecked != true) { RestoreStatusText.Text = "Review confirmation is required before committing restore."; return; }
-        if (_asaProcess.GetState(profile.Id).Running) { RestoreStatusText.Text = "Stop the active ARK server before restoring."; return; }
         if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) { RestoreStatusText.Text = "Configure the ASA installation directory first."; return; }
+
+        var restoreToExisting = RestoreExistingProfileRadio.IsChecked == true;
+        var restoreToNew = RestoreNewProfileRadio.IsChecked == true;
+        if (!restoreToExisting && !restoreToNew) { RestoreStatusText.Text = "Choose whether to restore to an existing profile or a new profile."; return; }
+
+        AsaServerProfile? targetProfile = null;
+        string? preservedExistingName = null;
+        if (restoreToExisting)
+        {
+            if (RestoreExistingProfileCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string targetId)
+            { RestoreStatusText.Text = "Select the existing server profile to restore into."; return; }
+            targetProfile = _settings.AsaProfiles.FirstOrDefault(p => p.Id == targetId);
+            if (targetProfile is null) { RestoreStatusText.Text = "The selected target profile no longer exists."; return; }
+            if (_asaProcess.GetState(targetProfile.Id).Running) { RestoreStatusText.Text = "Stop the target ARK server before restoring."; return; }
+            preservedExistingName = targetProfile.ServerName;
+        }
+        else
+        {
+            var newName = RestoreNewProfileNameBox.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(newName)) { RestoreStatusText.Text = "Enter a name for the restored profile."; return; }
+            if (_settings.AsaProfiles.Any(p => string.Equals(p.ServerName, newName, StringComparison.OrdinalIgnoreCase)))
+            { RestoreStatusText.Text = $"A profile named '{newName}' already exists. Select it as an existing target or choose another name."; return; }
+        }
+
         var rollbackDirectory = string.IsNullOrWhiteSpace(_settings.Backup.DestinationDirectory)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JAASM", "rollback")
             : Path.Combine(_settings.Backup.DestinationDirectory, "rollback");
         RestoreProgress.IsVisible = true; RestoreStatusText.Text = "Re-verifying and committing restore...";
-        try {
+        try
+        {
             var result = await _backupService.RestoreAsync(_pendingRestoreArchive, _settings.AsaServerInstallDirectory, rollbackDirectory);
-            RestoreStatusText.Text = result.Message; AppendConsole($"[RESTORE] {result.Message}");
-            if (result.Success) { RestoreReviewPanel.IsVisible = false; _pendingRestoreArchive = null; _pendingRestoreVerified = false; RestoreFileBox.Text = ""; VerifyRestoreButton.IsEnabled = false; RestoreSelectedButton.IsEnabled = false; }
-        } finally { RestoreProgress.IsVisible = false; }
+            if (!result.Success) { RestoreStatusText.Text = result.Message; AppendConsole($"[RESTORE] {result.Message}"); return; }
+
+            var importedProfile = await _backupService.ReadProfileAsync(_pendingRestoreArchive);
+            if (importedProfile is null)
+            {
+                RestoreStatusText.Text = "Server files were restored, but profile.json could not be imported.";
+                AppendConsole("[RESTORE] Files restored but profile import failed.");
+                return;
+            }
+
+            if (restoreToExisting && targetProfile is not null)
+            {
+                var index = _settings.AsaProfiles.IndexOf(targetProfile);
+                importedProfile.Id = targetProfile.Id;
+                importedProfile.ServerName = preservedExistingName!;
+                _settings.AsaProfiles[index] = importedProfile;
+                _settings.ActiveAsaProfileId = importedProfile.Id;
+                AppendConsole($"[RESTORE] Imported backup settings into existing profile '{importedProfile.ServerName}'.");
+            }
+            else
+            {
+                importedProfile.Id = Guid.NewGuid().ToString("N");
+                importedProfile.ServerName = RestoreNewProfileNameBox.Text!.Trim();
+                _settings.AsaProfiles.Add(importedProfile);
+                _settings.ActiveAsaProfileId = importedProfile.Id;
+                AppendConsole($"[RESTORE] Created restored profile '{importedProfile.ServerName}'.");
+            }
+
+            await _settingsService.SaveAsync(_settings);
+            RefreshProfileTabs();
+            LoadProfileControls();
+            RefreshProcessState();
+            BackupProfileText.Text = $"Active profile: {ActiveProfile?.ServerName ?? "none"}";
+
+            RestoreStatusText.Text = result.Message;
+            AppendConsole($"[RESTORE] {result.Message}");
+            RestoreReviewPanel.IsVisible = false; _pendingRestoreArchive = null; _pendingRestoreVerified = false;
+            RestoreFileBox.Text = ""; VerifyRestoreButton.IsEnabled = false; RestoreSelectedButton.IsEnabled = false;
+        }
+        finally { RestoreProgress.IsVisible = false; }
     }
 
     private void CancelRestore_Click(object? sender, RoutedEventArgs e)
