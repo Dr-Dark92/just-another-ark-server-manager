@@ -639,7 +639,7 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(p.AdminPassword))
             args += $"?ServerAdminPassword={QuoteUrl(p.AdminPassword)}";
 
-        args += $" -port={p.GamePort} -WinLiveMaxPlayers={p.MaxPlayers}";
+        args += $" -port={p.GamePort} -QueryPort={p.QueryPort} -RCONPort={p.RconPort} -WinLiveMaxPlayers={p.MaxPlayers}";
         args += " -ServerPlatform=" + BuildServerPlatformArgument(p);
         args += $" -log -AltLogDirectoryName=\"{saveName}/Logs\"";
         var enabledMods = p.Mods
