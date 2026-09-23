@@ -6,6 +6,7 @@ using JAASM.App.Models;
 namespace JAASM.App.Services;
 
 public sealed record BackupResult(bool Success, string Message, string? ArchivePath = null, string? Sha256 = null);
+public sealed record RestoreReview(bool Success, string Message, string ArchivePath, string ServerName, string Map, string ProfileId, DateTimeOffset? CreatedUtc, int FileCount, long TotalBytes, IReadOnlyList<string> Files);
 
 public sealed class BackupService
 {
@@ -82,6 +83,34 @@ public sealed class BackupService
                 return new(false, "Backup is missing manifest.json or profile.json.", archive, hash);
             return new(true, "Backup archive verified successfully.", archive, hash);
         } catch (Exception ex) { return new(false, $"Verification failed: {ex.Message}"); }
+    }
+
+    public async Task<RestoreReview> ReviewAsync(string archive, CancellationToken ct = default)
+    {
+        var verify = await VerifyAsync(archive, ct);
+        if (!verify.Success) return new(false, verify.Message, archive, "", "", "", null, 0, 0, Array.Empty<string>());
+        try {
+            using var zip = ZipFile.OpenRead(archive);
+            var manifestEntry = zip.GetEntry("manifest.json")!;
+            await using var stream = manifestEntry.Open();
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            var root = document.RootElement;
+            if (root.GetProperty("format").GetString() != "JAASM-BACKUP" || root.GetProperty("version").GetInt32() != 1)
+                return new(false, "Unsupported or invalid JAASM backup format.", archive, "", "", "", null, 0, 0, Array.Empty<string>());
+            var names = new List<string>(); long bytes = 0;
+            foreach (var entry in root.GetProperty("files").EnumerateArray()) {
+                names.Add(entry.GetProperty("path").GetString() ?? "");
+                bytes += entry.TryGetProperty("size", out var size) ? size.GetInt64() : 0;
+            }
+            DateTimeOffset? created = root.TryGetProperty("createdUtc", out var createdEl) && createdEl.TryGetDateTimeOffset(out var dt) ? dt : null;
+            return new(true, "Backup verified and ready for review.", archive,
+                root.GetProperty("serverName").GetString() ?? "",
+                root.GetProperty("map").GetString() ?? "",
+                root.GetProperty("profileId").GetString() ?? "",
+                created, names.Count, bytes, names);
+        } catch (Exception ex) {
+            return new(false, $"Review failed: {ex.Message}", archive, "", "", "", null, 0, 0, Array.Empty<string>());
+        }
     }
 
     public async Task<BackupResult> RestoreAsync(string archive, string asaInstallDirectory, string rollbackDestination, CancellationToken ct = default)
