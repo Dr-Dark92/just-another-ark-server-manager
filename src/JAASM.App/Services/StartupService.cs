@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using System.Diagnostics;
+using System.Runtime.Versioning;
 
 namespace JAASM.App.Services;
 
@@ -29,6 +30,7 @@ public sealed class StartupService
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private static (bool Success, string Message) SetWindowsStartup(bool enabled)
     {
         using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
