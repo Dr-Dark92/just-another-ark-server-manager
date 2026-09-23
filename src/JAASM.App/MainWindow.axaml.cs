@@ -30,6 +30,7 @@ public partial class MainWindow : Window
     private bool _loading;
     private string? _pendingRestoreArchive;
     private bool _pendingRestoreVerified;
+    private readonly DispatcherTimer _processUiTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private AsaServerProfile? ActiveProfile =>
         _settings.AsaProfiles.FirstOrDefault(p => p.Id == _settings.ActiveAsaProfileId);
 
@@ -39,6 +40,8 @@ public partial class MainWindow : Window
         _asaServer = new AsaServerService(_steamCmd);
         _browserModBridge = new BrowserModBridgeService(AddModFromBrowserExtensionAsync);
         LoadCatalogIcons();
+        _processUiTimer.Tick += (_, _) => RefreshProcessState();
+        _processUiTimer.Start();
 
         PlatformText.Text =
             $"Platform: {Environment.OSVersion.Platform} / {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}";
@@ -560,6 +563,7 @@ public partial class MainWindow : Window
         ProfileOverviewPanel.IsVisible = false;
         ProcessStatusText.Text = "Stopped";
         PidText.Text = "-";
+        StartedAtText.Text = "-";
         UptimeText.Text = "-";
     }
 
@@ -2366,6 +2370,8 @@ public partial class MainWindow : Window
                 var args = GetEffectiveLaunchArgumentsForProfile(profile);
                 var state = await _asaProcess.StartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
                 AppendConsole(state.Running ? $"[AUTOSTART] {profile.ServerName} started automatically." : $"[AUTOSTART] {profile.ServerName} did not start: {state.Message}");
+                if (ActiveProfile?.Id == profile.Id)
+                    RefreshProcessState(state);
             }
             catch (Exception ex) { AppendConsole($"[AUTOSTART] {profile.ServerName} failed: {ex.Message}"); }
         }
