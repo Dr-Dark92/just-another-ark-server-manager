@@ -103,6 +103,22 @@ public sealed class BackupService
         return result;
     }
 
+    public async Task<AsaServerProfile?> ReadProfileAsync(string archive, CancellationToken ct = default)
+    {
+        try
+        {
+            using var zip = ZipFile.OpenRead(archive);
+            var entry = zip.GetEntry("profile.json");
+            if (entry is null) return null;
+            await using var stream = entry.Open();
+            return await JsonSerializer.DeserializeAsync<AsaServerProfile>(stream, JsonOptions, ct);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<RestoreReview> ReviewAsync(string archive, CancellationToken ct = default)
     {
         var verify = await VerifyAsync(archive, ct);
