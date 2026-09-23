@@ -27,6 +27,7 @@ public partial class MainWindow : Window
 
     private AppSettings _settings = new();
     private bool _loading;
+    private string? _pendingRestoreArchive;
     private AsaServerProfile? ActiveProfile =>
         _settings.AsaProfiles.FirstOrDefault(p => p.Id == _settings.ActiveAsaProfileId);
 
@@ -2132,36 +2133,66 @@ public partial class MainWindow : Window
         AppendConsole($"[BACKUP VERIFY] {result.Message}");
     }
 
-    private async void RestoreBackup_Click(object? sender, RoutedEventArgs e)
+    private async void ReviewRestore_Click(object? sender, RoutedEventArgs e)
     {
-        var profile = ActiveProfile;
-        if (profile is null) { RestoreStatusText.Text = "Select the target server profile first."; return; }
-        if (_asaProcess.GetState(profile.Id).Running) {
-            RestoreStatusText.Text = "Stop the active ARK server before restoring a backup.";
-            AppendConsole("[RESTORE] Blocked because the active server is running.");
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) { RestoreStatusText.Text = "Configure the ASA installation directory first."; return; }
-
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
-            Title = "Select JAASM backup to restore", AllowMultiple = false,
+            Title = "Select JAASM backup to review", AllowMultiple = false,
             FileTypeFilter = new[] { new FilePickerFileType("JAASM Backup") { Patterns = new[] { "*.jaasm-backup.zip", "*.zip" } } }
         });
         if (files.Count == 0) return;
         var path = files[0].TryGetLocalPath();
         if (path is null) { RestoreStatusText.Text = "JAASM requires a local backup file."; return; }
 
+        RestoreProgress.IsVisible = true;
+        RestoreStatusText.Text = "Verifying backup before review...";
+        try {
+            var review = await _backupService.ReviewAsync(path);
+            RestoreStatusText.Text = review.Message;
+            if (!review.Success) { RestoreReviewPanel.IsVisible = false; _pendingRestoreArchive = null; return; }
+            _pendingRestoreArchive = path;
+            RestoreConfirmationCheck.IsChecked = false;
+            var created = review.CreatedUtc?.ToString("u") ?? "Unknown";
+            RestoreReviewSummaryText.Text =
+                $"Backup server: {review.ServerName}\nMap: {review.Map}\nCreated: {created}\nFiles: {review.FileCount}\nData size: {review.TotalBytes / 1024d / 1024d:F2} MiB\nTarget profile: {ActiveProfile?.ServerName ?? "None"}";
+            RestoreReviewFilesText.Text = string.Join(Environment.NewLine, review.Files);
+            RestoreReviewPanel.IsVisible = true;
+            AppendConsole($"[RESTORE REVIEW] {review.ServerName} / {review.Map} / {review.FileCount} files verified.");
+        } finally { RestoreProgress.IsVisible = false; }
+    }
+
+    private async void ConfirmRestore_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null) { RestoreStatusText.Text = "Select the target server profile first."; return; }
+        if (RestoreConfirmationCheck.IsChecked != true) { RestoreStatusText.Text = "Confirmation is required before restore."; return; }
+        if (string.IsNullOrWhiteSpace(_pendingRestoreArchive)) { RestoreStatusText.Text = "Review a backup before restoring."; return; }
+        if (_asaProcess.GetState(profile.Id).Running) {
+            RestoreStatusText.Text = "Stop the active ARK server before restoring a backup.";
+            AppendConsole("[RESTORE] Blocked because the active server is running."); return;
+        }
+        if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) { RestoreStatusText.Text = "Configure the ASA installation directory first."; return; }
+
         var rollbackDirectory = string.IsNullOrWhiteSpace(_settings.Backup.DestinationDirectory)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JAASM", "rollback")
             : Path.Combine(_settings.Backup.DestinationDirectory, "rollback");
 
         RestoreProgress.IsVisible = true;
-        RestoreStatusText.Text = "Verifying backup, staging files, and creating emergency rollback...";
+        RestoreStatusText.Text = "Confirmed. Re-verifying, creating emergency rollback, and restoring...";
         try {
-            var result = await _backupService.RestoreAsync(path, _settings.AsaServerInstallDirectory, rollbackDirectory);
+            var result = await _backupService.RestoreAsync(_pendingRestoreArchive, _settings.AsaServerInstallDirectory, rollbackDirectory);
             RestoreStatusText.Text = result.Message;
             AppendConsole($"[RESTORE] {result.Message}");
+            if (result.Success) { RestoreReviewPanel.IsVisible = false; _pendingRestoreArchive = null; RestoreConfirmationCheck.IsChecked = false; }
         } finally { RestoreProgress.IsVisible = false; }
+    }
+
+    private void CancelRestore_Click(object? sender, RoutedEventArgs e)
+    {
+        _pendingRestoreArchive = null;
+        RestoreConfirmationCheck.IsChecked = false;
+        RestoreReviewPanel.IsVisible = false;
+        RestoreStatusText.Text = "Restore cancelled. No server files were changed.";
+        AppendConsole("[RESTORE] Review cancelled; no changes applied.");
     }
 
     private void OpenBackupFolder_Click(object? sender, RoutedEventArgs e)
