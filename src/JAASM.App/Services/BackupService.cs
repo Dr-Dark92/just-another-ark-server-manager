@@ -84,6 +84,80 @@ public sealed class BackupService
         } catch (Exception ex) { return new(false, $"Verification failed: {ex.Message}"); }
     }
 
+    public async Task<BackupResult> RestoreAsync(string archive, string asaInstallDirectory, string rollbackDestination, CancellationToken ct = default)
+    {
+        var verify = await VerifyAsync(archive, ct);
+        if (!verify.Success) return verify;
+        if (string.IsNullOrWhiteSpace(asaInstallDirectory) || !Directory.Exists(asaInstallDirectory))
+            return new(false, "ASA installation directory does not exist.");
+
+        var staging = Path.Combine(Path.GetTempPath(), $"jaasm-restore-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(staging);
+            ZipFile.ExtractToDirectory(archive, staging);
+
+            var manifestPath = Path.Combine(staging, "manifest.json");
+            using var document = JsonDocument.Parse(await File.ReadAllTextAsync(manifestPath, ct));
+            var root = document.RootElement;
+            if (root.GetProperty("format").GetString() != "JAASM-BACKUP" || root.GetProperty("version").GetInt32() != 1)
+                return new(false, "Unsupported or invalid JAASM backup format.");
+
+            foreach (var entry in root.GetProperty("files").EnumerateArray())
+            {
+                var relative = entry.GetProperty("path").GetString() ?? string.Empty;
+                if (relative.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(relative))
+                    return new(false, $"Unsafe path in backup manifest: {relative}");
+                var full = Path.GetFullPath(Path.Combine(staging, relative.Replace('/', Path.DirectorySeparatorChar)));
+                if (!full.StartsWith(Path.GetFullPath(staging) + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                    return new(false, $"Unsafe path in backup manifest: {relative}");
+                if (!File.Exists(full)) return new(false, $"Backup file is missing: {relative}");
+                var expected = entry.GetProperty("sha256").GetString() ?? string.Empty;
+                var actual = await HashAsync(full, ct);
+                if (!actual.Equals(expected, StringComparison.OrdinalIgnoreCase))
+                    return new(false, $"Backup content verification failed: {relative}");
+            }
+
+            var serverStage = Path.Combine(staging, "server");
+            if (!Directory.Exists(serverStage)) return new(false, "Backup contains no server data.");
+
+            Directory.CreateDirectory(rollbackDestination);
+            var rollback = Path.Combine(rollbackDestination, $"pre-restore-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.jaasm-rollback.zip");
+            var liveSaved = Path.Combine(asaInstallDirectory, "ShooterGame", "Saved");
+            if (Directory.Exists(liveSaved))
+                ZipFile.CreateFromDirectory(liveSaved, rollback, CompressionLevel.Optimal, false);
+
+            foreach (var relative in new[] { "SavedArks", Path.Combine("Config", "WindowsServer", "Game.ini"), Path.Combine("Config", "WindowsServer", "GameUserSettings.ini") })
+            {
+                var source = Path.Combine(serverStage, relative);
+                var target = Path.Combine(liveSaved, relative);
+                if (Directory.Exists(source)) {
+                    if (Directory.Exists(target)) Directory.Delete(target, true);
+                    CopyDirectoryRaw(source, target);
+                } else if (File.Exists(source)) {
+                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                    File.Copy(source, target, true);
+                }
+            }
+
+            return new(true, $"Restore completed successfully. Emergency rollback: {rollback}", archive, verify.Sha256);
+        }
+        catch (Exception ex) { return new(false, $"Restore failed: {ex.Message}"); }
+        finally { try { if (Directory.Exists(staging)) Directory.Delete(staging, true); } catch { } }
+    }
+
+    private static void CopyDirectoryRaw(string source, string destination)
+    {
+        foreach (var directory in Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories))
+            Directory.CreateDirectory(Path.Combine(destination, Path.GetRelativePath(source, directory)));
+        Directory.CreateDirectory(destination);
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories)) {
+            var target = Path.Combine(destination, Path.GetRelativePath(source, file));
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.Copy(file, target, true);
+        }
+    }
+
     private static void CopyDirectory(string source, string destination, List<string> files, string staging) {
         foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories)) {
             var target = Path.Combine(destination, Path.GetRelativePath(source, file));
