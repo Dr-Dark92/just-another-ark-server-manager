@@ -2132,6 +2132,38 @@ public partial class MainWindow : Window
         AppendConsole($"[BACKUP VERIFY] {result.Message}");
     }
 
+    private async void RestoreBackup_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null) { RestoreStatusText.Text = "Select the target server profile first."; return; }
+        if (_asaProcess.GetState(profile.Id).Running) {
+            RestoreStatusText.Text = "Stop the active ARK server before restoring a backup.";
+            AppendConsole("[RESTORE] Blocked because the active server is running.");
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) { RestoreStatusText.Text = "Configure the ASA installation directory first."; return; }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
+            Title = "Select JAASM backup to restore", AllowMultiple = false,
+            FileTypeFilter = new[] { new FilePickerFileType("JAASM Backup") { Patterns = new[] { "*.jaasm-backup.zip", "*.zip" } } }
+        });
+        if (files.Count == 0) return;
+        var path = files[0].TryGetLocalPath();
+        if (path is null) { RestoreStatusText.Text = "JAASM requires a local backup file."; return; }
+
+        var rollbackDirectory = string.IsNullOrWhiteSpace(_settings.Backup.DestinationDirectory)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JAASM", "rollback")
+            : Path.Combine(_settings.Backup.DestinationDirectory, "rollback");
+
+        RestoreProgress.IsVisible = true;
+        RestoreStatusText.Text = "Verifying backup, staging files, and creating emergency rollback...";
+        try {
+            var result = await _backupService.RestoreAsync(path, _settings.AsaServerInstallDirectory, rollbackDirectory);
+            RestoreStatusText.Text = result.Message;
+            AppendConsole($"[RESTORE] {result.Message}");
+        } finally { RestoreProgress.IsVisible = false; }
+    }
+
     private void OpenBackupFolder_Click(object? sender, RoutedEventArgs e)
     {
         var path = _settings.Backup.DestinationDirectory;
