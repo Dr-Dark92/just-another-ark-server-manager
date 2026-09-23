@@ -701,7 +701,9 @@
 <TextBlock Text="Application Startup" FontSize="18" FontWeight="SemiBold"/>
 <ToggleSwitch x:Name="StartWithOsToggle" Content="Start JAASM automatically with the operating system"/>
 <ToggleSwitch x:Name="StartMinimizedToggle" Content="Start JAASM minimized"/>
-<ToggleSwitch x:Name="AutoStartServerToggle" Content="Automatically start the active ARK server profile when JAASM starts"/>
+<TextBlock Text="Auto-start server profiles" FontWeight="SemiBold"/>
+<TextBlock Text="Select one or more profiles to launch when JAASM starts. Every selected profile must use unique game, query, and RCON ports." Opacity="0.7" TextWrapping="Wrap"/>
+<StackPanel x:Name="AutoStartProfilesPanel" Spacing="6"/>
 <StackPanel Orientation="Horizontal" Spacing="10">
 <Button Content="Apply Startup Settings" Click="ApplyStartupSettings_Click"/>
 <Button Content="Disable Startup Service" Click="DisableStartupService_Click"/>
