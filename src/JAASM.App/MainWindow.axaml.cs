@@ -72,7 +72,7 @@ public partial class MainWindow : Window
         WebGuiToggle.IsChecked = _settings.WebGui.Enabled;
         StartWithOsToggle.IsChecked = _settings.Startup.StartWithOs;
         StartMinimizedToggle.IsChecked = _settings.Startup.StartMinimized;
-        AutoStartServerToggle.IsChecked = _settings.Startup.AutoStartActiveServer;
+        RefreshAutoStartProfilesUi();
         BackupDestinationBox.Text = _settings.Backup.DestinationDirectory;
         StartupPlatformText.Text = $"Platform integration: {_startupService.PlatformDescription}";
 
@@ -121,8 +121,10 @@ public partial class MainWindow : Window
         if (_settings.Startup.StartMinimized)
             WindowState = WindowState.Minimized;
 
-        if (_settings.Startup.AutoStartActiveServer && ActiveProfile is not null)
-            await AutoStartActiveServerAsync();
+        if (_settings.Startup.AutoStartProfileIds.Count == 0 && _settings.Startup.AutoStartActiveServer && ActiveProfile is not null)
+            _settings.Startup.AutoStartProfileIds.Add(ActiveProfile.Id);
+        if (_settings.Startup.AutoStartProfileIds.Count > 0)
+            await AutoStartProfilesAsync();
     }
 
     private async void SelectSteamCmd_Click(object? sender, RoutedEventArgs e)
@@ -2275,7 +2277,21 @@ public partial class MainWindow : Window
     {
         _settings.Startup.StartWithOs = StartWithOsToggle.IsChecked == true;
         _settings.Startup.StartMinimized = StartMinimizedToggle.IsChecked == true;
-        _settings.Startup.AutoStartActiveServer = AutoStartServerToggle.IsChecked == true;
+        _settings.Startup.AutoStartProfileIds = AutoStartProfilesPanel.Children
+            .OfType<CheckBox>()
+            .Where(x => x.IsChecked == true && x.Tag is string)
+            .Select(x => (string)x.Tag!)
+            .ToList();
+        _settings.Startup.AutoStartActiveServer = false;
+
+        var selectedProfiles = _settings.AsaProfiles.Where(p => _settings.Startup.AutoStartProfileIds.Contains(p.Id)).ToList();
+        var conflicts = FindPortConflicts(selectedProfiles);
+        if (conflicts.Count > 0)
+        {
+            StartupStatusText.Text = "Cannot apply startup settings: " + string.Join("; ", conflicts);
+            return;
+        }
+
         var result = await _startupService.SetEnabledAsync(_settings.Startup.StartWithOs);
         StartupStatusText.Text = result.Message;
         if (!result.Success) { AppendConsole($"[STARTUP] Failed: {result.Message}"); return; }
@@ -2295,24 +2311,79 @@ public partial class MainWindow : Window
         AppendConsole($"[STARTUP] {result.Message}");
     }
 
-    private async Task AutoStartActiveServerAsync()
+    private void RefreshAutoStartProfilesUi()
     {
-        var profile = ActiveProfile;
-        if (profile is null || _asaProcess.GetState(profile.Id).Running) return;
-        if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) {
-            AppendConsole("[AUTOSTART] ASA install directory is not configured."); return;
+        AutoStartProfilesPanel.Children.Clear();
+        foreach (var profile in _settings.AsaProfiles)
+        {
+            AutoStartProfilesPanel.Children.Add(new CheckBox
+            {
+                Content = $"{profile.ServerName}  —  {profile.GamePort} / {profile.QueryPort} / {profile.RconPort}",
+                Tag = profile.Id,
+                IsChecked = _settings.Startup.AutoStartProfileIds.Contains(profile.Id)
+            });
         }
+        if (_settings.AsaProfiles.Count == 0)
+            AutoStartProfilesPanel.Children.Add(new TextBlock { Text = "No server profiles configured.", Opacity = 0.7 });
+    }
+
+    private static List<string> FindPortConflicts(IReadOnlyList<AsaServerProfile> profiles)
+    {
+        var conflicts = new List<string>();
+        for (var i = 0; i < profiles.Count; i++)
+        for (var j = i + 1; j < profiles.Count; j++)
+        {
+            var a = profiles[i]; var b = profiles[j];
+            if (a.GamePort == b.GamePort) conflicts.Add($"{a.ServerName} and {b.ServerName}: game port {a.GamePort}");
+            if (a.QueryPort == b.QueryPort) conflicts.Add($"{a.ServerName} and {b.ServerName}: query port {a.QueryPort}");
+            if (a.RconPort == b.RconPort) conflicts.Add($"{a.ServerName} and {b.ServerName}: RCON port {a.RconPort}");
+        }
+        return conflicts;
+    }
+
+    private async Task AutoStartProfilesAsync()
+    {
+        var profiles = _settings.AsaProfiles.Where(p => _settings.Startup.AutoStartProfileIds.Contains(p.Id)).ToList();
+        var conflicts = FindPortConflicts(profiles);
+        if (conflicts.Count > 0)
+        {
+            AppendConsole("[AUTOSTART] Refused because selected profiles have port conflicts: " + string.Join("; ", conflicts));
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) { AppendConsole("[AUTOSTART] ASA install directory is not configured."); return; }
         var validation = _asaServer.ValidateInstallation(_settings.AsaServerInstallDirectory);
-        if (!validation.Success || string.IsNullOrWhiteSpace(validation.ExecutablePath)) {
-            AppendConsole($"[AUTOSTART] {validation.Message}"); return;
+        if (!validation.Success || string.IsNullOrWhiteSpace(validation.ExecutablePath)) { AppendConsole($"[AUTOSTART] {validation.Message}"); return; }
+
+        foreach (var profile in profiles)
+        {
+            if (_asaProcess.GetState(profile.Id).Running) continue;
+            try
+            {
+                var args = GetEffectiveLaunchArgumentsForProfile(profile);
+                var state = await _asaProcess.StartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
+                AppendConsole(state.Running ? $"[AUTOSTART] {profile.ServerName} started automatically." : $"[AUTOSTART] {profile.ServerName} did not start: {state.Message}");
+            }
+            catch (Exception ex) { AppendConsole($"[AUTOSTART] {profile.ServerName} failed: {ex.Message}"); }
         }
-        try {
-            await _asaConfig.WriteGameUserSettingsAsync(_settings.AsaServerInstallDirectory, profile);
-            var args = GetEffectiveLaunchArguments(profile);
-            var state = await _asaProcess.StartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
-            AppendConsole(state.Running ? $"[AUTOSTART] {profile.ServerName} started automatically." : $"[AUTOSTART] {profile.ServerName} did not start: {state.Message}");
-            RefreshProcessState();
-        } catch (Exception ex) { AppendConsole($"[AUTOSTART] Failed: {ex.Message}"); }
+        RefreshProcessState();
+    }
+
+    private string GetEffectiveLaunchArgumentsForProfile(AsaServerProfile profile)
+    {
+        if (profile.UseManualLaunchCommand && !string.IsNullOrWhiteSpace(profile.ManualLaunchCommand))
+            return profile.ManualLaunchCommand.Trim();
+        var args = $"{profile.Map}?listen?SessionName={QuoteUrl(profile.ServerName)}";
+        if (!string.IsNullOrWhiteSpace(profile.ServerPassword)) args += $"?ServerPassword={QuoteUrl(profile.ServerPassword)}";
+        var saveName = $"JAASM_{profile.Id[..Math.Min(8, profile.Id.Length)]}";
+        args += $"?AltSaveDirectoryName={saveName}";
+        if (!string.IsNullOrWhiteSpace(profile.AdminPassword)) args += $"?ServerAdminPassword={QuoteUrl(profile.AdminPassword)}";
+        args += $" -port={profile.GamePort} -QueryPort={profile.QueryPort} -RCONPort={profile.RconPort} -WinLiveMaxPlayers={profile.MaxPlayers}";
+        args += " -ServerPlatform=" + BuildServerPlatformArgument(profile);
+        args += $" -log -AltLogDirectoryName=\"{saveName}/Logs\"";
+        var mods = profile.Mods.Where(m => m.Enabled).OrderBy(m => m.LoadOrder).Select(m => m.ModId).Where(id => !string.IsNullOrWhiteSpace(id)).ToList();
+        if (mods.Count > 0) args += " -mods=" + string.Join(",", mods);
+        if (!string.IsNullOrWhiteSpace(profile.ExtraArguments)) args += " " + profile.ExtraArguments;
+        return args;
     }
 
     private async void WebGuiToggle_Changed(object? sender, RoutedEventArgs e)
