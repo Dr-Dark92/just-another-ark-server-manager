@@ -454,6 +454,10 @@ public partial class MainWindow : Window
 
         _loading = false;
 
+        // Keep every profile-dependent UI synchronized from this single refresh path.
+        // This includes create/delete/restore/import flows that already call RefreshProfileTabs().
+        RefreshAutoStartProfilesUi();
+
         NoProfilePanel.IsVisible = ActiveProfile is null;
         ProfileEditorPanel.IsVisible = ActiveProfile is not null;
     }
