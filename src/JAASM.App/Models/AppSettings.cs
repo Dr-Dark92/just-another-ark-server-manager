@@ -39,6 +39,8 @@ public sealed class AsaServerProfile
     public string ServerPassword { get; set; } = string.Empty;
     public string AdminPassword { get; set; } = string.Empty;
     public string ExtraArguments { get; set; } = string.Empty;
+    public bool UseManualLaunchCommand { get; set; }
+    public string ManualLaunchCommand { get; set; } = string.Empty;
     public List<string> SelectedExtraArguments { get; set; } = new();
     public AsaCustomizationSettings Customization { get; set; } = new();
     public PerLevelStatSettings PerLevelStats { get; set; } = new();
