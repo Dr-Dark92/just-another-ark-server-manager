@@ -31,6 +31,32 @@
 <Separator/><TextBlock Text="Optional Web GUI" FontSize="18" FontWeight="SemiBold"/><ToggleSwitch x:Name="WebGuiToggle" Content="Enable Web GUI" IsCheckedChanged="WebGuiToggle_Changed"/><TextBlock Text="Default bind: 127.0.0.1:8484" Opacity="0.65"/>
 </StackPanel></ScrollViewer></TabItem>
 
+<TabItem Header="Backup &amp; Restore">
+<ScrollViewer><StackPanel Margin="18" Spacing="14">
+<TextBlock Text="Backup &amp; Restore" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
+<TextBlock Text="Per-profile backups, scheduled retention, verification, and safe restore will be managed here." Opacity="0.7" TextWrapping="Wrap"/>
+<Border Classes="card" Padding="14">
+<StackPanel Spacing="8">
+<TextBlock Text="Backup engine" FontSize="18" FontWeight="SemiBold"/>
+<TextBlock Text="Foundation tab created. Next implementation: Backup Now, schedule, destination, retention, SHA-256 verification, backup history, and staged restore." TextWrapping="Wrap"/>
+</StackPanel>
+</Border>
+</StackPanel></ScrollViewer>
+</TabItem>
+
+<TabItem Header="Startup Service">
+<ScrollViewer><StackPanel Margin="18" Spacing="14">
+<TextBlock Text="Startup Service" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
+<TextBlock Text="Controls for starting JAASM with the operating system and automatically starting selected server profiles will live here." Opacity="0.7" TextWrapping="Wrap"/>
+<Border Classes="card" Padding="14">
+<StackPanel Spacing="8">
+<TextBlock Text="Service foundation" FontSize="18" FontWeight="SemiBold"/>
+<TextBlock Text="Next implementation: Windows startup integration, Linux systemd user service, tray/minimize behavior, and per-profile server autostart." TextWrapping="Wrap"/>
+</StackPanel>
+</Border>
+</StackPanel></ScrollViewer>
+</TabItem>
+
 <TabItem Header="Server Control">
 <ScrollViewer>
 <StackPanel Margin="18" Spacing="12">
@@ -90,7 +116,10 @@
 <StackPanel x:Name="ProfileEditorPanel" Spacing="12" IsVisible="False">
 <TextBlock x:Name="ProfileExplanationText" Text="This profile runs independently. Its game, query and RCON ports must not conflict with another running profile." Opacity="0.7" TextWrapping="Wrap"/>
 <TextBlock Text="Profile Configuration" FontSize="18" FontWeight="SemiBold"/>
-<TextBlock Text="Every field below belongs only to the selected server profile." Opacity="0.6"/>
+<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+<TextBlock Text="Every field below belongs only to the selected server profile." Opacity="0.6" VerticalAlignment="Center"/>
+<Button Grid.Column="1" Content="↺ Restore Defaults" Click="RestoreProfileDefaults_Click"/>
+</Grid>
 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
 <StackPanel Grid.Row="0"><TextBlock Text="Server Name"/><TextBlock Text="Public session name shown in the ARK server browser." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel><TextBox x:Name="ServerNameBox" Grid.Row="0" Grid.Column="1"/>
 <StackPanel Grid.Row="1"><TextBlock Text="Map"/><TextBlock Text="World loaded by this server profile. Each profile may run a different map." FontSize="11" Opacity="0.6" TextWrapping="Wrap"/></StackPanel>
@@ -667,10 +696,15 @@
 <TextBlock Text="Start launches only the selected profile. Stop requests shutdown and currently falls back to process termination until RCON graceful shutdown is implemented. Restart stops then starts this profile. Force Stop immediately terminates its process tree." Opacity="0.7" TextWrapping="Wrap"/>
 <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="▶  Start" Classes="success" Click="StartAsa_Click"/><Button Content="■  Stop" Click="StopAsa_Click"/><Button Content="↻  Restart" Classes="primary" Click="RestartAsa_Click"/><Button Content="⚠  Force Stop" Classes="danger" Click="ForceStopAsa_Click"/></StackPanel>
 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8"><TextBlock Text="Status:"/><TextBlock x:Name="ProcessStatusText" Grid.Column="1" Text="Stopped" FontWeight="SemiBold"/><TextBlock Grid.Column="2" Text="PID:"/><TextBlock x:Name="PidText" Grid.Column="3" Text="-"/><TextBlock Grid.Column="4" Text="Uptime:"/><TextBlock x:Name="UptimeText" Grid.Column="5" Text="-"/></Grid>
-<TextBlock Text="Generated launch command" FontWeight="SemiBold" Margin="0,8,0,0"/>
+<Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+<TextBlock Text="Generated launch command" FontWeight="SemiBold" VerticalAlignment="Center"/>
+<Button x:Name="EditLaunchCommandButton" Grid.Column="1" Content="✎ Edit" Click="EditLaunchCommand_Click"/>
+<Button x:Name="ResetLaunchCommandButton" Grid.Column="2" Content="Use Generated" Click="ResetLaunchCommand_Click" IsVisible="False"/>
+</Grid>
 <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
-<TextBlock x:Name="LaunchPreviewText" TextWrapping="Wrap" FontFamily="Consolas, monospace" Opacity="0.75"/>
+<TextBox x:Name="LaunchCommandBox" TextWrapping="Wrap" FontFamily="Consolas, monospace" IsReadOnly="True" AcceptsReturn="False"/>
 </Border>
+<TextBlock x:Name="LaunchCommandWarningText" Text="Manual command override is active. JAASM will launch exactly this command at your own risk." Foreground="#FFB86C" IsVisible="False" TextWrapping="Wrap"/>
 </StackPanel>
 </StackPanel>
 </ScrollViewer>
