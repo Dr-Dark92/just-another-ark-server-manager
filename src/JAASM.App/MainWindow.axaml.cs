@@ -581,7 +581,7 @@ public partial class MainWindow : Window
         RefreshEngramCatalogUi();
         RefreshHarvestCatalogUi();
         RefreshModsUi();
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
     }
 
     private void ReadProfileControls()
@@ -601,6 +601,8 @@ public partial class MainWindow : Window
         p.ServerPassword = ServerPasswordBox.Text ?? string.Empty;
         p.AdminPassword = AdminPasswordBox.Text ?? string.Empty;
         p.ExtraArguments = ManualArgumentsBox.Text?.Trim() ?? string.Empty;
+        if (p.UseManualLaunchCommand)
+            p.ManualLaunchCommand = LaunchCommandBox.Text?.Trim() ?? string.Empty;
         ReadCustomizationControls(p.Customization);
         ReadPerLevelStatsControls(p.PerLevelStats);
     }
@@ -657,6 +659,93 @@ public partial class MainWindow : Window
         return platforms.Count == 0 ? "PC" : string.Join("+", platforms);
     }
 
+    private string GetEffectiveLaunchArguments(AsaServerProfile profile)
+    {
+        if (profile.UseManualLaunchCommand && !string.IsNullOrWhiteSpace(profile.ManualLaunchCommand))
+            return profile.ManualLaunchCommand.Trim();
+
+        return BuildLaunchArguments();
+    }
+
+    private void UpdateLaunchCommandDisplay()
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+        {
+            LaunchCommandBox.Text = string.Empty;
+            return;
+        }
+
+        LaunchCommandBox.Text = GetEffectiveLaunchArguments(profile);
+        LaunchCommandBox.IsReadOnly = !profile.UseManualLaunchCommand;
+        LaunchCommandWarningText.IsVisible = profile.UseManualLaunchCommand;
+        ResetLaunchCommandButton.IsVisible = profile.UseManualLaunchCommand;
+        EditLaunchCommandButton.IsVisible = !profile.UseManualLaunchCommand;
+    }
+
+    private async void EditLaunchCommand_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        profile.ManualLaunchCommand = BuildLaunchArguments();
+        profile.UseManualLaunchCommand = true;
+        LaunchCommandBox.Text = profile.ManualLaunchCommand;
+        LaunchCommandBox.IsReadOnly = false;
+        LaunchCommandWarningText.IsVisible = true;
+        ResetLaunchCommandButton.IsVisible = true;
+        EditLaunchCommandButton.IsVisible = false;
+        await _settingsService.SaveAsync(_settings);
+        AppendConsole("[PROFILE] Manual launch command override enabled.");
+    }
+
+    private async void ResetLaunchCommand_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        profile.UseManualLaunchCommand = false;
+        profile.ManualLaunchCommand = string.Empty;
+        await _settingsService.SaveAsync(_settings);
+        UpdateLaunchCommandDisplay();
+        AppendConsole("[PROFILE] Manual launch command override removed; generated command restored.");
+    }
+
+    private async void RestoreProfileDefaults_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null)
+            return;
+
+        var defaults = new AsaServerProfile();
+        profile.ServerName = defaults.ServerName;
+        profile.Map = defaults.Map;
+        profile.MaxPlayers = defaults.MaxPlayers;
+        profile.GamePort = defaults.GamePort;
+        profile.QueryPort = defaults.QueryPort;
+        profile.RconPort = defaults.RconPort;
+        profile.ServerPassword = defaults.ServerPassword;
+        profile.AdminPassword = defaults.AdminPassword;
+        profile.ExtraArguments = defaults.ExtraArguments;
+        profile.SelectedExtraArguments = new();
+        profile.AllowPc = defaults.AllowPc;
+        profile.AllowXbox = defaults.AllowXbox;
+        profile.AllowPs5 = defaults.AllowPs5;
+        profile.UseManualLaunchCommand = false;
+        profile.ManualLaunchCommand = string.Empty;
+        profile.Customization = new AsaCustomizationSettings();
+        profile.PerLevelStats = new PerLevelStatSettings();
+        profile.EngramOverrides = new();
+        profile.HarvestResourceMultipliers = new();
+
+        await _settingsService.SaveAsync(_settings);
+        LoadProfileControls();
+        RefreshProfileTabs();
+        AppendConsole($"[PROFILE] {profile.ServerName} configuration restored to JAASM defaults. Mods were preserved.");
+    }
+
     private static string QuoteUrl(string value) => Uri.EscapeDataString(value);
 
     private async void ChooseExtraArguments_Click(object? sender, RoutedEventArgs e)
@@ -677,7 +766,7 @@ public partial class MainWindow : Window
         ExtraArgumentsSummaryText.Text = dialog.Selection.Count == 0
             ? "None selected"
             : $"{dialog.Selection.Count} selected";
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
     }
 
     private async void SaveProfile_Click(object? sender, RoutedEventArgs e)
@@ -688,7 +777,7 @@ public partial class MainWindow : Window
 
         ReadProfileControls();
         await _settingsService.SaveAsync(_settings);
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
         RefreshProfileTabs();
 
         if (!string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory))
@@ -743,8 +832,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        var args = BuildLaunchArguments();
-        LaunchPreviewText.Text = args;
+        var args = GetEffectiveLaunchArguments(profile);
+        UpdateLaunchCommandDisplay();
         var state = await _asaProcess.StartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
         RefreshProcessState(state);
     }
@@ -787,7 +876,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        var args = BuildLaunchArguments();
+        var args = GetEffectiveLaunchArguments(profile);
+        UpdateLaunchCommandDisplay();
         var state = await _asaProcess.RestartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
         RefreshProcessState(state);
     }
@@ -1385,7 +1475,7 @@ public partial class MainWindow : Window
 
         RefreshModsUi();
         ModsListBox.SelectedItem = mod;
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
         AppendConsole($"[MODS] Added mod {id} to {profile.ServerName}.");
         return true;
     }
@@ -1578,7 +1668,7 @@ public partial class MainWindow : Window
         await _settingsService.SaveAsync(_settings);
 
         RefreshModsUi();
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
         AppendConsole($"[MODS] Removed mod {mod.ModId} from {profile.ServerName}.");
     }
 
@@ -1609,7 +1699,7 @@ public partial class MainWindow : Window
 
         RefreshModsUi();
         ModsListBox.SelectedItem = profile.Mods.First(m => m.ModId == selected.ModId);
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
         AppendConsole($"[MODS] Moved mod {selected.ModId} to load order {target + 1}.");
     }
 
@@ -1624,7 +1714,7 @@ public partial class MainWindow : Window
 
         RefreshModsUi();
         ModsListBox.SelectedItem = profile.Mods.First(m => m.ModId == mod.ModId);
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
         AppendConsole($"[MODS] Mod {mod.ModId} {(mod.Enabled ? "enabled" : "disabled")}.");
     }
 
@@ -1858,7 +1948,7 @@ public partial class MainWindow : Window
         ModBrowseResultsList.ItemsSource = _browseMods;
 
         RefreshModsUi();
-        LaunchPreviewText.Text = BuildLaunchArguments();
+        UpdateLaunchCommandDisplay();
         ModBrowseSelectionText.Text = $"Added {mod.DisplayName} to {profile.ServerName}.";
         AppendConsole($"[MODS] Added browsed mod {mod.ModId} ({mod.DisplayName}).");
     }
