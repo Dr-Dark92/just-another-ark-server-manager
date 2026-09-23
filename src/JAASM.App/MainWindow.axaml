@@ -720,14 +720,31 @@
 
 <TabItem Header="Server Backup &amp; Restore">
 <ScrollViewer><StackPanel Margin="18" Spacing="14">
-<TextBlock Text="Backup &amp; Restore" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
-<TextBlock Text="Per-profile backups, scheduled retention, verification, and safe restore will be managed here." Opacity="0.7" TextWrapping="Wrap"/>
-<Border Classes="card" Padding="14">
-<StackPanel Spacing="8">
-<TextBlock Text="Backup engine" FontSize="18" FontWeight="SemiBold"/>
-<TextBlock Text="Foundation tab created. Next implementation: Backup Now, schedule, destination, retention, SHA-256 verification, backup history, and staged restore." TextWrapping="Wrap"/>
+<TextBlock Text="Server Backup &amp; Restore" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
+<TextBlock Text="Backups are profile-aware and contain saves, Game.ini, GameUserSettings.ini, profile metadata, a manifest, and SHA-256 hashes. ASA binaries are not copied." Opacity="0.7" TextWrapping="Wrap"/>
+<Border Classes="card" Padding="14"><StackPanel Spacing="10">
+<TextBlock Text="Backup" FontSize="18" FontWeight="SemiBold"/>
+<TextBlock x:Name="BackupProfileText" Text="Active profile: none"/>
+<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+<TextBox x:Name="BackupDestinationBox" IsReadOnly="True" PlaceholderText="Select backup destination"/>
+<Button Grid.Column="1" Content="Browse" Click="BrowseBackupDestination_Click"/>
+</Grid>
+<StackPanel Orientation="Horizontal" Spacing="10">
+<Button Content="Backup Now" Classes="primary" Click="BackupNow_Click"/>
+<Button Content="Open Backup Folder" Click="OpenBackupFolder_Click"/>
 </StackPanel>
-</Border>
+<ProgressBar x:Name="BackupProgress" Height="8" IsVisible="False" IsIndeterminate="True"/>
+<TextBlock x:Name="BackupStatusText" Text="Ready." TextWrapping="Wrap"/>
+</StackPanel></Border>
+<Border Classes="card" Padding="14"><StackPanel Spacing="10">
+<TextBlock Text="Restore / Verify" FontSize="18" FontWeight="SemiBold"/>
+<TextBlock Text="Restore will be staged and validated before files are applied. For now, archive verification is enabled; destructive restore is the next step." Opacity="0.7" TextWrapping="Wrap"/>
+<StackPanel Orientation="Horizontal" Spacing="10">
+<Button Content="Verify Backup" Click="VerifyBackup_Click"/>
+<Button Content="Restore Backup" IsEnabled="False"/>
+</StackPanel>
+<TextBlock x:Name="RestoreStatusText" Text="No backup selected." TextWrapping="Wrap"/>
+</StackPanel></Border>
 </StackPanel></ScrollViewer>
 </TabItem>
 
