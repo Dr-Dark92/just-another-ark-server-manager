@@ -13,6 +13,7 @@ public partial class MainWindow : Window
 {
     private readonly SteamCmdService _steamCmd = new();
     private readonly SettingsService _settingsService = new();
+    private readonly StartupService _startupService = new();
     private readonly AsaServerService _asaServer;
     private readonly AsaProcessService _asaProcess = new();
     private readonly AsaConfigService _asaConfig = new();
@@ -65,6 +66,10 @@ public partial class MainWindow : Window
         SteamCmdInstallDirectoryBox.Text = _settings.SteamCmdInstallDirectory ?? string.Empty;
         AsaInstallDirectoryBox.Text = _settings.AsaServerInstallDirectory ?? string.Empty;
         WebGuiToggle.IsChecked = _settings.WebGui.Enabled;
+        StartWithOsToggle.IsChecked = _settings.Startup.StartWithOs;
+        StartMinimizedToggle.IsChecked = _settings.Startup.StartMinimized;
+        AutoStartServerToggle.IsChecked = _settings.Startup.AutoStartActiveServer;
+        StartupPlatformText.Text = $"Platform integration: {_startupService.PlatformDescription}";
 
         var providerKey = !string.IsNullOrWhiteSpace(_settings.ModProvider.CurseForgeApiKey)
             ? _settings.ModProvider.CurseForgeApiKey
@@ -106,6 +111,12 @@ public partial class MainWindow : Window
 
         if (ActiveProfile is not null)
             await ResolveMissingModMetadataAsync(ActiveProfile);
+
+        if (_settings.Startup.StartMinimized)
+            WindowState = WindowState.Minimized;
+
+        if (_settings.Startup.AutoStartActiveServer && ActiveProfile is not null)
+            await AutoStartActiveServerAsync();
     }
 
     private async void SelectSteamCmd_Click(object? sender, RoutedEventArgs e)
@@ -2074,6 +2085,50 @@ public partial class MainWindow : Window
         PerLevelStatsSummaryText.Text = modified == 0
             ? "All multipliers at default 1.0"
             : $"{modified} per-level multipliers customized";
+    }
+
+    private async void ApplyStartupSettings_Click(object? sender, RoutedEventArgs e)
+    {
+        _settings.Startup.StartWithOs = StartWithOsToggle.IsChecked == true;
+        _settings.Startup.StartMinimized = StartMinimizedToggle.IsChecked == true;
+        _settings.Startup.AutoStartActiveServer = AutoStartServerToggle.IsChecked == true;
+        var result = await _startupService.SetEnabledAsync(_settings.Startup.StartWithOs);
+        StartupStatusText.Text = result.Message;
+        if (!result.Success) { AppendConsole($"[STARTUP] Failed: {result.Message}"); return; }
+        await _settingsService.SaveAsync(_settings);
+        AppendConsole($"[STARTUP] {result.Message}");
+    }
+
+    private async void DisableStartupService_Click(object? sender, RoutedEventArgs e)
+    {
+        var result = await _startupService.SetEnabledAsync(false);
+        if (result.Success) {
+            _settings.Startup.StartWithOs = false;
+            StartWithOsToggle.IsChecked = false;
+            await _settingsService.SaveAsync(_settings);
+        }
+        StartupStatusText.Text = result.Message;
+        AppendConsole($"[STARTUP] {result.Message}");
+    }
+
+    private async Task AutoStartActiveServerAsync()
+    {
+        var profile = ActiveProfile;
+        if (profile is null || _asaProcess.GetState(profile.Id).Running) return;
+        if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) {
+            AppendConsole("[AUTOSTART] ASA install directory is not configured."); return;
+        }
+        var validation = _asaServer.ValidateInstallation(_settings.AsaServerInstallDirectory);
+        if (!validation.Success || string.IsNullOrWhiteSpace(validation.ExecutablePath)) {
+            AppendConsole($"[AUTOSTART] {validation.Message}"); return;
+        }
+        try {
+            _asaConfig.WriteProfile(_settings.AsaServerInstallDirectory, profile);
+            var args = GetEffectiveLaunchArguments(profile);
+            var state = await _asaProcess.StartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
+            AppendConsole(state.Running ? $"[AUTOSTART] {profile.ServerName} started automatically." : $"[AUTOSTART] {profile.ServerName} did not start: {state.Message}");
+            RefreshProcessState();
+        } catch (Exception ex) { AppendConsole($"[AUTOSTART] Failed: {ex.Message}"); }
     }
 
     private async void WebGuiToggle_Changed(object? sender, RoutedEventArgs e)
