@@ -7,6 +7,7 @@ namespace JAASM.App.Services;
 
 public sealed record BackupResult(bool Success, string Message, string? ArchivePath = null, string? Sha256 = null);
 public sealed record RestoreReview(bool Success, string Message, string ArchivePath, string ServerName, string Map, string ProfileId, DateTimeOffset? CreatedUtc, int FileCount, long TotalBytes, IReadOnlyList<string> Files);
+public sealed record BackupTextFile(string Path, string Content);
 
 public sealed class BackupService
 {
@@ -83,6 +84,23 @@ public sealed class BackupService
                 return new(false, "Backup is missing manifest.json or profile.json.", archive, hash);
             return new(true, "Backup archive verified successfully.", archive, hash);
         } catch (Exception ex) { return new(false, $"Verification failed: {ex.Message}"); }
+    }
+
+    public async Task<IReadOnlyList<BackupTextFile>> ReadConfigurationFilesAsync(string archive, CancellationToken ct = default)
+    {
+        var result = new List<BackupTextFile>();
+        using var zip = ZipFile.OpenRead(archive);
+        foreach (var entry in zip.Entries.Where(e =>
+                     e.FullName.Equals("profile.json", StringComparison.OrdinalIgnoreCase) ||
+                     e.FullName.Equals("manifest.json", StringComparison.OrdinalIgnoreCase) ||
+                     e.FullName.EndsWith("/Game.ini", StringComparison.OrdinalIgnoreCase) ||
+                     e.FullName.EndsWith("/GameUserSettings.ini", StringComparison.OrdinalIgnoreCase)))
+        {
+            await using var stream = entry.Open();
+            using var reader = new StreamReader(stream);
+            result.Add(new(entry.FullName, await reader.ReadToEndAsync(ct)));
+        }
+        return result;
     }
 
     public async Task<RestoreReview> ReviewAsync(string archive, CancellationToken ct = default)
