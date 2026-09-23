@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace JAASM.App.Services;
 
-public sealed record AsaProcessState(bool Running, int? ProcessId, TimeSpan? Uptime, string Message);
+public sealed record AsaProcessState(bool Running, int? ProcessId, TimeSpan? Uptime, DateTimeOffset? StartedAt, string Message);
 
 public sealed class AsaProcessService : IDisposable
 {
@@ -18,7 +18,7 @@ public sealed class AsaProcessService : IDisposable
     public AsaProcessState GetState(string profileId)
     {
         if (!_processes.TryGetValue(profileId, out var managed) || managed.Process.HasExited)
-            return new(false, null, null, "Stopped");
+            return new(false, null, null, null, "Stopped");
 
         return new(true, managed.Process.Id,
             DateTimeOffset.Now - managed.StartedAt, "Running");
@@ -33,7 +33,7 @@ public sealed class AsaProcessService : IDisposable
             return current;
 
         if (!File.Exists(executablePath))
-            return new(false, null, null, $"ASA executable not found: {executablePath}");
+            return new(false, null, null, null, $"ASA executable not found: {executablePath}");
 
         var launcher = executablePath;
         var psi = new ProcessStartInfo
@@ -49,7 +49,7 @@ public sealed class AsaProcessService : IDisposable
         {
             var wine = ResolveWineExecutable();
             if (wine is null)
-                return new(false, null, null,
+                return new(false, null, null, null,
                     "Wine was not found. Install Wine and ensure 'wine' or 'wine64' is available in PATH.");
 
             launcher = wine;
@@ -74,7 +74,7 @@ public sealed class AsaProcessService : IDisposable
         try
         {
             if (!process.Start())
-                return new(false, null, null, "Operating system could not start the ASA server process.");
+                return new(false, null, null, null, "Operating system could not start the ASA server process.");
 
             var managed = new ManagedProcess { Process = process, StartedAt = DateTimeOffset.Now };
             _processes[profileId] = managed;
@@ -95,7 +95,7 @@ public sealed class AsaProcessService : IDisposable
             console?.Report($"[{profileId}] [ASA START ERROR] {ex.Message}");
             process.Dispose();
             _processes.Remove(profileId);
-            return new(false, null, null, ex.Message);
+            return new(false, null, null, null, ex.Message);
         }
     }
 
