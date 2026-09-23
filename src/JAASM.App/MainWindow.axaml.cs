@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private readonly SteamCmdService _steamCmd = new();
     private readonly SettingsService _settingsService = new();
     private readonly StartupService _startupService = new();
+    private readonly BackupService _backupService = new();
     private readonly AsaServerService _asaServer;
     private readonly AsaProcessService _asaProcess = new();
     private readonly AsaConfigService _asaConfig = new();
@@ -69,6 +70,7 @@ public partial class MainWindow : Window
         StartWithOsToggle.IsChecked = _settings.Startup.StartWithOs;
         StartMinimizedToggle.IsChecked = _settings.Startup.StartMinimized;
         AutoStartServerToggle.IsChecked = _settings.Startup.AutoStartActiveServer;
+        BackupDestinationBox.Text = _settings.Backup.DestinationDirectory;
         StartupPlatformText.Text = $"Platform integration: {_startupService.PlatformDescription}";
 
         var providerKey = !string.IsNullOrWhiteSpace(_settings.ModProvider.CurseForgeApiKey)
@@ -88,6 +90,7 @@ public partial class MainWindow : Window
         {
             LoadProfileControls();
             RefreshProcessState();
+            BackupProfileText.Text = $"Active profile: {ActiveProfile.ServerName}";
         }
         else
         {
@@ -2085,6 +2088,57 @@ public partial class MainWindow : Window
         PerLevelStatsSummaryText.Text = modified == 0
             ? "All multipliers at default 1.0"
             : $"{modified} per-level multipliers customized";
+    }
+
+    private async void BrowseBackupDestination_Click(object? sender, RoutedEventArgs e)
+    {
+        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Select JAASM backup destination", AllowMultiple = false });
+        if (folders.Count == 0) return;
+        var path = folders[0].TryGetLocalPath();
+        if (path is null) { BackupStatusText.Text = "JAASM requires a local filesystem directory."; return; }
+        _settings.Backup.DestinationDirectory = path;
+        BackupDestinationBox.Text = path;
+        await _settingsService.SaveAsync(_settings);
+        BackupStatusText.Text = $"Backup destination saved: {path}";
+    }
+
+    private async void BackupNow_Click(object? sender, RoutedEventArgs e)
+    {
+        var profile = ActiveProfile;
+        if (profile is null) { BackupStatusText.Text = "Select a server profile first."; return; }
+        if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) { BackupStatusText.Text = "Configure the ASA installation directory first."; return; }
+        if (string.IsNullOrWhiteSpace(_settings.Backup.DestinationDirectory)) { BackupStatusText.Text = "Select a backup destination first."; return; }
+        BackupProgress.IsVisible = true;
+        BackupStatusText.Text = $"Backing up {profile.ServerName}...";
+        try {
+            var result = await _backupService.CreateAsync(_settings.AsaServerInstallDirectory, profile, _settings.Backup.DestinationDirectory);
+            BackupStatusText.Text = result.Message;
+            AppendConsole($"[BACKUP] {result.Message}");
+            if (result.Success && result.Sha256 is not null) AppendConsole($"[BACKUP] SHA-256: {result.Sha256}");
+        } finally { BackupProgress.IsVisible = false; }
+    }
+
+    private async void VerifyBackup_Click(object? sender, RoutedEventArgs e)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
+            Title = "Select JAASM backup archive", AllowMultiple = false,
+            FileTypeFilter = new[] { new FilePickerFileType("JAASM Backup") { Patterns = new[] { "*.jaasm-backup.zip", "*.zip" } } }
+        });
+        if (files.Count == 0) return;
+        var path = files[0].TryGetLocalPath();
+        if (path is null) { RestoreStatusText.Text = "JAASM requires a local backup file."; return; }
+        var result = await _backupService.VerifyAsync(path);
+        RestoreStatusText.Text = result.Message;
+        AppendConsole($"[BACKUP VERIFY] {result.Message}");
+    }
+
+    private void OpenBackupFolder_Click(object? sender, RoutedEventArgs e)
+    {
+        var path = _settings.Backup.DestinationDirectory;
+        if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path)) { BackupStatusText.Text = "Backup destination does not exist."; return; }
+        try {
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        } catch (Exception ex) { BackupStatusText.Text = $"Could not open backup folder: {ex.Message}"; }
     }
 
     private async void ApplyStartupSettings_Click(object? sender, RoutedEventArgs e)
