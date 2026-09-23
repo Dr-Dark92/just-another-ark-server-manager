@@ -2123,7 +2123,7 @@ public partial class MainWindow : Window
             AppendConsole($"[AUTOSTART] {validation.Message}"); return;
         }
         try {
-            _asaConfig.WriteProfile(_settings.AsaServerInstallDirectory, profile);
+            await _asaConfig.WriteGameUserSettingsAsync(_settings.AsaServerInstallDirectory, profile);
             var args = GetEffectiveLaunchArguments(profile);
             var state = await _asaProcess.StartAsync(profile.Id, validation.ExecutablePath, args, CreateConsoleProgress());
             AppendConsole(state.Running ? $"[AUTOSTART] {profile.ServerName} started automatically." : $"[AUTOSTART] {profile.ServerName} did not start: {state.Message}");
