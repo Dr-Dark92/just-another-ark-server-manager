@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     private AppSettings _settings = new();
     private bool _loading;
     private string? _pendingRestoreArchive;
+    private bool _pendingRestoreVerified;
     private AsaServerProfile? ActiveProfile =>
         _settings.AsaProfiles.FirstOrDefault(p => p.Id == _settings.ActiveAsaProfileId);
 
@@ -2119,80 +2120,75 @@ public partial class MainWindow : Window
         } finally { BackupProgress.IsVisible = false; }
     }
 
-    private async void VerifyBackup_Click(object? sender, RoutedEventArgs e)
+    private async void OpenRestoreBackup_Click(object? sender, RoutedEventArgs e)
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
-            Title = "Select JAASM backup archive", AllowMultiple = false,
+            Title = "Open JAASM backup", AllowMultiple = false,
             FileTypeFilter = new[] { new FilePickerFileType("JAASM Backup") { Patterns = new[] { "*.jaasm-backup.zip", "*.zip" } } }
         });
         if (files.Count == 0) return;
         var path = files[0].TryGetLocalPath();
         if (path is null) { RestoreStatusText.Text = "JAASM requires a local backup file."; return; }
-        var result = await _backupService.VerifyAsync(path);
-        RestoreStatusText.Text = result.Message;
-        AppendConsole($"[BACKUP VERIFY] {result.Message}");
+        _pendingRestoreArchive = path; _pendingRestoreVerified = false;
+        RestoreFileBox.Text = path; VerifyRestoreButton.IsEnabled = true; RestoreSelectedButton.IsEnabled = false;
+        RestoreReviewPanel.IsVisible = false; RestoreConfirmationCheck.IsChecked = false;
+        RestoreStatusText.Text = "Backup opened. Verify it before restore.";
     }
 
-    private async void ReviewRestore_Click(object? sender, RoutedEventArgs e)
+    private async void VerifySelectedBackup_Click(object? sender, RoutedEventArgs e)
     {
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
-            Title = "Select JAASM backup to review", AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("JAASM Backup") { Patterns = new[] { "*.jaasm-backup.zip", "*.zip" } } }
-        });
-        if (files.Count == 0) return;
-        var path = files[0].TryGetLocalPath();
-        if (path is null) { RestoreStatusText.Text = "JAASM requires a local backup file."; return; }
-
-        RestoreProgress.IsVisible = true;
-        RestoreStatusText.Text = "Verifying backup before review...";
+        if (string.IsNullOrWhiteSpace(_pendingRestoreArchive)) return;
+        RestoreProgress.IsVisible = true; RestoreStatusText.Text = "Verifying backup and all recorded hashes...";
         try {
-            var review = await _backupService.ReviewAsync(path);
+            var review = await _backupService.ReviewAsync(_pendingRestoreArchive);
+            _pendingRestoreVerified = review.Success; RestoreSelectedButton.IsEnabled = review.Success;
             RestoreStatusText.Text = review.Message;
-            if (!review.Success) { RestoreReviewPanel.IsVisible = false; _pendingRestoreArchive = null; return; }
-            _pendingRestoreArchive = path;
-            RestoreConfirmationCheck.IsChecked = false;
-            var created = review.CreatedUtc?.ToString("u") ?? "Unknown";
+            if (!review.Success) { RestoreReviewPanel.IsVisible = false; return; }
             RestoreReviewSummaryText.Text =
-                $"Backup server: {review.ServerName}\nMap: {review.Map}\nCreated: {created}\nFiles: {review.FileCount}\nData size: {review.TotalBytes / 1024d / 1024d:F2} MiB\nTarget profile: {ActiveProfile?.ServerName ?? "None"}";
-            RestoreReviewFilesText.Text = string.Join(Environment.NewLine, review.Files);
-            RestoreReviewPanel.IsVisible = true;
-            AppendConsole($"[RESTORE REVIEW] {review.ServerName} / {review.Map} / {review.FileCount} files verified.");
+                $"Server: {review.ServerName}\nMap: {review.Map}\nCreated: {review.CreatedUtc?.ToString("u") ?? "Unknown"}\nFiles: {review.FileCount}\nData size: {review.TotalBytes / 1024d / 1024d:F2} MiB";
+            RestoreConfigFilesPanel.Children.Clear();
+            foreach (var file in await _backupService.ReadConfigurationFilesAsync(_pendingRestoreArchive)) {
+                var content = new TextBox { Text = file.Content, IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap, MinHeight = 120, MaxHeight = 360 };
+                RestoreConfigFilesPanel.Children.Add(new Expander { Header = file.Path, Content = content, IsExpanded = false });
+            }
+            AppendConsole($"[RESTORE VERIFY] {review.ServerName}: {review.FileCount} files verified.");
         } finally { RestoreProgress.IsVisible = false; }
+    }
+
+    private void RestoreSelectedBackup_Click(object? sender, RoutedEventArgs e)
+    {
+        if (!_pendingRestoreVerified || string.IsNullOrWhiteSpace(_pendingRestoreArchive)) {
+            RestoreStatusText.Text = "Verify the opened backup before restore."; return;
+        }
+        RestoreConfirmationCheck.IsChecked = false;
+        RestoreReviewPanel.IsVisible = true;
+        RestoreStatusText.Text = "Review the server configuration below, confirm, then Commit Restore.";
     }
 
     private async void ConfirmRestore_Click(object? sender, RoutedEventArgs e)
     {
         var profile = ActiveProfile;
         if (profile is null) { RestoreStatusText.Text = "Select the target server profile first."; return; }
-        if (RestoreConfirmationCheck.IsChecked != true) { RestoreStatusText.Text = "Confirmation is required before restore."; return; }
-        if (string.IsNullOrWhiteSpace(_pendingRestoreArchive)) { RestoreStatusText.Text = "Review a backup before restoring."; return; }
-        if (_asaProcess.GetState(profile.Id).Running) {
-            RestoreStatusText.Text = "Stop the active ARK server before restoring a backup.";
-            AppendConsole("[RESTORE] Blocked because the active server is running."); return;
-        }
+        if (!_pendingRestoreVerified || string.IsNullOrWhiteSpace(_pendingRestoreArchive)) { RestoreStatusText.Text = "Open and verify a backup first."; return; }
+        if (RestoreConfirmationCheck.IsChecked != true) { RestoreStatusText.Text = "Review confirmation is required before committing restore."; return; }
+        if (_asaProcess.GetState(profile.Id).Running) { RestoreStatusText.Text = "Stop the active ARK server before restoring."; return; }
         if (string.IsNullOrWhiteSpace(_settings.AsaServerInstallDirectory)) { RestoreStatusText.Text = "Configure the ASA installation directory first."; return; }
-
         var rollbackDirectory = string.IsNullOrWhiteSpace(_settings.Backup.DestinationDirectory)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JAASM", "rollback")
             : Path.Combine(_settings.Backup.DestinationDirectory, "rollback");
-
-        RestoreProgress.IsVisible = true;
-        RestoreStatusText.Text = "Confirmed. Re-verifying, creating emergency rollback, and restoring...";
+        RestoreProgress.IsVisible = true; RestoreStatusText.Text = "Re-verifying and committing restore...";
         try {
             var result = await _backupService.RestoreAsync(_pendingRestoreArchive, _settings.AsaServerInstallDirectory, rollbackDirectory);
-            RestoreStatusText.Text = result.Message;
-            AppendConsole($"[RESTORE] {result.Message}");
-            if (result.Success) { RestoreReviewPanel.IsVisible = false; _pendingRestoreArchive = null; RestoreConfirmationCheck.IsChecked = false; }
+            RestoreStatusText.Text = result.Message; AppendConsole($"[RESTORE] {result.Message}");
+            if (result.Success) { RestoreReviewPanel.IsVisible = false; _pendingRestoreArchive = null; _pendingRestoreVerified = false; RestoreFileBox.Text = ""; VerifyRestoreButton.IsEnabled = false; RestoreSelectedButton.IsEnabled = false; }
         } finally { RestoreProgress.IsVisible = false; }
     }
 
     private void CancelRestore_Click(object? sender, RoutedEventArgs e)
     {
-        _pendingRestoreArchive = null;
-        RestoreConfirmationCheck.IsChecked = false;
-        RestoreReviewPanel.IsVisible = false;
-        RestoreStatusText.Text = "Restore cancelled. No server files were changed.";
-        AppendConsole("[RESTORE] Review cancelled; no changes applied.");
+        RestoreConfirmationCheck.IsChecked = false; RestoreReviewPanel.IsVisible = false;
+        RestoreStatusText.Text = "Restore cancelled. The verified backup remains open.";
+        AppendConsole("[RESTORE] Commit cancelled; no files changed.");
     }
 
     private void OpenBackupFolder_Click(object? sender, RoutedEventArgs e)
