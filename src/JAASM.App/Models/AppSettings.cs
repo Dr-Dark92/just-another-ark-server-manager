@@ -28,7 +28,8 @@ public sealed class StartupSettings
 {
     public bool StartWithOs { get; set; }
     public bool StartMinimized { get; set; }
-    public bool AutoStartActiveServer { get; set; }\n    public List<string> AutoStartProfileIds { get; set; } = new();
+    public bool AutoStartActiveServer { get; set; }
+    public List<string> AutoStartProfileIds { get; set; } = new();
 }
 
 public sealed class ModProviderSettings
