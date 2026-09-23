@@ -741,10 +741,23 @@
 <TextBlock Text="Restore will be staged and validated before files are applied. For now, archive verification is enabled; destructive restore is the next step." Opacity="0.7" TextWrapping="Wrap"/>
 <StackPanel Orientation="Horizontal" Spacing="10">
 <Button Content="Verify Backup" Click="VerifyBackup_Click"/>
-<Button Content="Restore Backup" Click="RestoreBackup_Click"/>
+<Button Content="Review Restore" Classes="primary" Click="ReviewRestore_Click"/>
 </StackPanel>
 <ProgressBar x:Name="RestoreProgress" Height="8" IsVisible="False" IsIndeterminate="True"/>
 <TextBlock x:Name="RestoreStatusText" Text="No backup selected." TextWrapping="Wrap"/>
+<Border x:Name="RestoreReviewPanel" IsVisible="False" BorderBrush="#555" BorderThickness="1" CornerRadius="6" Padding="12">
+<StackPanel Spacing="8">
+<TextBlock Text="Restore Review" FontSize="17" FontWeight="SemiBold"/>
+<TextBlock x:Name="RestoreReviewSummaryText" TextWrapping="Wrap"/>
+<TextBox x:Name="RestoreReviewFilesText" IsReadOnly="True" AcceptsReturn="True" Height="150" FontFamily="Consolas, monospace" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+<TextBlock Text="This operation replaces the current save/configuration files. JAASM will create an emergency rollback first." Foreground="#FFB86C" TextWrapping="Wrap"/>
+<CheckBox x:Name="RestoreConfirmationCheck" Content="I reviewed this backup and understand that the current server files will be replaced."/>
+<StackPanel Orientation="Horizontal" Spacing="10">
+<Button Content="Confirm &amp; Restore" Classes="primary" Click="ConfirmRestore_Click"/>
+<Button Content="Cancel" Click="CancelRestore_Click"/>
+</StackPanel>
+</StackPanel>
+</Border>
 </StackPanel></Border>
 </StackPanel></ScrollViewer>
 </TabItem>
