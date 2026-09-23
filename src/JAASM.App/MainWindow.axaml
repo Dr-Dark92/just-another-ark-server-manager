@@ -741,8 +741,9 @@
 <TextBlock Text="Restore will be staged and validated before files are applied. For now, archive verification is enabled; destructive restore is the next step." Opacity="0.7" TextWrapping="Wrap"/>
 <StackPanel Orientation="Horizontal" Spacing="10">
 <Button Content="Verify Backup" Click="VerifyBackup_Click"/>
-<Button Content="Restore Backup" IsEnabled="False"/>
+<Button Content="Restore Backup" Click="RestoreBackup_Click"/>
 </StackPanel>
+<ProgressBar x:Name="RestoreProgress" Height="8" IsVisible="False" IsIndeterminate="True"/>
 <TextBlock x:Name="RestoreStatusText" Text="No backup selected." TextWrapping="Wrap"/>
 </StackPanel></Border>
 </StackPanel></ScrollViewer>
