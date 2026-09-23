@@ -21,7 +21,7 @@ public sealed class AsaProcessService : IDisposable
             return new(false, null, null, null, "Stopped");
 
         return new(true, managed.Process.Id,
-            DateTimeOffset.Now - managed.StartedAt, "Running");
+            DateTimeOffset.Now - managed.StartedAt, managed.StartedAt, "Running");
     }
 
     public async Task<AsaProcessState> StartAsync(
