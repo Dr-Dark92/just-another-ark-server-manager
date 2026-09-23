@@ -4,5 +4,87 @@
              RequestedThemeVariant="Dark">
   <Application.Styles>
     <FluentTheme />
+
+    <!-- JAASM visual language: ARK-like cold blue/cyan accents over a softer dark surface. -->
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#10151C"/>
+      <Setter Property="Foreground" Value="#E7EDF5"/>
+    </Style>
+
+    <Style Selector="TabControl">
+      <Setter Property="Background" Value="#10151C"/>
+    </Style>
+
+    <Style Selector="TabItem">
+      <Setter Property="Padding" Value="14,9"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="TabItem:selected">
+      <Setter Property="Foreground" Value="#55D7FF"/>
+    </Style>
+
+    <Style Selector="Button">
+      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Padding" Value="12,7"/>
+      <Setter Property="Background" Value="#1B2632"/>
+      <Setter Property="BorderBrush" Value="#34485C"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="Button:pointerover">
+      <Setter Property="Background" Value="#25394A"/>
+      <Setter Property="BorderBrush" Value="#55D7FF"/>
+    </Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#126C8A"/>
+      <Setter Property="BorderBrush" Value="#55D7FF"/>
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.success">
+      <Setter Property="Background" Value="#176B43"/>
+      <Setter Property="BorderBrush" Value="#39D98A"/>
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.danger">
+      <Setter Property="Background" Value="#702D36"/>
+      <Setter Property="BorderBrush" Value="#E05B67"/>
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="#151D26"/>
+      <Setter Property="BorderBrush" Value="#34485C"/>
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="Background" Value="#151D26"/>
+      <Setter Property="BorderBrush" Value="#34485C"/>
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="Background" Value="#151D26"/>
+      <Setter Property="BorderBrush" Value="#34485C"/>
+    </Style>
+
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#151D26"/>
+      <Setter Property="BorderBrush" Value="#2A3A4A"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <Style Selector="TextBlock.sectionTitle">
+      <Setter Property="Foreground" Value="#8BE5FF"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="ProgressBar">
+      <Setter Property="Height" Value="8"/>
+      <Setter Property="Foreground" Value="#2EC8F0"/>
+      <Setter Property="Background" Value="#1B2632"/>
+    </Style>
+
+    <Style Selector="Separator">
+      <Setter Property="Background" Value="#293A49"/>
+    </Style>
   </Application.Styles>
 </Application>
