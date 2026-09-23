@@ -754,8 +754,18 @@
 <TextBlock Text="Backup Server Configuration" FontSize="17" FontWeight="SemiBold"/>
 <TextBlock x:Name="RestoreReviewSummaryText" TextWrapping="Wrap"/>
 <StackPanel x:Name="RestoreConfigFilesPanel" Spacing="8"/>
+<Border BorderBrush="#555" BorderThickness="1" CornerRadius="6" Padding="10">
+<StackPanel Spacing="8">
+<TextBlock Text="Restore Target" FontSize="16" FontWeight="SemiBold"/>
+<RadioButton x:Name="RestoreExistingProfileRadio" GroupName="RestoreTarget" Content="Restore to an existing profile"/>
+<ComboBox x:Name="RestoreExistingProfileCombo" PlaceholderText="Select existing server profile"/>
+<RadioButton x:Name="RestoreNewProfileRadio" GroupName="RestoreTarget" Content="Restore as a new profile"/>
+<TextBox x:Name="RestoreNewProfileNameBox" PlaceholderText="New profile name"/>
+<TextBlock Text="Existing profile: backup settings replace that profile's settings but its profile identity/name is retained. New profile: JAASM imports the backed-up profile under the name above." Opacity="0.7" TextWrapping="Wrap"/>
+</StackPanel>
+</Border>
 <TextBlock Text="Restore replaces the current save/configuration files. JAASM creates an emergency rollback first." Foreground="#FFB86C" TextWrapping="Wrap"/>
-<CheckBox x:Name="RestoreConfirmationCheck" Content="I reviewed the backup configuration and confirm this restore."/>
+<CheckBox x:Name="RestoreConfirmationCheck" Content="I reviewed the backup configuration, selected the restore target, and confirm this restore."/>
 <StackPanel Orientation="Horizontal" Spacing="10">
 <Button Content="Commit Restore" Classes="primary" Click="ConfirmRestore_Click"/>
 <Button Content="Cancel" Click="CancelRestore_Click"/>
