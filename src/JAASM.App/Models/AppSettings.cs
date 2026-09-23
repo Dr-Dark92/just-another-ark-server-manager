@@ -15,6 +15,14 @@ public sealed class AppSettings
     public string? ActiveAsaProfileId { get; set; }
     public WebGuiSettings WebGui { get; set; } = new();
     public ModProviderSettings ModProvider { get; set; } = new();
+    public StartupSettings Startup { get; set; } = new();
+}
+
+public sealed class StartupSettings
+{
+    public bool StartWithOs { get; set; }
+    public bool StartMinimized { get; set; }
+    public bool AutoStartActiveServer { get; set; }
 }
 
 public sealed class ModProviderSettings
