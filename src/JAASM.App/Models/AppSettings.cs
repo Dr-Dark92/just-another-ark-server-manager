@@ -16,6 +16,12 @@ public sealed class AppSettings
     public WebGuiSettings WebGui { get; set; } = new();
     public ModProviderSettings ModProvider { get; set; } = new();
     public StartupSettings Startup { get; set; } = new();
+    public BackupSettings Backup { get; set; } = new();
+}
+
+public sealed class BackupSettings
+{
+    public string DestinationDirectory { get; set; } = string.Empty;
 }
 
 public sealed class StartupSettings
