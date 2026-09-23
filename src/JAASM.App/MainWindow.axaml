@@ -47,11 +47,24 @@
 <TabItem Header="Startup Service">
 <ScrollViewer><StackPanel Margin="18" Spacing="14">
 <TextBlock Text="Startup Service" FontSize="22" FontWeight="SemiBold" Classes="sectionTitle"/>
-<TextBlock Text="Controls for starting JAASM with the operating system and automatically starting selected server profiles will live here." Opacity="0.7" TextWrapping="Wrap"/>
+<TextBlock x:Name="StartupPlatformText" Opacity="0.7" TextWrapping="Wrap"/>
 <Border Classes="card" Padding="14">
-<StackPanel Spacing="8">
-<TextBlock Text="Service foundation" FontSize="18" FontWeight="SemiBold"/>
-<TextBlock Text="Next implementation: Windows startup integration, Linux systemd user service, tray/minimize behavior, and per-profile server autostart." TextWrapping="Wrap"/>
+<StackPanel Spacing="12">
+<TextBlock Text="Application Startup" FontSize="18" FontWeight="SemiBold"/>
+<ToggleSwitch x:Name="StartWithOsToggle" Content="Start JAASM automatically with the operating system"/>
+<ToggleSwitch x:Name="StartMinimizedToggle" Content="Start JAASM minimized"/>
+<ToggleSwitch x:Name="AutoStartServerToggle" Content="Automatically start the active ARK server profile when JAASM starts"/>
+<StackPanel Orientation="Horizontal" Spacing="10">
+<Button Content="Apply Startup Settings" Click="ApplyStartupSettings_Click"/>
+<Button Content="Disable Startup Service" Click="DisableStartupService_Click"/>
+</StackPanel>
+<TextBlock x:Name="StartupStatusText" Text="Startup settings have not been applied." TextWrapping="Wrap"/>
+</StackPanel>
+</Border>
+<Border Classes="card" Padding="14">
+<StackPanel Spacing="6">
+<TextBlock Text="Platform behavior" FontSize="18" FontWeight="SemiBold"/>
+<TextBlock Text="Windows uses the current-user startup registry. Linux installs a systemd --user service. Server autostart uses the active JAASM profile and refuses duplicate launches." TextWrapping="Wrap" Opacity="0.75"/>
 </StackPanel>
 </Border>
 </StackPanel></ScrollViewer>
